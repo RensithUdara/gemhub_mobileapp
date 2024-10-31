@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gemhub/Database/db_helper.dart';
 import 'package:gemhub/login_screen.dart';
 
 class SignUp_Screen extends StatefulWidget {
@@ -21,6 +22,8 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
       TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
+
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   InputDecoration customInputDecoration(String labelText,
       {bool isPasswordField = false, bool isConfirmPasswordField = false}) {
@@ -106,18 +109,40 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
     setState(() {
       isBuyer = toBuyer;
       if (toBuyer) {
-        // Clear Seller-specific fields when switching to Buyer
         displayNameController.clear();
         addressController.clear();
-      } else {
-        // Clear Buyer-specific fields when switching to Seller
-        usernameController.clear();
-        passwordController.clear();
-        confirmPasswordController.clear();
-        emailController.clear();
-        phoneNumberController.clear();
       }
     });
+  }
+
+  Future<void> _saveUser() async {
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match!")),
+      );
+      return;
+    }
+
+    Map<String, dynamic> user = {
+      'displayName': isBuyer ? null : displayNameController.text,
+      'address': isBuyer ? null : addressController.text,
+      'username': usernameController.text,
+      'password': passwordController.text,
+      'email': emailController.text,
+      'phoneNumber': phoneNumberController.text,
+    };
+
+    await _databaseHelper.insertUser(user);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("User registered successfully!")),
+    );
+
+    // Navigate to the Login Screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
@@ -224,14 +249,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                     keyboardType: TextInputType.phone),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    // Navigate to the HomeScreen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
-                    );
-                  },
+                  onPressed: _saveUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(

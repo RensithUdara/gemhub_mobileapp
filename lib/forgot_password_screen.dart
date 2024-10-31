@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gemhub/Database/db_helper.dart';
+import 'package:gemhub/reset_password_screen.dart'; // Import the reset password screen
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -9,8 +11,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController otpController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   bool isOTPSent = false;
+  String generatedOTP = "123456"; // For testing purposes, you would generate this dynamically
+  bool isPhoneNumberValid = false; // Used to enable/disable "Send OTP" button
 
   List<TextEditingController> otpControllers =
       List.generate(6, (index) => TextEditingController());
@@ -38,27 +42,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
-    );
-  }
-
-  Widget customTextField(String labelText, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: customInputDecoration(labelText),
-      ),
     );
   }
 
@@ -112,16 +95,57 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  void sendOTP() {
+  // Function to validate if phone number exists in database
+  Future<bool> validatePhoneNumber(String phoneNumber) async {
+    final users = await _databaseHelper.getUsers();
+    return users.any((user) => user['phoneNumber'] == phoneNumber);
+  }
+
+  // Function to check phone number before enabling "Send OTP" button
+  void checkPhoneNumber(String value) {
     setState(() {
-      isOTPSent = true;
+      isPhoneNumberValid = value.isNotEmpty;
     });
-    // Add logic to send OTP here
+  }
+
+  // Send OTP and validate phone number
+  void sendOTP() async {
+    String phoneNumber = phoneNumberController.text;
+
+    // Validate if phone number exists in the database
+    bool phoneNumberExists = await validatePhoneNumber(phoneNumber);
+
+    if (phoneNumberExists) {
+      setState(() {
+        isOTPSent = true;
+      });
+      // Proceed with sending OTP logic
+    } else {
+      // Show error if phone number does not exist
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Phone number not found!")),
+      );
+    }
   }
 
   void verifyOTP() {
-    String otp = otpControllers.map((controller) => controller.text).join();
-    // Add logic to verify OTP here
+    String enteredOTP = otpControllers.map((controller) => controller.text).join();
+    if (enteredOTP == generatedOTP) {
+      // Navigate to the Reset Password screen if OTP is correct
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResetPasswordScreen(
+            phoneNumber: phoneNumberController.text,
+          ),
+        ),
+      );
+    } else {
+      // Show error message if OTP is incorrect
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid OTP!")),
+      );
+    }
   }
 
   @override
@@ -148,13 +172,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                customTextField('Phone Number', phoneNumberController,
-                    keyboardType: TextInputType.phone),
+                TextField(
+                  controller: phoneNumberController,
+                  keyboardType: TextInputType.phone,
+                  onChanged: checkPhoneNumber, // Enable "Send OTP" button based on input
+                  decoration: customInputDecoration('Phone Number'),
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: sendOTP,
+                  onPressed: isPhoneNumberValid ? sendOTP : null, // Disable button if phone number is empty
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: isPhoneNumberValid ? Colors.black : Colors.grey, // Change button color when enabled/disabled
                     padding: const EdgeInsets.symmetric(
                       vertical: 12.0,
                       horizontal: 40.0,
