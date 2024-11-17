@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
           notchSmoothness: NotchSmoothness.smoothEdge,
           onTap: _onItemTapped,
           backgroundColor: const Color.fromARGB(255, 221, 255, 187),
-          activeColor: const Color.fromARGB(255, 9, 119, 33),
+          activeColor: const Color.fromARGB(255, 8, 151, 39),
           leftCornerRadius: 32,
           rightCornerRadius: 32,
         ),
