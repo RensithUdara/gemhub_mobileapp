@@ -7,16 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String name;
-  final String email;
-  final String phone;
-
-  const ProfileScreen({
-    super.key,
-    required this.name,
-    required this.email,
-    required this.phone,
-  });
+  const ProfileScreen({super.key, required String phone, required String email, required String name});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -29,13 +20,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   File? _profileImage;
+  String? imageUrl;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.name);
-    _emailController = TextEditingController(text: widget.email);
-    _phoneController = TextEditingController(text: widget.phone);
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _fetchUserData();
   }
 
   @override
@@ -46,11 +39,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // Function to pick an image
+  Future<void> _fetchUserData() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        final data = userDoc.data();
+        setState(() {
+          _nameController.text = data?['name'] ?? '';
+          _emailController.text = data?['email'] ?? '';
+          _phoneController.text = data?['phone'] ?? '';
+          imageUrl = data?['imageUrl'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
 
-    showModalBottomSheet(
+    final pickedFile = await showModalBottomSheet<File?>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -70,31 +82,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 leading: const Icon(Icons.camera_alt, color: Colors.blueAccent),
                 title: const Text('Take a Photo'),
                 onTap: () async {
-                  Navigator.of(context).pop();
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() {
-                      _profileImage = File(pickedFile.path);
-                    });
-                  }
+                  Navigator.of(context).pop(await picker.pickImage(source: ImageSource.camera));
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Colors.green),
                 title: const Text('Choose from Gallery'),
                 onTap: () async {
-                  Navigator.of(context).pop();
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    setState(() {
-                      _profileImage = File(pickedFile.path);
-                    });
-                  }
+                  Navigator.of(context).pop(await picker.pickImage(source: ImageSource.gallery));
                 },
               ),
-              const SizedBox(height: 10),
               ListTile(
                 leading: const Icon(Icons.cancel, color: Colors.redAccent),
                 title: const Text('Cancel'),
@@ -107,9 +104,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
   }
 
-  // Function to upload profile image to Firebase Storage
   Future<String?> _uploadProfileImage(File? imageFile) async {
     if (imageFile == null) return null;
 
@@ -123,14 +125,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .child('$userId.jpg');
 
       await ref.putFile(imageFile);
-      return await ref.getDownloadURL(); 
+      return await ref.getDownloadURL();
     } catch (e) {
       print('Error uploading image: $e');
       return null;
     }
   }
 
-  // Function to save user details to Firestore
   Future<void> _saveUserDetails(String name, String email, String phone, String? imageUrl) async {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -214,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool enabled = true,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
         controller: controller,
         enabled: enabled,
@@ -248,129 +249,118 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: _isEditing ? _pickImage : null,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _profileImage != null
-                          ? FileImage(_profileImage!) as ImageProvider
-                          : null,
-                      backgroundColor: Colors.grey[300],
-                    ),
-                    if (_profileImage == null)
-                      const Icon(
-                        Icons.camera_alt,
-                        color: Colors.black54,
-                        size: 30,
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _nameController.text,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                _phoneController.text,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 30),
-              _buildProfileField(
-                label: 'Full Name',
-                controller: _nameController,
-                enabled: _isEditing,
-              ),
-              _buildProfileField(
-                label: 'Mobile Number',
-                controller: _phoneController,
-                enabled: _isEditing,
-              ),
-              _buildProfileField(
-                label: 'Email Address',
-                controller: _emailController,
-                enabled: false,
-              ),
-              const SizedBox(height: 20),
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: _isEditing ? _pickImage : null,
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundImage: imageUrl != null
+                              ? NetworkImage(imageUrl!)
+                              : (_profileImage != null
+                                  ? FileImage(_profileImage!)
+                                  : null) as ImageProvider?,
+                          backgroundColor: Colors.grey[300],
+                          child: imageUrl == null && _profileImage == null
+                              ? const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.black54,
+                                  size: 30,
+                                )
+                              : null,
                         ),
                       ),
-                      onPressed: _isEditing
-                          ? () async {
-                              setState(() {
-                                isLoading = true;
-                              });
-
-                              final imageUrl =
-                                  await _uploadProfileImage(_profileImage);
-                              await _saveUserDetails(
-                                _nameController.text,
-                                _emailController.text,
-                                _phoneController.text,
-                                imageUrl,
-                              );
-
-                              setState(() {
-                                _isEditing = false;
-                                isLoading = false;
-                              });
-                            }
-                          : () {
-                              setState(() {
-                                _isEditing = true;
-                              });
-                            },
-                      child: Text(
-                        _isEditing ? 'Save' : 'Edit Profile',
-                        style: const TextStyle(color: Colors.white),
+                      const SizedBox(height: 20),
+                      _buildProfileField(
+                        label: 'Full Name',
+                        controller: _nameController,
+                        enabled: _isEditing,
                       ),
-                    ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                      _buildProfileField(
+                        label: 'Mobile Number',
+                        controller: _phoneController,
+                        enabled: _isEditing,
+                      ),
+                      _buildProfileField(
+                        label: 'Email Address',
+                        controller: _emailController,
+                        enabled: _isEditing,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: _isEditing
+                            ? () async {
+                                setState(() {
+                                  isLoading = true;
+                                });
+
+                                final imageUrl =
+                                    await _uploadProfileImage(_profileImage);
+                                await _saveUserDetails(
+                                  _nameController.text,
+                                  _emailController.text,
+                                  _phoneController.text,
+                                  imageUrl,
+                                );
+
+                                setState(() {
+                                  _isEditing = false;
+                                  isLoading = false;
+                                });
+                              }
+                            : () {
+                                setState(() {
+                                  _isEditing = true;
+                                });
+                              },
+                        child: Text(
+                          _isEditing ? 'Save' : 'Edit Profile',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        label: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                icon: const Icon(Icons.logout, color: Colors.white),
-                onPressed: _logout,
-                label: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.white),
-                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
