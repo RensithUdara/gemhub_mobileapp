@@ -58,14 +58,37 @@ class _HomeScreenState extends State<HomeScreen> {
     return (await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Logout'),
-            content: const Text('Do you want to logout?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Row(
+              children: [
+                Icon(
+                  Icons.logout,
+                  color: Colors.redAccent,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Confirm Logout',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to logout?',
+              style: TextStyle(fontSize: 16),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop(true);
                   Navigator.pushAndRemoveUntil(
@@ -75,7 +98,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     (route) => false,
                   );
                 },
-                child: const Text('Yes'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
             ],
           ),
