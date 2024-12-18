@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gemhub/Database/db_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gemhub/login_screen.dart';
+import 'package:gemhub/Database/db_helper.dart';
 
 class SignUp_Screen extends StatefulWidget {
   const SignUp_Screen({super.key});
@@ -116,6 +117,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
   }
 
   Future<void> _saveUser() async {
+    // Validate password match
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Passwords do not match!")),
@@ -123,26 +125,36 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
       return;
     }
 
-    Map<String, dynamic> user = {
-      'displayName': isBuyer ? null : displayNameController.text,
-      'address': isBuyer ? null : addressController.text,
-      'username': usernameController.text,
-      'password': passwordController.text,
-      'email': emailController.text,
-      'phoneNumber': phoneNumberController.text,
-    };
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
 
-    await _databaseHelper.insertUser(user);
+      Map<String, dynamic> user = {
+        'displayName': isBuyer ? null : displayNameController.text,
+        'address': isBuyer ? null : addressController.text,
+        'username': usernameController.text,
+        'email': emailController.text,
+        'phoneNumber': phoneNumberController.text,
+        'firebaseUid': userCredential.user?.uid, // Storing Firebase UID
+      };
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("User registered successfully!")),
-    );
+      await _databaseHelper.insertUser(user);
 
-    // Navigate to the Login Screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User registered successfully!")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.message}")),
+      );
+    }
   }
 
   @override
