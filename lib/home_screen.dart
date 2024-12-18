@@ -267,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => const AuctionScreen()),
             );
           },
-          backgroundColor: const Color.fromARGB(255, 221, 255, 187),
+          backgroundColor: const Color.fromARGB(255, 173, 216, 230),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -281,8 +281,8 @@ class _HomeScreenState extends State<HomeScreen> {
           gapLocation: GapLocation.center,
           notchSmoothness: NotchSmoothness.smoothEdge,
           onTap: _onItemTapped,
-          backgroundColor: const Color.fromARGB(255, 221, 255, 187),
-          activeColor: const Color.fromARGB(255, 8, 151, 39),
+          backgroundColor: const Color.fromARGB(255, 173, 216, 230),
+          activeColor: const Color.fromARGB(255, 0, 0, 139),
           leftCornerRadius: 32,
           rightCornerRadius: 32,
         ),
