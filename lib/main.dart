@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'splash_screen.dart'; // Ensure this path is correct based on your project structure
+import 'splash_screen.dart'; 
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); 
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
