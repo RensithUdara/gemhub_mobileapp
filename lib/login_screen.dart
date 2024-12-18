@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:gemhub/Database/db_helper.dart';
-import 'package:gemhub/forgot_password_screen.dart';
 import 'package:gemhub/home_screen.dart';
+import 'package:gemhub/forgot_password_screen.dart';
 import 'package:gemhub/signup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth package
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,12 +13,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
   bool rememberMe = false;
 
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -26,15 +26,15 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberedCredentials();
   }
 
-  // Load saved username and password if "Remember Me" was checked
+  // Load saved email and password if "Remember Me" was checked
   Future<void> _loadRememberedCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedUsername = prefs.getString('username');
+    String? savedEmail = prefs.getString('email');
     String? savedPassword = prefs.getString('password');
 
-    if (savedUsername != null && savedPassword != null) {
+    if (savedEmail != null && savedPassword != null) {
       setState(() {
-        usernameController.text = savedUsername;
+        emailController.text = savedEmail;
         passwordController.text = savedPassword;
         rememberMe = true;
       });
@@ -45,10 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _saveCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (rememberMe) {
-      await prefs.setString('username', usernameController.text);
+      await prefs.setString('email', emailController.text);
       await prefs.setString('password', passwordController.text);
     } else {
-      await prefs.remove('username');
+      await prefs.remove('email');
       await prefs.remove('password');
     }
   }
@@ -124,35 +124,31 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to validate the login by checking the SQLite database
+  // Firebase login validation method
   Future<void> _validateLogin() async {
-    String username = usernameController.text;
+    String email = emailController.text;
     String password = passwordController.text;
 
-    // Query the database for the user with the given username and password
-    final List<Map<String, dynamic>> users = await _databaseHelper.getUsers();
-    bool isValidUser = false;
+    try {
+      // Attempt to sign in with Firebase
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    for (var user in users) {
-      if (user['username'] == username && user['password'] == password) {
-        isValidUser = true;
-        break;
-      }
-    }
-
-    if (isValidUser) {
-      // Save credentials if "Remember Me" is checked
+      // If successful, save credentials if "Remember Me" is checked
       await _saveCredentials();
 
       // Navigate to the HomeScreen on successful login
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
-    } else {
-      // Show error message if login fails
+    } on FirebaseAuthException catch (e) {
+      // Handle login errors
+      String errorMessage = e.message ?? 'Login failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid username or password!")),
+        SnackBar(content: Text(errorMessage)),
       );
     }
   }
@@ -181,7 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                customTextField('Username', usernameController),
+                customTextField('Email', emailController,
+                    keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 20),
                 customTextField(
                   'Password',
