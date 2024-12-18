@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "67115458375",
+    "project_id": "gemhub-mobile-app",
+    "storage_bucket": "gemhub-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67115458375:android:1c8505642920ba1eab7662",
+        "android_client_info": {
+          "package_name": "com.example.gemhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdbAzTi4Q7iCizG9cqew26H6hjquPOcBc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

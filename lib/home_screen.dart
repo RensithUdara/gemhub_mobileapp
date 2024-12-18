@@ -6,7 +6,6 @@ import 'package:gemhub/login_screen.dart';
 import 'package:gemhub/cart_screen.dart';
 import 'package:gemhub/profile_screen.dart';
 import 'package:gemhub/auction_screen.dart';
-import 'package:gemhub/widget/category_card%20.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
