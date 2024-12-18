@@ -137,6 +137,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              onPressed: () async {
+                bool shouldLogout = await _onWillPop();
+                if (shouldLogout) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           child: Padding(
@@ -150,17 +166,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 10),
                 TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    hintText: 'Search products...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    filled: true,
-                    fillColor: const Color.fromARGB(255, 221, 255, 187),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                  ),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                hintText: 'Search gems...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: const BorderSide(color: Colors.blue),
                 ),
+                filled: true,
+                fillColor: Colors.blue[50],
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+              ),
+            ),
                 const SizedBox(height: 15),
                 CarouselSlider(
                   options: CarouselOptions(
