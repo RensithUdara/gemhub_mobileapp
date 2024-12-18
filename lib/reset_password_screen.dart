@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gemhub/Database/db_helper.dart';
-import 'package:gemhub/login_screen.dart'; // Import the login screen
-
+import 'package:gemhub/login_screen.dart'; 
 
 class ResetPasswordScreen extends StatefulWidget {
-  final String phoneNumber; // Receive the phone number to update the password
-
+  final String phoneNumber; 
   const ResetPasswordScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
@@ -20,7 +18,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
 
-  InputDecoration customInputDecoration(String labelText) {
+  InputDecoration customInputDecoration(String labelText, {bool isPasswordField = false}) {
     return InputDecoration(
       labelText: labelText,
       filled: true,
@@ -37,12 +35,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
-      suffixIcon: labelText == 'New Password'
+      suffixIcon: isPasswordField
           ? IconButton(
               icon: Icon(
                 isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -68,39 +65,42 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 
-  // Add password reset logic with validation
-  void resetPassword() async {
-    String newPassword = newPasswordController.text;
-    String confirmPassword = confirmPasswordController.text;
+  Future<void> resetPassword() async {
+    String newPassword = newPasswordController.text.trim();
+    String confirmPassword = confirmPasswordController.text.trim();
 
-    // Validation: check if fields are empty
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
-      );
+      _showSnackBar("Please fill in all fields");
       return;
     }
 
-    // Validation: check if passwords match
+    if (newPassword.length < 6) {
+      _showSnackBar("Password must be at least 6 characters long");
+      return;
+    }
+
     if (newPassword != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
+      _showSnackBar("Passwords do not match");
       return;
     }
 
-    // Update the user's password in the database
-    await _databaseHelper.updateUserPassword(widget.phoneNumber, newPassword);
+    try {
+      await _databaseHelper.updateUserPassword(widget.phoneNumber, newPassword);
+      _showSnackBar("Password reset successfully!");
 
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (error) {
+      _showSnackBar("An error occurred. Please try again.");
+    }
+  }
+
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Password reset successfully!")),
-    );
-
-    // After successful reset, redirect to the Login screen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (Route<dynamic> route) => false,
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -131,13 +131,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 TextField(
                   controller: newPasswordController,
                   obscureText: !isPasswordVisible,
-                  decoration: customInputDecoration('New Password'),
+                  decoration: customInputDecoration('New Password', isPasswordField: true),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: confirmPasswordController,
                   obscureText: !isConfirmPasswordVisible,
-                  decoration: customInputDecoration('Confirm Password'),
+                  decoration: customInputDecoration('Confirm Password', isPasswordField: false),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
