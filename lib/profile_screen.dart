@@ -1,8 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/login_screen.dart';
-import 'package:image_picker/image_picker.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   final String name;
@@ -22,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
+  bool isLoading = false;
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -43,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // Function to allow user to pick an image from the camera or gallery
+  // Function to pick an image
   Future<void> _pickImage() async {
     final picker = ImagePicker();
 
@@ -106,7 +109,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Logout Functionality
+  // Function to upload profile image to Firebase Storage
+  Future<String?> _uploadProfileImage(File? imageFile) async {
+    if (imageFile == null) return null;
+
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return null;
+
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('$userId.jpg');
+
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL(); 
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Function to save user details to Firestore
+  Future<void> _saveUserDetails(String name, String email, String phone, String? imageUrl) async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) return;
+
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'imageUrl': imageUrl,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+    } catch (e) {
+      print('Error saving user details: $e');
+    }
+  }
+
+  // Logout functionality
   void _logout() {
     showDialog(
       context: context,
@@ -132,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text(
                 'Cancel',
@@ -141,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
@@ -210,23 +255,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _isEditing
-                    ? _pickImage
-                    : null,
+                onTap: _isEditing ? _pickImage : null,
                 child: Stack(
-                  alignment:
-                      Alignment.center, 
+                  alignment: Alignment.center,
                   children: [
                     CircleAvatar(
                       radius: 60,
                       backgroundImage: _profileImage != null
                           ? FileImage(_profileImage!) as ImageProvider
-                          : null, 
-                      backgroundColor:
-                          Colors.grey[300], 
+                          : null,
+                      backgroundColor: Colors.grey[300],
                     ),
-                    if (_profileImage ==
-                        null) 
+                    if (_profileImage == null)
                       const Icon(
                         Icons.camera_alt,
                         color: Colors.black54,
@@ -266,45 +306,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildProfileField(
                 label: 'Email Address',
                 controller: _emailController,
-                enabled: false, // Email is not editable
+                enabled: false,
               ),
               const SizedBox(height: 20),
-              if (_isEditing)
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: _isEditing
+                          ? () async {
+                              setState(() {
+                                isLoading = true;
+                              });
+
+                              final imageUrl =
+                                  await _uploadProfileImage(_profileImage);
+                              await _saveUserDetails(
+                                _nameController.text,
+                                _emailController.text,
+                                _phoneController.text,
+                                imageUrl,
+                              );
+
+                              setState(() {
+                                _isEditing = false;
+                                isLoading = false;
+                              });
+                            }
+                          : () {
+                              setState(() {
+                                _isEditing = true;
+                              });
+                            },
+                      child: Text(
+                        _isEditing ? 'Save' : 'Edit Profile',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = false;
-                    });
-                  },
-                  child:
-                      const Text('Save', style: TextStyle(color: Colors.white)),
-                )
-              else
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = true;
-                    });
-                  },
-                  child: const Text('Edit Profile',
-                      style: TextStyle(color: Colors.white)),
-                ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -316,7 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.logout, color: Colors.white),
-                onPressed: _logout, // Call logout function
+                onPressed: _logout,
                 label: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.white),
