@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:gemhub/home_screen.dart';
 import 'package:gemhub/forgot_password_screen.dart';
 import 'package:gemhub/signup_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth package
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
