@@ -69,9 +69,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
 
     // Add other Firebase dependencies as needed
-    // Example:
-    // implementation 'com.google.firebase:firebase-auth'
-    // implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-auth'  // For Firebase Authentication
+    // implementation 'com.google.firebase:firebase-firestore' // For Firestore (if needed)
+    // implementation 'com.google.firebase:firebase-storage' // For Firebase Storage (if needed)
 }
 
 // Apply the Google Services plugin
