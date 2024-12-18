@@ -1,6 +1,8 @@
-import 'dart:io'; // Import for handling file input for profile image
+import 'dart:io'; 
+
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // Import for picking image from gallery or camera
+import 'package:gemhub/login_screen.dart';
+import 'package:image_picker/image_picker.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   final String name;
@@ -53,6 +55,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Logout Functionality
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.logout, color: Colors.redAccent),
+              SizedBox(width: 10),
+              Text(
+                'Confirm Logout',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildProfileField({
     required String label,
     required TextEditingController controller,
@@ -100,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _isEditing ? _pickImage : null, // Allow picking image when editing
+                onTap: _isEditing ? _pickImage : null, 
                 child: CircleAvatar(
                   radius: 60,
                   backgroundImage: _profileImage != null
@@ -146,7 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -156,13 +216,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _isEditing = false;
                     });
                   },
-                  child: const Text('Save', style: TextStyle(color: Colors.white)),
+                  child:
+                      const Text('Save', style: TextStyle(color: Colors.white)),
                 )
               else
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -172,21 +234,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _isEditing = true;
                     });
                   },
-                  child: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+                  child: const Text('Edit Profile',
+                      style: TextStyle(color: Colors.white)),
                 ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 icon: const Icon(Icons.logout, color: Colors.white),
-                onPressed: () {
-                  // Implement logout action here
-                },
+                onPressed: _logout, 
                 label: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.white),
