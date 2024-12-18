@@ -1,17 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:gemhub/category_screen.dart';
-import 'package:gemhub/login_screen.dart';
-import 'package:gemhub/cart_screen.dart';
-import 'package:gemhub/profile_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:gemhub/auction_screen.dart';
+import 'package:gemhub/cart_screen.dart';
+import 'package:gemhub/login_screen.dart';
+import 'package:gemhub/profile_screen.dart';
+import 'package:gemhub/widget/product_card.dart';
+
+import 'widget/category_card .dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -42,7 +44,12 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen(name: '', email: '', phone: '',)),
+        MaterialPageRoute(
+            builder: (context) => const ProfileScreen(
+                  name: '',
+                  email: '',
+                  phone: '',
+                )),
       );
     }
   }
@@ -63,7 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).pop(true);
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -130,15 +138,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     aspectRatio: 16 / 9,
                     viewportFraction: 0.8,
                   ),
-                  items: imgList.map((item) => Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      image: DecorationImage(
-                        image: AssetImage(item),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  )).toList(),
+                  items: imgList
+                      .map((item) => Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              image: DecorationImage(
+                                image: AssetImage(item),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ))
+                      .toList(),
                 ),
                 const SizedBox(height: 15),
                 const Text(
@@ -225,106 +235,6 @@ class _HomeScreenState extends State<HomeScreen> {
           activeColor: const Color.fromARGB(255, 8, 151, 39),
           leftCornerRadius: 32,
           rightCornerRadius: 32,
-        ),
-      ),
-    );
-  }
-}
-
-class CategoryCard extends StatelessWidget {
-  final String imagePath;
-  final String title;
-
-  const CategoryCard({super.key, required this.imagePath, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color.fromARGB(255, 148, 145, 145).withOpacity(0.3),
-                spreadRadius: 3,
-                blurRadius: 5,
-              ),
-            ],
-            image: DecorationImage(
-              image: AssetImage(imagePath),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class ProductCard extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String price;
-
-  const ProductCard({
-    super.key,
-    required this.imagePath,
-    required this.title,
-    required this.price,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 3,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: DecorationImage(
-                  image: AssetImage(imagePath),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              price,
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
         ),
       ),
     );

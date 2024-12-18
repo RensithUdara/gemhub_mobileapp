@@ -44,7 +44,8 @@ android {
 
     defaultConfig {
         applicationId "com.example.gemhub"
-        minSdkVersion flutter.minSdkVersion
+        // Override minSdkVersion to 23 (required by Firebase)
+        minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

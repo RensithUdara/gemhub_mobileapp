@@ -21,18 +21,18 @@ class CategoryCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: AssetImage(imagePath),
-                fit: BoxFit.cover,
-              ),
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.cover,
             ),
           ),
+        ),
           const SizedBox(height: 5),
-          Text(title),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

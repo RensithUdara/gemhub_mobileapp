@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gemhub/widget/product_card.dart';
 
 class CategoryScreen extends StatefulWidget {
   final String categoryTitle;
@@ -11,15 +12,34 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _selectedSortOption = 'Price low to high';
+
   final List<Map<String, dynamic>> _products = [
-    {'title': 'Carrot', 'price': 600, 'imagePath': 'assets/images/gem01.jpg'},
     {
-      'title': 'Cauliflower',
-      'price': 450,
+      'title': 'Natural Blue Sapphire',
+      'price': 4000000,
       'imagePath': 'assets/images/gem01.jpg'
     },
-    {'title': 'Beets', 'price': 100, 'imagePath': 'assets/images/gem01.jpg'},
-    {'title': 'Cabbage', 'price': 300, 'imagePath': 'assets/images/gem01.jpg'},
+    {
+      'title': 'Natural Pink Sapphire',
+      'price': 1500000,
+      'imagePath': 'assets/images/gem02.jpg'
+    },
+    {
+      'title': 'Yellow Sapphire',
+      'price': 2500000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+    {'title': 'Ruby', 'price': 6000000, 'imagePath': 'assets/images/gem01.jpg'},
+    {
+      'title': 'Emerald',
+      'price': 3500000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+    {
+      'title': 'White Sapphire',
+      'price': 1000000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
   ];
 
   void _sortProducts(String option) {
@@ -36,24 +56,33 @@ class _CategoryScreenState extends State<CategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.categoryTitle),
+        backgroundColor: Colors.blue[700],
+        title: Text(widget.categoryTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
+            // Search bar
             TextField(
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search',
+                prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                hintText: 'Search gems...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
+                  borderSide: const BorderSide(color: Colors.blue),
                 ),
+                filled: true,
+                fillColor: Colors.blue[50],
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
               ),
             ),
             const SizedBox(height: 20),
+            // Optional banner
             Container(
               width: double.infinity,
               height: 150,
@@ -66,11 +95,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            // Sorting options
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Sort By:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 DropdownButton<String>(
                   value: _selectedSortOption,
                   items: const [
@@ -89,57 +120,34 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       _sortProducts(_selectedSortOption);
                     });
                   },
+                  dropdownColor: Colors.blue[50],
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                  underline: const SizedBox(),
                 ),
               ],
             ),
             const SizedBox(height: 20),
+            // Product Grid
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.75,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
               ),
               itemCount: _products.length,
               itemBuilder: (context, index) {
                 return ProductCard(
                   imagePath: _products[index]['imagePath'],
                   title: _products[index]['title'],
-                  price: 'Rs. ${_products[index]['price']}/Kg',
+                  price: 'Rs. ${_products[index]['price']}',
                 );
               },
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class ProductCard extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String price;
-
-  const ProductCard({
-    super.key,
-    required this.imagePath,
-    required this.title,
-    required this.price,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: Column(
-        children: [
-          Image.asset(imagePath, height: 100, fit: BoxFit.cover),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(price, style: const TextStyle(color: Colors.green)),
-        ],
       ),
     );
   }
