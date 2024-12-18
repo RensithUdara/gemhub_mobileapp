@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gemhub/home_screen.dart';
-import 'package:gemhub/forgot_password_screen.dart';
-import 'package:gemhub/signup_screen.dart';
+import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
+import 'package:gemhub/screens/auth_screens/signup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

@@ -1,11 +1,11 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:gemhub/auction_screen.dart';
-import 'package:gemhub/cart_screen.dart';
-import 'package:gemhub/login_screen.dart';
-import 'package:gemhub/profile_screen.dart';
-import 'package:gemhub/widget/product_card.dart';
+import 'package:gemhub/screens/auction_screen/auction_screen.dart';
+import 'package:gemhub/screens/cart_screen/cart_screen.dart';
+import 'package:gemhub/screens/auth_screens/login_screen.dart';
+import 'package:gemhub/screens/profile_screen/profile_screen.dart';
+import 'package:gemhub/screens/product_screen/product_card.dart';
 
 import 'widget/category_card .dart';
 

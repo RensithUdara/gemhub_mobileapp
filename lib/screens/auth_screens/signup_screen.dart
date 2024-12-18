@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gemhub/login_screen.dart';
+import 'package:gemhub/screens/auth_screens/login_screen.dart';
 import 'package:gemhub/Database/db_helper.dart';
 
 class SignUp_Screen extends StatefulWidget {

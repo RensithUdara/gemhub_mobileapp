@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'product_provider.dart';
-import 'widget/product_card.dart'; // Your ProductCard widget
+import 'package:gemhub/screens/product_screen/product_card.dart';
 
 class CategoryScreen extends StatefulWidget {
   final String categoryTitle;
@@ -15,12 +13,42 @@ class CategoryScreen extends StatefulWidget {
 class _CategoryScreenState extends State<CategoryScreen> {
   String _selectedSortOption = 'Price low to high';
 
-  @override
-  void initState() {
-    super.initState();
-    // Fetch products when the screen loads
-    Future.delayed(Duration.zero, () {
-      Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+  final List<Map<String, dynamic>> _products = [
+    {
+      'title': 'Natural Blue Sapphire',
+      'price': 4000000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+    {
+      'title': 'Natural Pink Sapphire',
+      'price': 1500000,
+      'imagePath': 'assets/images/gem02.jpg'
+    },
+    {
+      'title': 'Yellow Sapphire',
+      'price': 2500000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+    {'title': 'Ruby', 'price': 6000000, 'imagePath': 'assets/images/gem01.jpg'},
+    {
+      'title': 'Emerald',
+      'price': 3500000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+    {
+      'title': 'White Sapphire',
+      'price': 1000000,
+      'imagePath': 'assets/images/gem01.jpg'
+    },
+  ];
+
+  void _sortProducts(String option) {
+    setState(() {
+      if (option == 'Price low to high') {
+        _products.sort((a, b) => a['price'].compareTo(b['price']));
+      } else if (option == 'Price high to low') {
+        _products.sort((a, b) => b['price'].compareTo(a['price']));
+      }
     });
   }
 
@@ -89,15 +117,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedSortOption = newValue!;
+                      _sortProducts(_selectedSortOption);
                     });
-                    // Trigger the sorting in the provider
-                    if (newValue == 'Price low to high') {
-                      Provider.of<ProductProvider>(context, listen: false)
-                          .sortProductsByPriceLowToHigh();
-                    } else if (newValue == 'Price high to low') {
-                      Provider.of<ProductProvider>(context, listen: false)
-                          .sortProductsByPriceHighToLow();
-                    }
                   },
                   dropdownColor: Colors.blue[50],
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
@@ -107,26 +128,21 @@ class _CategoryScreenState extends State<CategoryScreen> {
             ),
             const SizedBox(height: 20),
             // Product Grid
-            Consumer<ProductProvider>(
-              builder: (context, productProvider, child) {
-                final products = productProvider.products;
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    return ProductCard(
-                      imagePath: products[index].imagePath,
-                      title: products[index].title,
-                      price: 'Rs. ${products[index].price}',
-                    );
-                  },
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+              ),
+              itemCount: _products.length,
+              itemBuilder: (context, index) {
+                return ProductCard(
+                  imagePath: _products[index]['imagePath'],
+                  title: _products[index]['title'],
+                  price: 'Rs. ${_products[index]['price']}',
                 );
               },
             ),
