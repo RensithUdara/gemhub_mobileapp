@@ -1,4 +1,4 @@
-import 'dart:io'; 
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gemhub/login_screen.dart';
@@ -43,16 +43,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // Function to allow user to pick an image from the gallery
+  // Function to allow user to pick an image from the camera or gallery
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-    }
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Choose Profile Picture',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blueAccent),
+                title: const Text('Take a Photo'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile =
+                      await picker.pickImage(source: ImageSource.camera);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _profileImage = File(pickedFile.path);
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('Choose from Gallery'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile =
+                      await picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _profileImage = File(pickedFile.path);
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.cancel, color: Colors.redAccent),
+                title: const Text('Cancel'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // Logout Functionality
@@ -159,12 +210,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _isEditing ? _pickImage : null, 
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!) as ImageProvider
-                      : const AssetImage('assets/images/profile_avatar.jpg'),
+                onTap: _isEditing
+                    ? _pickImage
+                    : null,
+                child: Stack(
+                  alignment:
+                      Alignment.center, 
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundImage: _profileImage != null
+                          ? FileImage(_profileImage!) as ImageProvider
+                          : null, 
+                      backgroundColor:
+                          Colors.grey[300], 
+                    ),
+                    if (_profileImage ==
+                        null) 
+                      const Icon(
+                        Icons.camera_alt,
+                        color: Colors.black54,
+                        size: 30,
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),
@@ -248,7 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.logout, color: Colors.white),
-                onPressed: _logout, 
+                onPressed: _logout, // Call logout function
                 label: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.white),
