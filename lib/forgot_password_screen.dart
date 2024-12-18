@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gemhub/Database/db_helper.dart';
-import 'package:gemhub/reset_password_screen.dart'; // Import the reset password screen
+import 'package:firebase_auth/firebase_auth.dart';
+import 'reset_password_screen.dart'; 
+import 'login_screen.dart'; 
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -10,15 +11,17 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  bool isOTPSent = false;
-  String generatedOTP = "123456"; // For testing purposes, you would generate this dynamically
-  bool isPhoneNumberValid = false; // Used to enable/disable "Send OTP" button
+  final TextEditingController otpController = TextEditingController();
 
-  List<TextEditingController> otpControllers =
-      List.generate(6, (index) => TextEditingController());
-  List<FocusNode> otpFocusNodes = List.generate(6, (index) => FocusNode());
+  bool isEmailSelected = true; 
+  bool isOTPSent = false; 
+  bool isPhoneNumberValid = false; 
+  bool isEmailValid = false; 
+  String verificationId = ""; 
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   InputDecoration customInputDecoration(String labelText) {
     return InputDecoration(
@@ -37,113 +40,106 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
     );
   }
 
-  Widget otpInput(TextEditingController controller, FocusNode focusNode,
-      FocusNode? nextFocusNode) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        maxLength: 1,
-        onChanged: (value) {
-          if (value.length == 1) {
-            focusNode.unfocus();
-            if (nextFocusNode != null) {
-              FocusScope.of(context).requestFocus(nextFocusNode);
-            }
-          }
-        },
-        decoration: InputDecoration(
-          counterText: '',
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Function to validate if phone number exists in database
-  Future<bool> validatePhoneNumber(String phoneNumber) async {
-    final users = await _databaseHelper.getUsers();
-    return users.any((user) => user['phoneNumber'] == phoneNumber);
-  }
-
-  // Function to check phone number before enabling "Send OTP" button
-  void checkPhoneNumber(String value) {
+  // Switch between email and phone options
+  void toggleOption(bool isEmail) {
     setState(() {
-      isPhoneNumberValid = value.isNotEmpty;
+      isEmailSelected = isEmail;
+      isOTPSent = false; 
     });
   }
 
-  // Send OTP and validate phone number
-  void sendOTP() async {
-    String phoneNumber = phoneNumberController.text;
+  // Validate email input
+  void checkEmail(String value) {
+    setState(() {
+      isEmailValid = value.isNotEmpty && value.contains('@');
+    });
+  }
 
-    // Validate if phone number exists in the database
-    bool phoneNumberExists = await validatePhoneNumber(phoneNumber);
+  void checkPhoneNumber(String value) {
+    setState(() {
+      isPhoneNumberValid = value.length == 10; // Adjust for your phone number length
+    });
+  }
 
-    if (phoneNumberExists) {
-      setState(() {
-        isOTPSent = true;
-      });
-      // Proceed with sending OTP logic
-    } else {
-      // Show error if phone number does not exist
+  Future<void> sendResetEmail() async {
+    try {
+      await _auth.sendPasswordResetEmail(email: emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Phone number not found!")),
+        const SnackBar(content: Text("Password reset email sent successfully!")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? "Error occurred")),
       );
     }
   }
 
-  void verifyOTP() {
-    String enteredOTP = otpControllers.map((controller) => controller.text).join();
-    if (enteredOTP == generatedOTP) {
-      // Navigate to the Reset Password screen if OTP is correct
-      Navigator.push(
+  // Send OTP for phone option
+  Future<void> sendOTP() async {
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: "+94${phoneNumberController.text.trim()}", 
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification (rare)
+          await _auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? "Verification failed")),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            this.verificationId = verificationId;
+            isOTPSent = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("OTP sent to your phone")),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          this.verificationId = verificationId;
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  // Verify OTP for phone option
+  Future<void> verifyOTP() async {
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otpController.text.trim(),
+      );
+
+      // Authenticate user and navigate to ResetPasswordScreen
+      await _auth.signInWithCredential(credential);
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ResetPasswordScreen(
-            phoneNumber: phoneNumberController.text,
-          ),
+          builder: (context) => ResetPasswordScreen(phoneNumber: phoneNumberController.text.trim()),
         ),
       );
-    } else {
-      // Show error message if OTP is incorrect
+    } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid OTP!")),
+        SnackBar(content: Text(e.message ?? "Invalid OTP")),
       );
     }
   }
@@ -172,17 +168,83 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextField(
-                  controller: phoneNumberController,
-                  keyboardType: TextInputType.phone,
-                  onChanged: checkPhoneNumber, // Enable "Send OTP" button based on input
-                  decoration: customInputDecoration('Phone Number'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () => toggleOption(true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: isEmailSelected ? Colors.black : Colors.grey[300],
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            bottomLeft: Radius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Email',
+                          style: TextStyle(
+                            color: isEmailSelected ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => toggleOption(false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: !isEmailSelected ? Colors.black : Colors.grey[300],
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(10),
+                            bottomRight: Radius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Phone',
+                          style: TextStyle(
+                            color: !isEmailSelected ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
+                if (isEmailSelected)
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: checkEmail,
+                    decoration: customInputDecoration('Enter your Email'),
+                  ),
+                if (!isEmailSelected && !isOTPSent)
+                  TextField(
+                    controller: phoneNumberController,
+                    keyboardType: TextInputType.phone,
+                    onChanged: checkPhoneNumber,
+                    decoration: customInputDecoration('Enter your Phone Number'),
+                  ),
+                if (!isEmailSelected && isOTPSent)
+                  TextField(
+                    controller: otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: customInputDecoration('Enter OTP'),
+                  ),
+                const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: isPhoneNumberValid ? sendOTP : null, // Disable button if phone number is empty
+                  onPressed: isEmailSelected
+                      ? (isEmailValid ? sendResetEmail : null)
+                      : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isPhoneNumberValid ? Colors.black : Colors.grey, // Change button color when enabled/disabled
+                    backgroundColor: (isEmailSelected && isEmailValid) ||
+                            (!isEmailSelected && (isOTPSent || isPhoneNumberValid))
+                        ? Colors.black
+                        : Colors.grey,
                     padding: const EdgeInsets.symmetric(
                       vertical: 12.0,
                       horizontal: 40.0,
@@ -191,48 +253,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text(
-                    'Send OTP',
-                    style: TextStyle(
+                  child: Text(
+                    isEmailSelected
+                        ? 'Send Email'
+                        : (isOTPSent ? 'Verify OTP' : 'Send OTP'),
+                    style: const TextStyle(
                       fontSize: 18.0,
                       color: Colors.white,
                     ),
                   ),
                 ),
-                if (isOTPSent) ...[
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(6, (index) {
-                      return otpInput(
-                        otpControllers[index],
-                        otpFocusNodes[index],
-                        index < 5 ? otpFocusNodes[index + 1] : null,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: verifyOTP,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 40.0,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    child: const Text(
-                      'Verify OTP',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
