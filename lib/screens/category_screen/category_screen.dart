@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 
 class CategoryScreen extends StatefulWidget {
@@ -13,22 +13,20 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _selectedSortOption = 'Price low to high';
-  String _searchQuery = ''; // State to track search input
+  String _searchQuery = '';
 
-  // Firestore reference
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
 
-  // Method to fetch sorted and filtered data
   Stream<List<Map<String, dynamic>>> _getSortedProducts(
       String sortOption, String searchQuery) {
     Query query = _productsCollection;
 
     // Apply search filter
     if (searchQuery.isNotEmpty) {
-      query = query.where('title', isGreaterThanOrEqualTo: searchQuery).where(
-          'title',
-          isLessThanOrEqualTo: searchQuery + '\uf8ff'); // For prefix matching
+      query = query
+          .orderBy('title')
+          .startAt([searchQuery]).endAt(['$searchQuery\uf8ff']);
     }
 
     // Apply sorting
@@ -38,8 +36,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
       query = query.orderBy('price', descending: true);
     }
 
-    return query.snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+    return query.snapshots().map((snapshot) => snapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList());
   }
 
   @override
