@@ -342,7 +342,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
+
                       const SizedBox(height: 20),
+                      
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
@@ -366,6 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
+                  
                 ),
               ),
             ),

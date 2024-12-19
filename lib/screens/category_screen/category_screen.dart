@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 
 class CategoryScreen extends StatefulWidget {
@@ -12,44 +13,33 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _selectedSortOption = 'Price low to high';
+  String _searchQuery = ''; // State to track search input
 
-  final List<Map<String, dynamic>> _products = [
-    {
-      'title': 'Natural Blue Sapphire',
-      'price': 4000000,
-      'imagePath': 'assets/images/gem01.jpg'
-    },
-    {
-      'title': 'Natural Pink Sapphire',
-      'price': 1500000,
-      'imagePath': 'assets/images/gem02.jpg'
-    },
-    {
-      'title': 'Yellow Sapphire',
-      'price': 2500000,
-      'imagePath': 'assets/images/gem01.jpg'
-    },
-    {'title': 'Ruby', 'price': 6000000, 'imagePath': 'assets/images/gem01.jpg'},
-    {
-      'title': 'Emerald',
-      'price': 3500000,
-      'imagePath': 'assets/images/gem01.jpg'
-    },
-    {
-      'title': 'White Sapphire',
-      'price': 1000000,
-      'imagePath': 'assets/images/gem01.jpg'
-    },
-  ];
+  // Firestore reference
+  final CollectionReference _productsCollection =
+      FirebaseFirestore.instance.collection('products');
 
-  void _sortProducts(String option) {
-    setState(() {
-      if (option == 'Price low to high') {
-        _products.sort((a, b) => a['price'].compareTo(b['price']));
-      } else if (option == 'Price high to low') {
-        _products.sort((a, b) => b['price'].compareTo(a['price']));
-      }
-    });
+  // Method to fetch sorted and filtered data
+  Stream<List<Map<String, dynamic>>> _getSortedProducts(
+      String sortOption, String searchQuery) {
+    Query query = _productsCollection;
+
+    // Apply search filter
+    if (searchQuery.isNotEmpty) {
+      query = query.where('title', isGreaterThanOrEqualTo: searchQuery).where(
+          'title',
+          isLessThanOrEqualTo: searchQuery + '\uf8ff'); // For prefix matching
+    }
+
+    // Apply sorting
+    if (sortOption == 'Price low to high') {
+      query = query.orderBy('price', descending: false);
+    } else if (sortOption == 'Price high to low') {
+      query = query.orderBy('price', descending: true);
+    }
+
+    return query.snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
   }
 
   @override
@@ -60,7 +50,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
         title: Text(widget.categoryTitle,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,6 +58,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
             const SizedBox(height: 20),
             // Search bar
             TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim();
+                });
+              },
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search, color: Colors.blue),
                 hintText: 'Search gems...',
@@ -79,19 +74,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 fillColor: Colors.blue[50],
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Optional banner
-            Container(
-              width: double.infinity,
-              height: 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/banner1.png'),
-                  fit: BoxFit.cover,
-                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -117,7 +99,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedSortOption = newValue!;
-                      _sortProducts(_selectedSortOption);
                     });
                   },
                   dropdownColor: Colors.blue[50],
@@ -127,24 +108,39 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            // Product Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+            // Product Grid with Firestore data
+            Expanded(
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: _getSortedProducts(_selectedSortOption, _searchQuery),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return const Center(child: Text('Error loading products.'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No products found.'));
+                  } else {
+                    final products = snapshot.data!;
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        return ProductCard(
+                          imagePath: products[index]['imagePath'],
+                          title: products[index]['title'],
+                          price: 'Rs. ${products[index]['price']}',
+                        );
+                      },
+                    );
+                  }
+                },
               ),
-              itemCount: _products.length,
-              itemBuilder: (context, index) {
-                return ProductCard(
-                  imagePath: _products[index]['imagePath'],
-                  title: _products[index]['title'],
-                  price: 'Rs. ${_products[index]['price']}',
-                );
-              },
             ),
           ],
         ),
