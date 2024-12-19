@@ -2,10 +2,11 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/screens/auction_screen/auction_screen.dart';
-import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
-import 'package:gemhub/screens/profile_screen/profile_screen.dart';
+import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
+import 'package:gemhub/screens/profile_screen/profile_screen.dart';
+
 import 'widget/category_card .dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.person,
   ];
 
-  final List<String> imgList = [
+  final List<String> bannerList = [
     'assets/images/banner1.png',
     'assets/images/banner2.png',
     'assets/images/banner3.png',
@@ -120,25 +121,39 @@ class _HomeScreenState extends State<HomeScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 5,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF0072ff), Color(0xFF00c6ff)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          elevation: 10,
+          shadowColor: Colors.black.withOpacity(0.3),
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
                 'assets/images/logo_new.png',
-                height: 30,
+                height: 50,
               ),
               const SizedBox(width: 10),
-              Text(
+              const Text(
                 'GemHub',
                 style: TextStyle(
-                    color: Colors.blue[700], fontWeight: FontWeight.bold),
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
               ),
             ],
           ),
+          centerTitle: true,
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              icon: const Icon(Icons.logout, color: Colors.white),
               onPressed: () async {
                 bool shouldLogout = await _onWillPop();
                 if (shouldLogout) {
@@ -174,8 +189,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.blue[50],
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
                   ),
                 ),
                 const SizedBox(height: 15),
@@ -187,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     aspectRatio: 16 / 9,
                     viewportFraction: 0.8,
                   ),
-                  items: imgList
+                  items: bannerList
                       .map((item) => Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
@@ -205,7 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const Text(
                       'Categories',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     TextButton(
                       onPressed: () {
@@ -217,8 +233,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               appBar: AppBar(
                                 title: const Text('All Categories'),
                               ),
-                              body: Center(
-                                child: const Text('All categories will be displayed here.'),
+                              body: const Center(
+                                child: Text(
+                                    'All categories will be displayed here.'),
                               ),
                             ),
                           ),
