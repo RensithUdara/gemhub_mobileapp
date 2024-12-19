@@ -6,7 +6,6 @@ import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 import 'package:gemhub/screens/profile_screen/profile_screen.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
-
 import 'widget/category_card .dart';
 
 class HomeScreen extends StatefulWidget {
@@ -166,19 +165,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 10),
                 TextField(
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.blue),
-                hintText: 'Search gems...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: const BorderSide(color: Colors.blue),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                    hintText: 'Search gems...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(color: Colors.blue),
+                    ),
+                    filled: true,
+                    fillColor: Colors.blue[50],
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  ),
                 ),
-                filled: true,
-                fillColor: Colors.blue[50],
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              ),
-            ),
                 const SizedBox(height: 15),
                 CarouselSlider(
                   options: CarouselOptions(
@@ -201,9 +200,36 @@ class _HomeScreenState extends State<HomeScreen> {
                       .toList(),
                 ),
                 const SizedBox(height: 15),
-                const Text(
-                  'Categories',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Categories',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Navigate to a full categories screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Scaffold(
+                              appBar: AppBar(
+                                title: const Text('All Categories'),
+                              ),
+                              body: Center(
+                                child: const Text('All categories will be displayed here.'),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'See All',
+                        style: TextStyle(color: Colors.blue, fontSize: 16),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 5),
                 GridView.count(
