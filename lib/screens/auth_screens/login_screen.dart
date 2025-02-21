@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:gemhub/home_screen.dart';
 import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
 import 'package:gemhub/screens/auth_screens/signup_screen.dart';
+import 'package:gemhub/screens/profile_screen/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool rememberMe = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -26,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberedCredentials();
   }
 
-  // Load saved email and password if "Remember Me" was checked
   Future<void> _loadRememberedCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedEmail = prefs.getString('email');
@@ -41,7 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Save the credentials if "Remember Me" is checked
   Future<void> _saveCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (rememberMe) {
@@ -53,7 +54,55 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Method to handle forgot password action
+  Future<void> _validateLogin() async {
+    String email = emailController.text;
+    String password = passwordController.text;
+
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Save credentials if "Remember Me" is checked
+      await _saveCredentials();
+
+      // Get user UID
+      String? userId = userCredential.user?.uid;
+
+      // Fetch user role from Firestore
+      DocumentSnapshot buyerSnapshot =
+          await _firestore.collection('buyers').doc(userId).get();
+      DocumentSnapshot sellerSnapshot =
+          await _firestore.collection('sellers').doc(userId).get();
+
+      if (buyerSnapshot.exists) {
+        // Navigate to HomeScreen for buyers
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else if (sellerSnapshot.exists) {
+        // Navigate to ProfileScreen for sellers
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen(phone: '', email: '', name: '',)),
+        );
+      } else {
+        throw Exception("User role not found.");
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = e.message ?? 'Login failed. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.toString()}")),
+      );
+    }
+  }
+
   void _handleForgotPassword(BuildContext context) {
     Navigator.push(
       context,
@@ -122,35 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
             customInputDecoration(labelText, isPasswordField: obscureText),
       ),
     );
-  }
-
-  // Firebase login validation method
-  Future<void> _validateLogin() async {
-    String email = emailController.text;
-    String password = passwordController.text;
-
-    try {
-      // Attempt to sign in with Firebase
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // If successful, save credentials if "Remember Me" is checked
-      await _saveCredentials();
-
-      // Navigate to the HomeScreen on successful login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } on FirebaseAuthException catch (e) {
-      // Handle login errors
-      String errorMessage = e.message ?? 'Login failed. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-    }
   }
 
   @override
@@ -241,11 +261,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("Don't have an account?"),
                     TextButton(
                       onPressed: () {
-                        // Navigate to the registration screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SignUp_Screen(),
+                            builder: (context) => const SignUpScreen(),
                           ),
                         );
                       },
