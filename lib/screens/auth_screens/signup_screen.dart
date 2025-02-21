@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
-import 'package:gemhub/Database/db_helper.dart';
 
-class SignUp_Screen extends StatefulWidget {
-  const SignUp_Screen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUp_Screen> createState() => _SignUp_ScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUp_ScreenState extends State<SignUp_Screen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   bool isBuyer = true;
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
@@ -24,7 +24,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
 
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   InputDecoration customInputDecoration(String labelText,
       {bool isPasswordField = false, bool isConfirmPasswordField = false}) {
@@ -71,7 +71,8 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                   ),
                   onPressed: () {
                     setState(() {
-                      isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                      isConfirmPasswordVisible =
+                          !isConfirmPasswordVisible;
                     });
                   },
                 )
@@ -106,18 +107,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
     );
   }
 
-  void switchRole(bool toBuyer) {
-    setState(() {
-      isBuyer = toBuyer;
-      if (toBuyer) {
-        displayNameController.clear();
-        addressController.clear();
-      }
-    });
-  }
-
   Future<void> _saveUser() async {
-    // Validate password match
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Passwords do not match!")),
@@ -126,21 +116,29 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
     }
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
-      Map<String, dynamic> user = {
-        'displayName': isBuyer ? null : displayNameController.text,
-        'address': isBuyer ? null : addressController.text,
-        'username': usernameController.text,
-        'email': emailController.text,
-        'phoneNumber': phoneNumberController.text,
-        'firebaseUid': userCredential.user?.uid, // Storing Firebase UID
+      Map<String, dynamic> userData = {
+        'firebaseUid': userCredential.user?.uid,
+        'username': usernameController.text.trim(),
+        'email': emailController.text.trim(),
+        'phoneNumber': phoneNumberController.text.trim(),
+        'role': isBuyer ? 'buyer' : 'seller',
       };
 
-      await _databaseHelper.insertUser(user);
+      if (!isBuyer) {
+        userData.addAll({
+          'displayName': displayNameController.text.trim(),
+          'address': addressController.text.trim(),
+        });
+      }
+
+      final String collectionName = isBuyer ? 'buyers' : 'sellers';
+      await _firestore.collection(collectionName).doc(userCredential.user?.uid).set(userData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("User registered successfully!")),
@@ -157,6 +155,16 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
     }
   }
 
+  void switchRole(bool toBuyer) {
+    setState(() {
+      isBuyer = toBuyer;
+      if (toBuyer) {
+        displayNameController.clear();
+        addressController.clear();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,24 +175,18 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Image.asset(
-                  'assets/images/logo_new.png',
-                  height: 100,
-                ),
+                Image.asset('assets/images/logo_new.png', height: 100),
                 const SizedBox(height: 20),
-                const Text(
-                  'Register',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+                const Text('Register',
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          switchRole(true);
-                        },
+                        onTap: () => switchRole(true),
                         child: Container(
                           decoration: BoxDecoration(
                             color: isBuyer ? Colors.green : Colors.black,
@@ -198,9 +200,8 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                             child: Text(
                               'Buyer',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -208,9 +209,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          switchRole(false);
-                        },
+                        onTap: () => switchRole(false),
                         child: Container(
                           decoration: BoxDecoration(
                             color: !isBuyer ? Colors.green : Colors.black,
@@ -224,9 +223,8 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                             child: Text(
                               'Seller',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -235,9 +233,11 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                if (!isBuyer) customTextField('Name', displayNameController),
+                if (!isBuyer)
+                  customTextField('Name', displayNameController),
                 if (!isBuyer) const SizedBox(height: 10),
-                if (!isBuyer) customTextField('Address', addressController),
+                if (!isBuyer)
+                  customTextField('Address', addressController),
                 if (!isBuyer) const SizedBox(height: 10),
                 customTextField('Username', usernameController),
                 const SizedBox(height: 10),
@@ -265,9 +265,7 @@ class _SignUp_ScreenState extends State<SignUp_Screen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 40.0,
-                    ),
+                        vertical: 12.0, horizontal: 40.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
