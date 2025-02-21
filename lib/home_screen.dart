@@ -6,6 +6,8 @@ import 'package:gemhub/screens/auth_screens/login_screen.dart';
 import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 import 'package:gemhub/screens/profile_screen/profile_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'widget/category_card .dart';
 
@@ -25,11 +27,34 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.person,
   ];
 
-  final List<String> bannerList = [
-    'assets/images/banner1.png',
-    'assets/images/banner2.png',
-    'assets/images/banner3.png',
-  ];
+  List<String> bannerList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBannerImages();
+  }
+
+  Future<void> _fetchBannerImages() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('banners').get();
+      final List<String> banners = [];
+
+      for (var doc in querySnapshot.docs) {
+        String gsUrl = doc['imageUrl'];
+        String httpUrl = await FirebaseStorage.instance.refFromURL(gsUrl).getDownloadURL();
+        banners.add(httpUrl);
+      }
+
+      print('Fetched Banners: $banners');
+      setState(() {
+        bannerList = banners;
+      });
+    } catch (e) {
+      print('Error fetching banners: $e');
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -194,26 +219,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                CarouselSlider(
-                  options: CarouselOptions(
-                    height: 150.0,
-                    autoPlay: true,
-                    enlargeCenterPage: true,
-                    aspectRatio: 16 / 9,
-                    viewportFraction: 0.8,
-                  ),
-                  items: bannerList
-                      .map((item) => Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              image: DecorationImage(
-                                image: AssetImage(item),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                ),
+                bannerList.isEmpty
+                    ? const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : CarouselSlider(
+                        options: CarouselOptions(
+                          height: 150.0,
+                          autoPlay: true,
+                          enlargeCenterPage: true,
+                          aspectRatio: 16 / 9,
+                          viewportFraction: 0.8,
+                        ),
+                        items: bannerList
+                            .map((item) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15),
+                                    image: DecorationImage(
+                                      image: NetworkImage(item),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
                 const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -225,7 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Navigate to a full categories screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
