@@ -72,7 +72,7 @@ class _ProductCardState extends State<ProductCard> {
                   fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -143,7 +143,7 @@ class _ProductCardState extends State<ProductCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
             ],
           ),
         ),
