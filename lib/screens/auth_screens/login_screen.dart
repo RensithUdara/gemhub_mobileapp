@@ -55,8 +55,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _validateLogin() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+    String email = emailController.text;
+    String password = passwordController.text;
 
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -66,39 +66,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await _saveCredentials();
 
-      String userId = userCredential.user!.uid;
+      String? userId = userCredential.user?.uid;
 
-      DocumentSnapshot buyerSnapshot =
-          await _firestore.collection('buyers').doc(userId).get();
-      DocumentSnapshot sellerSnapshot =
-          await _firestore.collection('sellers').doc(userId).get();
+      if (userId != null) {
+        DocumentSnapshot buyerSnapshot =
+            await _firestore.collection('buyers').doc(userId).get();
+        DocumentSnapshot sellerSnapshot =
+            await _firestore.collection('sellers').doc(userId).get();
 
-      if (buyerSnapshot.exists) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else if (sellerSnapshot.exists) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  ProfileScreen(phone: '', email: email, name: '')),
-        );
-      } else {
-        throw Exception("User role not found.");
+        if (buyerSnapshot.exists) {
+          // Buyer → Navigate to HomeScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else if (sellerSnapshot.exists) {
+          // Seller → Navigate to ProfileScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfileScreen(
+                phone: '',
+                email: '',
+                name: '',
+              ),
+            ),
+          );
+        } else {
+          throw Exception("User role not found.");
+        }
       }
     } on FirebaseAuthException catch (e) {
-      _showErrorMessage(e.message ?? 'Login failed. Please try again.');
+      String errorMessage = e.message ?? 'Login failed. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     } catch (e) {
-      _showErrorMessage("Error: ${e.toString()}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.toString()}")),
+      );
     }
-  }
-
-  void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   void _handleForgotPassword(BuildContext context) {
@@ -115,6 +122,14 @@ class _LoginScreenState extends State<LoginScreen> {
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
