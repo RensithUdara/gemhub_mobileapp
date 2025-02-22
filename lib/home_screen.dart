@@ -215,9 +215,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Welcome ${userName.isNotEmpty ? userName : 'Guest'},',
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                const Text(
+                  'Welcome Rensith,',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -341,26 +341,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: '1.17ct Natural Pink Sapphire',
                       price: 'Rs.549,000.00',
                     ),
-                    ProductCard(
-                      imagePath: 'assets/images/gem01.jpg',
-                      title: '4.37ct Natural Blue Sapphire',
-                      price: 'Rs 4,038,500.00',
-                    ),
-                    ProductCard(
-                      imagePath: 'assets/images/gem02.jpg',
-                      title: '1.17ct Natural Pink Sapphire',
-                      price: 'Rs.549,000.00',
-                    ),
-                    ProductCard(
-                      imagePath: 'assets/images/gem01.jpg',
-                      title: '4.37ct Natural Blue Sapphire',
-                      price: 'Rs 4,038,500.00',
-                    ),
-                    ProductCard(
-                      imagePath: 'assets/images/gem02.jpg',
-                      title: '1.17ct Natural Pink Sapphire',
-                      price: 'Rs.549,000.00',
-                    ),
                   ],
                 ),
               ],
@@ -386,8 +366,12 @@ class _HomeScreenState extends State<HomeScreen> {
           icons: iconList,
           activeIndex: _selectedIndex,
           gapLocation: GapLocation.center,
-          notchSmoothness: NotchSmoothness.defaultEdge,
+          notchSmoothness: NotchSmoothness.smoothEdge,
           onTap: _onItemTapped,
+          backgroundColor: const Color.fromARGB(255, 173, 216, 230),
+          activeColor: const Color.fromARGB(255, 0, 0, 139),
+          leftCornerRadius: 32,
+          rightCornerRadius: 32,
         ),
       ),
     );
