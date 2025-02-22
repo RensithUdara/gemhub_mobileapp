@@ -341,6 +341,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: '1.17ct Natural Pink Sapphire',
                       price: 'Rs.549,000.00',
                     ),
+                    ProductCard(
+                      imagePath: 'assets/images/gem01.jpg',
+                      title: '4.37ct Natural Blue Sapphire',
+                      price: 'Rs 4,038,500.00',
+                    ),
+                    ProductCard(
+                      imagePath: 'assets/images/gem02.jpg',
+                      title: '1.17ct Natural Pink Sapphire',
+                      price: 'Rs.549,000.00',
+                    ),
+                    ProductCard(
+                      imagePath: 'assets/images/gem01.jpg',
+                      title: '4.37ct Natural Blue Sapphire',
+                      price: 'Rs 4,038,500.00',
+                    ),
+                    ProductCard(
+                      imagePath: 'assets/images/gem02.jpg',
+                      title: '1.17ct Natural Pink Sapphire',
+                      price: 'Rs.549,000.00',
+                    ),
                   ],
                 ),
               ],
