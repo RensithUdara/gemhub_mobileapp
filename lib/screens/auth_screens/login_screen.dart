@@ -55,8 +55,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _validateLogin() async {
-    String email = emailController.text;
-    String password = passwordController.text;
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -64,43 +64,41 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
-      // Save credentials if "Remember Me" is checked
       await _saveCredentials();
 
-      // Get user UID
-      String? userId = userCredential.user?.uid;
+      String userId = userCredential.user!.uid;
 
-      // Fetch user role from Firestore
       DocumentSnapshot buyerSnapshot =
           await _firestore.collection('buyers').doc(userId).get();
       DocumentSnapshot sellerSnapshot =
           await _firestore.collection('sellers').doc(userId).get();
 
       if (buyerSnapshot.exists) {
-        // Navigate to HomeScreen for buyers
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else if (sellerSnapshot.exists) {
-        // Navigate to ProfileScreen for sellers
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen(phone: '', email: '', name: '',)),
+          MaterialPageRoute(
+              builder: (context) =>
+                  ProfileScreen(phone: '', email: email, name: '')),
         );
       } else {
         throw Exception("User role not found.");
       }
     } on FirebaseAuthException catch (e) {
-      String errorMessage = e.message ?? 'Login failed. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      _showErrorMessage(e.message ?? 'Login failed. Please try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
-      );
+      _showErrorMessage("Error: ${e.toString()}");
     }
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _handleForgotPassword(BuildContext context) {
@@ -117,14 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16.0),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16.0),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
