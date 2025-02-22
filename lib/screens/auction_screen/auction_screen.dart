@@ -8,30 +8,37 @@ class AuctionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Auction'),
+        title: const Text('Auction', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blue,
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: const [
-          AuctionItemCard(
-            imagePath: 'assets/images/gem01.jpg',
-            title: 'Natural Emerald 3.5ct',
-            currentBid: 150000,
-            endTime: Duration(hours: 1), // 1 hour auction
-          ),
-          AuctionItemCard(
-            imagePath: 'assets/images/gem01.jpg',
-            title: 'Ruby Gemstone 2.7ct',
-            currentBid: 250000,
-            endTime: Duration(hours: 2), // 2 hours auction
-          ),
-          AuctionItemCard(
-            imagePath: 'assets/images/gem01.jpg',
-            title: 'Sapphire Gemstone 5.0ct',
-            currentBid: 500000,
-            endTime: Duration(hours: 3), // 3 hours auction
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: const [
+            AuctionItemCard(
+              imagePath: 'assets/images/gem01.jpg',
+              title: 'Natural Emerald 3.5ct',
+              currentBid: 150000,
+              endTime: Duration(hours: 1), // 1 hour auction
+            ),
+            SizedBox(height: 16),
+            AuctionItemCard(
+              imagePath: 'assets/images/gem01.jpg',
+              title: 'Ruby Gemstone 2.7ct',
+              currentBid: 250000,
+              endTime: Duration(hours: 2), // 2 hours auction
+            ),
+            SizedBox(height: 16),
+            AuctionItemCard(
+              imagePath: 'assets/images/gem01.jpg',
+              title: 'Sapphire Gemstone 5.0ct',
+              currentBid: 500000,
+              endTime: Duration(hours: 3), // 3 hours auction
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -112,30 +119,86 @@ class _AuctionItemCardState extends State<AuctionItemCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        leading: Image.asset(widget.imagePath, fit: BoxFit.cover, width: 50),
-        title: Text(widget.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Current Bid: Rs. $_currentBid'),
-            Text('Time Remaining: ${_formatTime(_remainingTime)}'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _bidController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Enter Your Bid',
-                border: OutlineInputBorder(),
-              ),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              widget.imagePath,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 180,
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
-        trailing: ElevatedButton(
-          onPressed: _remainingTime.inSeconds > 0 ? _placeBid : null,
-          child: Text(_remainingTime.inSeconds > 0 ? 'Place Bid' : 'Auction Closed'),
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Current Bid: Rs. $_currentBid',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Time Remaining: ${_formatTime(_remainingTime)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _bidController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    labelText: 'Enter Your Bid',
+                    labelStyle: const TextStyle(color: Colors.blue),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton(
+                    onPressed: _remainingTime.inSeconds > 0 ? _placeBid : null,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white, backgroundColor: Colors.blue, shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _remainingTime.inSeconds > 0 ? 'Place Bid' : 'Auction Closed',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
