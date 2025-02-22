@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, required String phone, required String email, required String name});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await showModalBottomSheet<XFile?>(
+    final pickedFile = await showModalBottomSheet<File?>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -121,12 +121,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _saveUserDetails(String name, String? imageUrl) async {
+  Future<void> _saveUserDetails(String name, String email, String phone, String? imageUrl) async {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) return;
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'name': name,
+        'email': email,
+        'phone': phone,
         'imageUrl': imageUrl,
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +160,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                FirebaseAuth.instance.signOut();
                 Navigator.of(context).pop();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -176,114 +177,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _changeEmailOrPhone(String field) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController _otpController = TextEditingController();
-        final TextEditingController _newValueController = TextEditingController();
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Change $field', style: const TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _newValueController,
-                decoration: InputDecoration(
-                  labelText: 'New $field',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _otpController,
-                decoration: InputDecoration(
-                  labelText: 'Enter OTP',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                // Simulate sending OTP (replace with actual OTP service)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('OTP sent to your current $field')),
-                );
-              },
-              child: const Text('Send OTP'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // Verify OTP and update field (replace with actual verification)
-                final userId = FirebaseAuth.instance.currentUser?.uid;
-                if (userId != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(userId).update({
-                    field.toLowerCase(): _newValueController.text,
-                  });
-                  setState(() {
-                    if (field == 'Email') {
-                      _emailController.text = _newValueController.text;
-                    } else {
-                      _phoneController.text = _newValueController.text;
-                    }
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Updated successfully')),
-                  );
-                }
-              },
-              child: const Text('Verify & Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _buildProfileField({
     required String label,
     required TextEditingController controller,
     bool enabled = true,
-    bool isEditableField = true,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              enabled: enabled && isEditableField,
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: const TextStyle(color: Colors.blueAccent),
-                filled: true,
-                fillColor: Colors.white,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-            ),
+      child: TextField(
+        controller: controller,
+        enabled: enabled,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.blueAccent),
+          filled: true,
+          fillColor: Colors.white,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
-          if (!isEditableField)
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.blueAccent),
-              onPressed: () => _changeEmailOrPhone(label.split(' ')[0]),
-            ),
-        ],
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+        ),
       ),
     );
   }
@@ -305,13 +226,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Profile',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -356,7 +287,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : null) as ImageProvider?,
                             backgroundColor: Colors.grey[200],
                             child: imageUrl == null && _profileImage == null
-                                ? const Icon(Icons.camera_alt, color: Colors.blueAccent, size: 40)
+                                ? const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.blueAccent,
+                                    size: 40,
+                                  )
                                 : null,
                           ),
                         ),
@@ -373,19 +308,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 label: 'Full Name',
                                 controller: _nameController,
                                 enabled: _isEditing,
-                                isEditableField: true,
                               ),
                               _buildProfileField(
                                 label: 'Mobile Number',
                                 controller: _phoneController,
-                                enabled: false,
-                                isEditableField: false,
+                                enabled: _isEditing,
                               ),
                               _buildProfileField(
                                 label: 'Email Address',
                                 controller: _emailController,
-                                enabled: false,
-                                isEditableField: false,
+                                enabled: _isEditing,
                               ),
                             ],
                           ),
@@ -398,12 +330,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                           backgroundColor: Colors.blueAccent,
                           elevation: 5,
+                          shadowColor: Colors.black26,
                         ),
                         onPressed: _isEditing
                             ? () async {
                                 setState(() => isLoading = true);
                                 final imageUrl = await _uploadProfileImage(_profileImage);
-                                await _saveUserDetails(_nameController.text, imageUrl);
+                                await _saveUserDetails(
+                                  _nameController.text,
+                                  _emailController.text,
+                                  _phoneController.text,
+                                  imageUrl,
+                                );
                                 setState(() {
                                   _isEditing = false;
                                   isLoading = false;
@@ -426,6 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                           backgroundColor: Colors.redAccent,
                           elevation: 5,
+                          shadowColor: Colors.black26,
                         ),
                         icon: const Icon(Icons.logout, color: Colors.white),
                         label: const Text(
