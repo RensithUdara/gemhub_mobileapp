@@ -49,14 +49,14 @@ class _ProductCardState extends State<ProductCard> {
         // Handle tap event (e.g., navigate to product details page)
       },
       child: SizedBox(
-        width: 160,
-        height: 250,
+        width: 180,
+        height: 280,
         child: Card(
-          elevation: 8,
+          elevation: 10,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          shadowColor: Colors.black.withOpacity(0.2),
+          shadowColor: Colors.black.withOpacity(0.3),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -68,16 +68,17 @@ class _ProductCardState extends State<ProductCard> {
                 child: Image.asset(
                   widget.imagePath,
                   width: double.infinity,
-                  height: 100,
+                  height: 120,
                   fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.title,
@@ -92,41 +93,57 @@ class _ProductCardState extends State<ProductCard> {
                       Text(
                         widget.price,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           color: Colors.green,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       quantity == 0
-                          ? ElevatedButton(
-                              onPressed: _addToCart,
-                              child: const Text("Add to Cart"),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove),
-                                  onPressed: _decrementQuantity,
-                                ),
-                                Text(
-                                  "$quantity",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                          ? SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: _incrementQuantity,
-                                ),
-                              ],
+                                onPressed: _addToCart,
+                                child: const Text("Add to Cart"),
+                              ),
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove, color: Colors.blue),
+                                    onPressed: _decrementQuantity,
+                                  ),
+                                  Text(
+                                    "$quantity",
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add, color: Colors.blue),
+                                    onPressed: _incrementQuantity,
+                                  ),
+                                ],
+                              ),
                             ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
           ),
         ),
