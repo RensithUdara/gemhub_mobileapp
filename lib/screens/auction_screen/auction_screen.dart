@@ -10,53 +10,78 @@ class AuctionScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Live Auction',
+          'Luxury Auction',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+            fontSize: 26,
+            letterSpacing: 1.5,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.blue[800],
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue[800]!, Colors.blue[600]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Colors.blue[900]!, Colors.blue[700]!],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              // Refresh auctions logic here
+            },
+          ),
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
         child: ListView(
-          children: const [
+          children: [
+            const Text(
+              'Live Bidding',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey,
+              ),
+            ),
+            const SizedBox(height: 16),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Natural Emerald 3.5ct',
               currentBid: 150000,
-              endTime: Duration(minutes: 1),
+              endTime: const Duration(minutes: 1), // Shortened for demo
               minimumIncrement: 500,
-              currentUserId: 'user1', // Example user ID
+              currentUserId: 'user1',
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 20),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Ruby Gemstone 2.7ct',
               currentBid: 250000,
-              endTime: Duration(hours: 2),
+              endTime: const Duration(minutes: 2),
               minimumIncrement: 1000,
               currentUserId: 'user1',
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 20),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Sapphire Gemstone 5.0ct',
               currentBid: 500000,
-              endTime: Duration(hours: 3),
+              endTime: const Duration(minutes: 3),
               minimumIncrement: 2000,
               currentUserId: 'user1',
             ),
@@ -73,7 +98,7 @@ class AuctionItemCard extends StatefulWidget {
   final int currentBid;
   final Duration endTime;
   final int minimumIncrement;
-  final String currentUserId; // Added to track current user
+  final String currentUserId;
 
   const AuctionItemCard({
     super.key,
@@ -98,7 +123,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _bidAnimation;
-  String? _winningUserId; // Tracks the winning user
+  String? _winningUserId;
 
   @override
   void initState() {
@@ -123,10 +148,9 @@ class _AuctionItemCardState extends State<AuctionItemCard>
       });
     } else {
       _timer.cancel();
-      // Auction ended, set winner if there's a bid
       if (_winningUserId == null && _currentBid > widget.currentBid) {
         setState(() {
-          _winningUserId = widget.currentUserId; // For demo, assuming last bidder wins
+          _winningUserId = widget.currentUserId;
         });
       }
     }
@@ -141,12 +165,12 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     }
 
     if (enteredBid <= _currentBid) {
-      _showSnackBar('Bid must be higher than current bid');
+      _showSnackBar('Bid must exceed current bid');
       return;
     }
 
     if ((enteredBid - _currentBid) < widget.minimumIncrement) {
-      _showSnackBar('Bid must be at least ${_formatCurrency(widget.minimumIncrement)} higher');
+      _showSnackBar('Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
       return;
     }
 
@@ -157,21 +181,14 @@ class _AuctionItemCardState extends State<AuctionItemCard>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 16,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.grey[50]!],
+              colors: [Colors.white, Colors.blue[50]!],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -180,38 +197,38 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue[100],
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[600]!, Colors.blue[400]!],
+                  ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.gavel,
                   size: 32,
-                  color: Colors.blue[700],
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Confirm Your Bid',
+                'Confirm Bid',
                 style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[800],
-                  letterSpacing: 0.5,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.blue[900],
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Are you sure you want to place a bid of',
-                textAlign: TextAlign.center,
+                'Place bid of:',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: Colors.grey[700],
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 _formatCurrency(enteredBid),
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.green[700],
                 ),
@@ -223,43 +240,37 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       backgroundColor: Colors.grey[200],
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Cancel',
                       style: TextStyle(
-                        color: Colors.grey[700],
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Colors.grey,
                       ),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       backgroundColor: Colors.blue[700],
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      elevation: 4,
+                      elevation: 6,
                     ),
-                    child: Text(
+                    child: const Text(
                       'Confirm',
                       style: TextStyle(
-                        color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -277,7 +288,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
       
       setState(() {
         _currentBid = enteredBid;
-        _winningUserId = widget.currentUserId; // Current user becomes potential winner
+        _winningUserId = widget.currentUserId;
         _isLoading = false;
       });
       _animationController.forward(from: 0.0);
@@ -287,21 +298,27 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   Future<void> _handlePayment() async {
-    // Simulate payment process
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 1000));
     setState(() => _isLoading = false);
     _showSnackBar('Payment processing initiated!');
-    // In a real app, this would trigger actual payment flow
   }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.info, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.blue[700],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: Colors.blue[800],
+        elevation: 6,
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -315,7 +332,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   String _formatCurrency(int amount) {
-    return 'Rs. ${amount.toString().replaceAllMapped(
+    return 'Rs.${amount.toString().replaceAllMapped(
           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},'
         )}';
@@ -334,214 +351,288 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     bool isAuctionActive = _remainingTime.inSeconds > 0;
     bool isCurrentUserWinner = _winningUserId == widget.currentUserId;
 
-    return Card(
-      elevation: 8,
-      shadowColor: Colors.blue.withOpacity(0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.grey[50]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            isAuctionActive ? Colors.blue[50]! : Colors.grey[100]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: Stack(
-                children: [
-                  Image.asset(
-                    widget.imagePath,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 200,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: const Center(child: Text('Image Not Found')),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            child: Stack(
+              children: [
+                Image.asset(
+                  widget.imagePath,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: 220,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 220,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.image_not_supported, size: 50),
                     ),
                   ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isAuctionActive ? Colors.green : Colors.red,
-                        borderRadius: BorderRadius.circular(12),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isAuctionActive
+                            ? [Colors.green[600]!, Colors.green[400]!]
+                            : [Colors.red[600]!, Colors.red[400]!],
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isAuctionActive ? 'LIVE' : 'ENDED',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Text(
-                        isAuctionActive ? 'LIVE' : 'ENDED',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blue[900],
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
-                      letterSpacing: 0.5,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Lot #${widget.title.hashCode.toString().substring(0, 4)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[800],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ScaleTransition(
+                  scale: _bidAnimation,
+                  child: Row(
+                    children: [
+                      Icon(Icons.gavel, color: Colors.green[700], size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Current Bid: ${_formatCurrency(_currentBid)}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  ScaleTransition(
-                    scale: _bidAnimation,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.timer,
+                      color: _remainingTime.inSeconds < 300
+                          ? Colors.red[700]
+                          : Colors.grey[600],
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Time Left: ${_formatTime(_remainingTime)}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _remainingTime.inSeconds < 300
+                            ? Colors.red[700]
+                            : Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.add_circle_outline, color: Colors.grey[600], size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Min. Inc: ${_formatCurrency(widget.minimumIncrement)}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                if (!isAuctionActive && _winningUserId != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isCurrentUserWinner
+                            ? [Colors.green[100]!, Colors.green[50]!]
+                            : [Colors.grey[200]!, Colors.grey[100]!],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.gavel, color: Colors.green[700], size: 20),
+                        Icon(
+                          isCurrentUserWinner ? Icons.celebration : Icons.info,
+                          color: isCurrentUserWinner ? Colors.green[800] : Colors.grey[800],
+                        ),
                         const SizedBox(width: 8),
-                        Text(
-                          'Current: ${_formatCurrency(_currentBid)}',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.green[700],
+                        Expanded(
+                          child: Text(
+                            isCurrentUserWinner
+                                ? 'You Won! Congratulations!'
+                                : 'Won by another bidder',
+                            style: TextStyle(
+                              color: isCurrentUserWinner ? Colors.green[800] : Colors.grey[800],
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.timer, color: Colors.grey[600], size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Time Left: ${_formatTime(_remainingTime)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
+                ],
+                const SizedBox(height: 20),
+                if (isAuctionActive) ...[
+                  TextField(
+                    controller: _bidController,
+                    keyboardType: TextInputType.number,
+                    enabled: !_isLoading,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      hintText: 'Enter your bid',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      prefixIcon: Icon(Icons.monetization_on, color: Colors.blue[600]),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.clear, color: Colors.grey[400]),
+                        onPressed: () => _bidController.clear(),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.add_circle_outline, color: Colors.grey[600], size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Min+: ${_formatCurrency(widget.minimumIncrement)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
-                    ],
-                  ),
-                  if (!isAuctionActive && _winningUserId != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isCurrentUserWinner ? Colors.green[100] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.blue[200]!, width: 1.5),
                       ),
-                      child: Text(
-                        isCurrentUserWinner
-                            ? 'Congratulations! You won this auction!'
-                            : 'Auction won by another bidder',
-                        style: TextStyle(
-                          color: isCurrentUserWinner ? Colors.green[800] : Colors.grey[800],
-                          fontWeight: FontWeight.bold,
-                        ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  if (isAuctionActive) ...[
-                    TextField(
-                      controller: _bidController,
-                      keyboardType: TextInputType.number,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        hintText: 'Enter your bid amount',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        prefixIcon: Icon(Icons.monetization_on, color: Colors.blue[400]),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue[200]!),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue[200]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _getButtonAction(),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: isAuctionActive || (isCurrentUserWinner && !isAuctionActive)
-                            ? Colors.blue[700]
-                            : Colors.grey[400],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : Text(
-                              _getButtonText(),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.1,
-                              ),
-                            ),
                     ),
                   ),
                 ],
-              ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _getButtonAction(),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: isAuctionActive || (isCurrentUserWinner && !isAuctionActive)
+                          ? Colors.blue[700]
+                          : Colors.grey[600],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (!isAuctionActive && isCurrentUserWinner)
+                                const Icon(Icons.payment, size: 20),
+                              if (!isAuctionActive && isCurrentUserWinner)
+                                const SizedBox(width: 8),
+                              Text(
+                                _getButtonText(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
