@@ -28,11 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   List<String> bannerList = [];
+  String userName = '';
 
   @override
   void initState() {
     super.initState();
     _fetchBannerImages();
+    _fetchUserName();
   }
 
   Future<void> _fetchBannerImages() async {
@@ -53,6 +55,20 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       print('Error fetching banners: $e');
+    }
+  }
+
+  Future<void> _fetchUserName() async {
+    try {
+      var user = FirebaseFirestore.instance.collection('users').doc('userId'); // Replace 'userId' with the actual user ID
+      var docSnapshot = await user.get();
+      if (docSnapshot.exists) {
+        setState(() {
+          userName = docSnapshot['username']; // Ensure that the username is fetched correctly
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
     }
   }
 
@@ -199,9 +215,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Welcome Rensith,',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                Text(
+                  'Welcome ${userName.isNotEmpty ? userName : 'Guest'},',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -350,12 +366,8 @@ class _HomeScreenState extends State<HomeScreen> {
           icons: iconList,
           activeIndex: _selectedIndex,
           gapLocation: GapLocation.center,
-          notchSmoothness: NotchSmoothness.smoothEdge,
+          notchSmoothness: NotchSmoothness.defaultEdge,
           onTap: _onItemTapped,
-          backgroundColor: const Color.fromARGB(255, 173, 216, 230),
-          activeColor: const Color.fromARGB(255, 0, 0, 139),
-          leftCornerRadius: 32,
-          rightCornerRadius: 32,
         ),
       ),
     );
