@@ -25,14 +25,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _saveUser() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Passwords do not match!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match!")),
+      );
       return;
     }
 
@@ -43,7 +44,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       String userId = userCredential.user?.uid ?? '';
-
       Map<String, dynamic> userData = {
         'firebaseUid': userId,
         'username': usernameController.text.trim(),
@@ -51,7 +51,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'phoneNumber': phoneNumberController.text.trim(),
         'role': isBuyer ? 'buyer' : 'seller',
       };
-
+      
       if (!isBuyer) {
         userData.addAll({
           'displayName': displayNameController.text.trim(),
@@ -61,98 +61,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       final String collectionName = isBuyer ? 'buyers' : 'sellers';
       await _firestore.collection(collectionName).doc(userId).set(userData);
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User registered successfully!")));
-
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User registered successfully!")),
+      );
+      Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.message}")),
+      );
     }
-  }
-
-  void switchRole(bool toBuyer) {
-    setState(() {
-      isBuyer = toBuyer;
-      if (toBuyer) {
-        displayNameController.clear();
-        addressController.clear();
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       body: Center(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Image.asset('assets/images/logo_new.png', height: 100),
-                  const SizedBox(height: 20),
-                  const Text('Register', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => switchRole(true),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isBuyer ? Colors.green : Colors.black,
-                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(10), bottomLeft: Radius.circular(10)),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: const Center(child: Text('Buyer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => switchRole(false),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: !isBuyer ? Colors.green : Colors.black,
-                              borderRadius: const BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10)),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: const Center(child: Text('Seller', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                          ),
-                        ),
-                      ),
-                    ],
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/logo_new.png', height: 90),
+                const SizedBox(height: 20),
+                const Text(
+                  'Create an Account',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  const SizedBox(height: 20),
-                  if (!isBuyer) _customTextField('Name', displayNameController),
-                  if (!isBuyer) const SizedBox(height: 10),
-                  if (!isBuyer) _customTextField('Address', addressController),
-                  _customTextField('Username', usernameController),
-                  const SizedBox(height: 10),
-                  _customTextField('Password', passwordController, isPasswordField: true),
-                  const SizedBox(height: 10),
-                  _customTextField('Confirm Password', confirmPasswordController, isConfirmPasswordField: true),
-                  const SizedBox(height: 10),
-                  _customTextField('Email', emailController),
-                  const SizedBox(height: 10),
-                  _customTextField('Phone Number', phoneNumberController, keyboardType: TextInputType.phone),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _saveUser,
-                    child: const Text('Register'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                _roleSelector(),
+                if (!isBuyer) _customTextField('Name', displayNameController),
+                if (!isBuyer) _customTextField('Address', addressController),
+                _customTextField('Username', usernameController),
+                _customTextField('Email', emailController),
+                _customTextField('Phone Number', phoneNumberController, keyboardType: TextInputType.phone),
+                _customTextField('Password', passwordController, isPassword: true),
+                _customTextField('Confirm Password', confirmPasswordController, isPassword: true),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _saveUser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ],
-              ),
+                  child: const Text(
+                    'Register',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -160,38 +131,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _customTextField(String labelText, TextEditingController controller, {bool isPasswordField = false, bool isConfirmPasswordField = false, TextInputType keyboardType = TextInputType.text}) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
-        borderRadius: BorderRadius.circular(16.0),
-      ),
+  Widget _roleSelector() {
+    return ToggleButtons(
+      isSelected: [isBuyer, !isBuyer],
+      onPressed: (index) => setState(() => isBuyer = index == 0),
+      borderRadius: BorderRadius.circular(12),
+      selectedColor: Colors.white,
+      fillColor: Colors.green,
+      color: Colors.black,
+      borderWidth: 2,
+      children: const [
+        Padding(padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), child: Text('Buyer')),
+        Padding(padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), child: Text('Seller')),
+      ],
+    );
+  }
+
+  Widget _customTextField(String label, TextEditingController controller, {bool isPassword = false, TextInputType keyboardType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
       child: TextFormField(
         controller: controller,
-        obscureText: isPasswordField ? !isPasswordVisible : isConfirmPasswordField ? !isConfirmPasswordVisible : false,
+        obscureText: isPassword ? !isPasswordVisible : false,
         keyboardType: keyboardType,
         decoration: InputDecoration(
-          labelText: labelText,
+          labelText: label,
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
-          labelStyle: TextStyle(color: Colors.grey[700]),
-          suffixIcon: isPasswordField || isConfirmPasswordField
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon((isPasswordField ? isPasswordVisible : isConfirmPasswordVisible) ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
-                  onPressed: () {
-                    setState(() {
-                      if (isPasswordField) {
-                        isPasswordVisible = !isPasswordVisible;
-                      } else {
-                        isConfirmPasswordVisible = !isConfirmPasswordVisible;
-                      }
-                    });
-                  },
+                  icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
                 )
               : null,
         ),
