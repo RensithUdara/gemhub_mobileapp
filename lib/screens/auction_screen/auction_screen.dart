@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 
 class AuctionScreen extends StatelessWidget {
   const AuctionScreen({super.key});
@@ -49,8 +50,8 @@ class AuctionScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
         child: ListView(
-          children: [
-            const Text(
+          children: const [
+            Text(
               'Live Bidding',
               style: TextStyle(
                 fontSize: 22,
@@ -58,30 +59,30 @@ class AuctionScreen extends StatelessWidget {
                 color: Colors.blueGrey,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Natural Emerald 3.5ct',
               currentBid: 150000,
-              endTime: const Duration(minutes: 1), // Shortened for demo
+              endTime: Duration(minutes: 1), // Shortened for demo
               minimumIncrement: 500,
               currentUserId: 'user1',
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Ruby Gemstone 2.7ct',
               currentBid: 250000,
-              endTime: const Duration(minutes: 2),
+              endTime: Duration(minutes: 2),
               minimumIncrement: 1000,
               currentUserId: 'user1',
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             AuctionItemCard(
               imagePath: 'assets/images/gem01.jpg',
               title: 'Sapphire Gemstone 5.0ct',
               currentBid: 500000,
-              endTime: const Duration(minutes: 3),
+              endTime: Duration(minutes: 3),
               minimumIncrement: 2000,
               currentUserId: 'user1',
             ),
@@ -131,7 +132,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     _currentBid = widget.currentBid;
     _remainingTime = widget.endTime;
     _timer = Timer.periodic(const Duration(seconds: 1), _updateTime);
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -158,7 +159,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
 
   Future<void> _placeBid() async {
     final enteredBid = int.tryParse(_bidController.text.trim());
-    
+
     if (enteredBid == null) {
       _showSnackBar('Please enter a valid number');
       return;
@@ -170,7 +171,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     }
 
     if ((enteredBid - _currentBid) < widget.minimumIncrement) {
-      _showSnackBar('Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
+      _showSnackBar(
+          'Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
       return;
     }
 
@@ -240,7 +242,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       backgroundColor: Colors.grey[200],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -258,7 +261,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       backgroundColor: Colors.blue[700],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -285,7 +289,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     if (confirm ?? false) {
       setState(() => _isLoading = true);
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       setState(() {
         _currentBid = enteredBid;
         _winningUserId = widget.currentUserId;
@@ -332,10 +336,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   String _formatCurrency(int amount) {
-    return 'Rs.${amount.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},'
-        )}';
+    return 'Rs.${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
   @override
@@ -396,7 +397,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isAuctionActive
@@ -437,7 +439,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.blue[100],
                         borderRadius: BorderRadius.circular(8),
@@ -497,7 +500,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.add_circle_outline, color: Colors.grey[600], size: 22),
+                    Icon(Icons.add_circle_outline,
+                        color: Colors.grey[600], size: 22),
                     const SizedBox(width: 8),
                     Text(
                       'Min. Inc: ${_formatCurrency(widget.minimumIncrement)}',
@@ -526,7 +530,9 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       children: [
                         Icon(
                           isCurrentUserWinner ? Icons.celebration : Icons.info,
-                          color: isCurrentUserWinner ? Colors.green[800] : Colors.grey[800],
+                          color: isCurrentUserWinner
+                              ? Colors.green[800]
+                              : Colors.grey[800],
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -535,7 +541,9 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                                 ? 'You Won! Congratulations!'
                                 : 'Won by another bidder',
                             style: TextStyle(
-                              color: isCurrentUserWinner ? Colors.green[800] : Colors.grey[800],
+                              color: isCurrentUserWinner
+                                  ? Colors.green[800]
+                                  : Colors.grey[800],
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
@@ -556,7 +564,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       fillColor: Colors.grey[50],
                       hintText: 'Enter your bid',
                       hintStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.monetization_on, color: Colors.blue[600]),
+                      prefixIcon:
+                          Icon(Icons.monetization_on, color: Colors.blue[600]),
                       suffixIcon: IconButton(
                         icon: Icon(Icons.clear, color: Colors.grey[400]),
                         onPressed: () => _bidController.clear(),
@@ -567,11 +576,13 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blue[200]!, width: 1.5),
+                        borderSide:
+                            BorderSide(color: Colors.blue[200]!, width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+                        borderSide:
+                            BorderSide(color: Colors.blue[700]!, width: 2),
                       ),
                     ),
                   ),
@@ -593,7 +604,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                     onPressed: _getButtonAction(),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      backgroundColor: isAuctionActive || (isCurrentUserWinner && !isAuctionActive)
+                      backgroundColor: isAuctionActive ||
+                              (isCurrentUserWinner && !isAuctionActive)
                           ? Colors.blue[700]
                           : Colors.grey[600],
                       shape: RoundedRectangleBorder(
