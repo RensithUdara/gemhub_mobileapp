@@ -68,16 +68,30 @@ class _ProductListingState extends State<ProductListing>
     for (var image in _images) {
       if (image != null) {
         String fileName = 'product_images/${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
-        UploadTask uploadTask = _storage.ref(fileName).putFile(image);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
+        try {
+          // Explicitly set metadata to avoid null issues
+          SettableMetadata metadata = SettableMetadata(
+            cacheControl: 'public,max-age=31536000', // Example cache control
+            contentType: 'image/jpeg', // Adjust based on image type (e.g., 'image/png')
+          );
+          UploadTask uploadTask = _storage.ref(fileName).putFile(image, metadata);
+          TaskSnapshot snapshot = await uploadTask;
+          String downloadUrl = await snapshot.ref.getDownloadURL();
+          imageUrls.add(downloadUrl);
+        } catch (e) {
+          _showErrorDialog('Error uploading image: $e');
+          return []; // Return empty list if an error occurs
+        }
       }
     }
     return imageUrls;
   }
 
   Future<void> _saveProductToFirestore(List<String> imageUrls) async {
+    if (imageUrls.isEmpty) {
+      _showErrorDialog('No images uploaded. Please try again.');
+      return;
+    }
     try {
       await _firestore.collection('products').add({
         'title': _titleController.text,
