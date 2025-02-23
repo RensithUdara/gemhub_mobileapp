@@ -47,6 +47,7 @@ dependencies:
   firebase_database: ^10.5.7
   logger: ^2.5.0
   cached_network_image: ^3.4.1
+  flutter_animate: ^4.3.0
 
 dev_dependencies:
   flutter_test:
