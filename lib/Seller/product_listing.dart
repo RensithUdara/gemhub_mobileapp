@@ -182,12 +182,7 @@ class _ProductListingState extends State<ProductListing> with SingleTickerProvid
           'Product Listing',
           style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Icon(Icons.signal_wifi_4_bar, color: Colors.white, size: 20),
-          ),
-        ],
+        
       ),
       body: SafeArea(
         child: FadeTransition(
