@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class AuctionProduct extends StatefulWidget {
   const AuctionProduct({super.key});
@@ -10,7 +11,8 @@ class AuctionProduct extends StatefulWidget {
   State<AuctionProduct> createState() => _AuctionProductState();
 }
 
-class _AuctionProductState extends State<AuctionProduct> with SingleTickerProviderStateMixin {
+class _AuctionProductState extends State<AuctionProduct>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   final List<File?> _images = List.filled(3, null);
@@ -52,15 +54,18 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
   }
 
   void _showConfirmationDialog() {
-    if (_formKey.currentState!.validate() && _images.any((image) => image != null)) {
+    if (_formKey.currentState!.validate() &&
+        _images.any((image) => image != null)) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Auction',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           content: const Text(
             'Are you sure you want to start this auction?',
@@ -82,7 +87,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Confirm'),
             ),
@@ -102,7 +108,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Success!',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: const Text(
           'Your auction has been created successfully!',
@@ -117,14 +124,16 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                 {
                   'title': _titleController.text,
                   'quantity': int.tryParse(_quantityController.text) ?? 0,
-                  'imagePath': _images.firstWhere((image) => image != null)?.path,
+                  'imagePath':
+                      _images.firstWhere((image) => image != null)?.path,
                 },
               ); // Return auction details
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -141,7 +150,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Error',
-          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: Text(
           message,
@@ -153,7 +163,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -175,14 +186,9 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         ),
         title: const Text(
           'Auction Product',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Icon(Icons.signal_wifi_4_bar, color: Colors.white, size: 20),
-          ),
-        ],
       ),
       body: SafeArea(
         child: FadeTransition(
@@ -199,57 +205,71 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (index) => GestureDetector(
-                      onTap: () => _pickImage(index),
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.grey[900]!, Colors.grey[800]!],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.blue, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: _images[index] != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(14),
-                                child: Image.file(
-                                  _images[index]!,
-                                  fit: BoxFit.cover,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                          3,
+                          (index) => GestureDetector(
+                                onTap: () => _pickImage(index),
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.grey[900]!,
+                                        Colors.grey[800]!
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                        color: Colors.blue, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: _images[index] != null
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                          child: Image.file(
+                                            _images[index]!,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : const Center(
+                                          child: Icon(Icons.camera_alt,
+                                              color: Colors.white, size: 40),
+                                        ),
                                 ),
-                              )
-                            : const Center(
-                                child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
-                              ),
-                      ),
-                    )),
+                              )),
+                    ),
                   ),
                   const SizedBox(height: 32),
                   _buildInputField(
                     label: 'Title',
                     hint: 'Enter auction title',
                     controller: _titleController,
-                    validator: (value) => value!.isEmpty ? 'Title is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Title is required' : null,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Pricing',
                     hint: 'Enter price (e.g., 10)',
                     controller: _pricingController,
-                    validator: (value) => value!.isEmpty ? 'Pricing is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Pricing is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
@@ -257,7 +277,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                     label: 'Start bid price',
                     hint: 'Enter starting bid',
                     controller: _startBidController,
-                    validator: (value) => value!.isEmpty ? 'Start bid price is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Start bid price is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
@@ -265,7 +286,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                     label: 'Product quantity',
                     hint: 'Enter quantity',
                     controller: _quantityController,
-                    validator: (value) => value!.isEmpty ? 'Quantity is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Quantity is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 32),
@@ -289,13 +311,17 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                           children: [
                             Text(
                               'ALL DONE',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.check_circle, size: 20, color: Colors.white),
+                            Icon(Icons.check_circle,
+                                size: 20, color: Colors.white),
                           ],
                         ),
-                      ).animate().scale(duration: 200.ms, curve: Curves.easeInOut),
+                      )
+                          .animate()
+                          .scale(duration: 200.ms, curve: Curves.easeInOut),
                     ),
                   ),
                 ],
@@ -336,7 +362,7 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.blue, width: 2),
+              borderSide: const BorderSide(color: Colors.blue, width: 2),
             ),
             errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
           ),

@@ -104,139 +104,141 @@ class _SellerHomePageState extends State<SellerHomePage>
                   opacity: _fadeAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Avatar with Glow Effect and Centered
-                        MouseRegion(
-                          onEnter: (_) => setState(() => _isHovered = true),
-                          onExit: (_) => setState(() => _isHovered = false),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.blue, width: 2),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: _isHovered
-                                  ? [
-                                      BoxShadow(
-                                        color: Colors.blue.withOpacity(0.5),
-                                        blurRadius: 20,
-                                        spreadRadius: 5,
-                                        offset: const Offset(0, 0),
-                                      ),
-                                    ]
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.blue.withOpacity(0.3),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Image.asset(
-                                'assets/images/logo_new.png',
-                                width: 200,
-                                height: 200,
-                                fit: BoxFit.cover,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Avatar with Glow Effect and Centered
+                          MouseRegion(
+                            onEnter: (_) => setState(() => _isHovered = true),
+                            onExit: (_) => setState(() => _isHovered = false),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.blue, width: 2),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: _isHovered
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.blue.withOpacity(0.5),
+                                          blurRadius: 20,
+                                          spreadRadius: 5,
+                                          offset: const Offset(0, 0),
+                                        ),
+                                      ]
+                                    : [
+                                        BoxShadow(
+                                          color: Colors.blue.withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: Image.asset(
+                                  'assets/images/logo_new.png',
+                                  width: 200,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 40),
-                        // Welcome Text with Animation and Centered
-                        const Text(
-                          'Welcome, Kasun!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.blue,
-                                offset: Offset(0, 6),
-                                blurRadius: 8,
-                              ),
-                            ],
+                          const SizedBox(height: 40),
+                          // Welcome Text with Animation and Centered
+                          const Text(
+                            'Welcome, Kasun!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.blue,
+                                  offset: Offset(0, 6),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                          const SizedBox(height: 60),
+                          // Buttons with Hover, Tap Animations, and Centered
+                          _buildButton(
+                            context: context,
+                            title: 'PRODUCT LISTING',
+                            icon: Icons.list_alt,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) =>
+                                          const ProductListing(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return FadeTransition(
+                                        opacity: animation, child: child);
+                                  },
+                                  transitionDuration:
+                                      const Duration(milliseconds: 400),
+                                ),
+                              );
+                              if (result != null &&
+                                  result is Map<String, dynamic>) {
+                                _showNotification(result['title'],
+                                    result['quantity'], result['imagePath']);
+                              }
+                            },
                           ),
-                        ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
-                        const SizedBox(height: 60),
-                        // Buttons with Hover, Tap Animations, and Centered
-                        _buildButton(
-                          context: context,
-                          title: 'PRODUCT LISTING',
-                          icon: Icons.list_alt,
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const ProductListing(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  return FadeTransition(
-                                      opacity: animation, child: child);
-                                },
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
-                              ),
-                            );
-                            if (result != null &&
-                                result is Map<String, dynamic>) {
-                              _showNotification(result['title'],
-                                  result['quantity'], result['imagePath']);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        _buildButton(
-                          context: context,
-                          title: 'AUCTION',
-                          icon: Icons.gavel,
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const AuctionProduct(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  return FadeTransition(
-                                      opacity: animation, child: child);
-                                },
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
-                              ),
-                            );
-                            if (result != null &&
-                                result is Map<String, dynamic>) {
-                              _showNotification(result['title'],
-                                  result['quantity'], result['imagePath']);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        _buildButton(
-                          context: context,
-                          title: 'ORDER HISTORY',
-                          icon: Icons.history,
-                          onTap: () {},
-                        ),
-                        const SizedBox(height: 24),
-                        _buildButton(
-                          context: context,
-                          title: 'AUCTION HISTORY',
-                          icon: Icons.timeline,
-                          onTap: () {},
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+                          const SizedBox(height: 24),
+                          _buildButton(
+                            context: context,
+                            title: 'AUCTION',
+                            icon: Icons.gavel,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation, secondaryAnimation) =>
+                                          const AuctionProduct(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return FadeTransition(
+                                        opacity: animation, child: child);
+                                  },
+                                  transitionDuration:
+                                      const Duration(milliseconds: 400),
+                                ),
+                              );
+                              if (result != null &&
+                                  result is Map<String, dynamic>) {
+                                _showNotification(result['title'],
+                                    result['quantity'], result['imagePath']);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          _buildButton(
+                            context: context,
+                            title: 'ORDER HISTORY',
+                            icon: Icons.history,
+                            onTap: () {},
+                          ),
+                          const SizedBox(height: 24),
+                          _buildButton(
+                            context: context,
+                            title: 'AUCTION HISTORY',
+                            icon: Icons.timeline,
+                            onTap: () {},
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
                 ),
