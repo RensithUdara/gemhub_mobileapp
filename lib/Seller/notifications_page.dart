@@ -5,8 +5,15 @@ import 'package:flutter_animate/flutter_animate.dart'; // Add this package for a
 
 class NotificationsPage extends StatefulWidget {
   final List<Map<String, dynamic>> notifications;
+  final Function(int)? onDelete; // Callback to delete a notification by index
+  final VoidCallback? onClearAll; // Callback to clear all notifications
 
-  const NotificationsPage({super.key, required this.notifications});
+  const NotificationsPage({
+    super.key,
+    required this.notifications,
+    this.onDelete,
+    this.onClearAll,
+  });
 
   @override
   State<NotificationsPage> createState() => _NotificationsPageState();
@@ -43,18 +50,20 @@ class _NotificationsPageState extends State<NotificationsPage>
     });
   }
 
-  // Delete a single notification
+  // Delete a single notification and notify SellerHomePage
   void _deleteNotification(int index) {
     setState(() {
       _notifications.removeAt(index);
     });
+    widget.onDelete?.call(index); // Call the callback to update SellerHomePage
   }
 
-  // Clear all notifications
+  // Clear all notifications and notify SellerHomePage
   void _clearAllNotifications() {
     setState(() {
       _notifications.clear();
     });
+    widget.onClearAll?.call(); // Call the callback to update SellerHomePage
     Navigator.pop(context); // Optionally close the page after clearing
   }
 
