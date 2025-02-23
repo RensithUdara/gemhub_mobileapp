@@ -126,8 +126,9 @@ class _AuctionProductState extends State<AuctionProduct>
                   'quantity': int.tryParse(_quantityController.text) ?? 0,
                   'imagePath':
                       _images.firstWhere((image) => image != null)?.path,
+                  'type': 'auction', // Indicate this is an auction
                 },
-              ); // Return auction details
+              ); // Return auction details with type
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,

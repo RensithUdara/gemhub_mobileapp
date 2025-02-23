@@ -37,6 +37,7 @@ class NotificationsPage extends StatelessWidget {
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   final notification = notifications[index];
+                  final isProduct = notification['type'] == 'product';
                   return Card(
                     color: Colors.grey[900],
                     shape: RoundedRectangleBorder(
@@ -63,7 +64,7 @@ class NotificationsPage extends StatelessWidget {
                             fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
-                        'Quantity: ${notification['quantity']} listed successfully',
+                        'Quantity: ${notification['quantity']} ${isProduct ? 'listed successfully' : 'auction created successfully'}',
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 14),
                       ),

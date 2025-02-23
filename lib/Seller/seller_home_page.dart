@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // Add this package for animations
 
-import 'auction_product.dart';
-import 'notifications_page.dart'; // New import for the Notifications page
-import 'product_listing.dart';
+import 'auction_product.dart'
+    as auction; // Use a prefix for auction_product.dart
+import 'notifications_page.dart';
+import 'product_listing.dart'
+    as product; // Use a prefix for product_listing.dart
 
 class SellerHomePage extends StatefulWidget {
   const SellerHomePage({super.key});
@@ -21,7 +23,7 @@ class _SellerHomePageState extends State<SellerHomePage>
   bool _isHovered = false;
   int _selectedIndex = 0; // Track the selected tab in the bottom navigation bar
   final List<Map<String, dynamic>> _notifications =
-      []; // List to store notification data (image, title, quantity)
+      []; // List to store notification data
 
   @override
   void initState() {
@@ -45,13 +47,15 @@ class _SellerHomePageState extends State<SellerHomePage>
     super.dispose();
   }
 
-  // Method to add a notification with product details
-  void _showNotification(String title, int quantity, String? imagePath) {
+  // Method to add a notification with product/auction details and type
+  void _showNotification(
+      String title, int quantity, String? imagePath, String type) {
     setState(() {
       _notifications.add({
         'title': title,
         'quantity': quantity,
         'imagePath': imagePath,
+        'type': type, // 'product' or 'auction'
       });
     });
   }
@@ -117,7 +121,8 @@ class _SellerHomePageState extends State<SellerHomePage>
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.blue, width: 2),
+                                border:
+                                    Border.all(color: Colors.blue, width: 2),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: _isHovered
                                     ? [
@@ -147,7 +152,7 @@ class _SellerHomePageState extends State<SellerHomePage>
                               ),
                             ),
                           ),
-                           const SizedBox(height: 40),
+                          const SizedBox(height: 40),
                           // // Welcome Text with Animation and Centered
                           // const Text(
                           //   'Welcome, Kasun!',
@@ -175,9 +180,9 @@ class _SellerHomePageState extends State<SellerHomePage>
                               final result = await Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder:
-                                      (context, animation, secondaryAnimation) =>
-                                          const ProductListing(),
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const product.ProductListing(),
                                   transitionsBuilder: (context, animation,
                                       secondaryAnimation, child) {
                                     return FadeTransition(
@@ -189,8 +194,11 @@ class _SellerHomePageState extends State<SellerHomePage>
                               );
                               if (result != null &&
                                   result is Map<String, dynamic>) {
-                                _showNotification(result['title'],
-                                    result['quantity'], result['imagePath']);
+                                _showNotification(
+                                    result['title'],
+                                    result['quantity'],
+                                    result['imagePath'],
+                                    'product');
                               }
                             },
                           ),
@@ -203,9 +211,9 @@ class _SellerHomePageState extends State<SellerHomePage>
                               final result = await Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder:
-                                      (context, animation, secondaryAnimation) =>
-                                          const AuctionProduct(),
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const auction.AuctionProduct(),
                                   transitionsBuilder: (context, animation,
                                       secondaryAnimation, child) {
                                     return FadeTransition(
@@ -217,8 +225,11 @@ class _SellerHomePageState extends State<SellerHomePage>
                               );
                               if (result != null &&
                                   result is Map<String, dynamic>) {
-                                _showNotification(result['title'],
-                                    result['quantity'], result['imagePath']);
+                                _showNotification(
+                                    result['title'],
+                                    result['quantity'],
+                                    result['imagePath'],
+                                    'auction');
                               }
                             },
                           ),
