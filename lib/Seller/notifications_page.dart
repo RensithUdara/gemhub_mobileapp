@@ -20,14 +20,9 @@ class NotificationsPage extends StatelessWidget {
         ),
         title: const Text(
           'Notifications',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Icon(Icons.signal_wifi_4_bar, color: Colors.white, size: 20),
-          ),
-        ],
       ),
       body: SafeArea(
         child: notifications.isEmpty
@@ -44,7 +39,8 @@ class NotificationsPage extends StatelessWidget {
                   final notification = notifications[index];
                   return Card(
                     color: Colors.grey[900],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
                       leading: notification['imagePath'] != null
@@ -57,21 +53,27 @@ class NotificationsPage extends StatelessWidget {
                                 fit: BoxFit.cover,
                               ),
                             )
-                          : const Icon(Icons.image_not_supported, color: Colors.white, size: 50),
+                          : const Icon(Icons.image_not_supported,
+                              color: Colors.white, size: 50),
                       title: Text(
                         notification['title'],
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
                         'Quantity: ${notification['quantity']} listed successfully',
-                        style: const TextStyle(color: Colors.white70, fontSize: 14),
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 14),
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
                           // Here you would typically remove the notification from a state management system or pass a callback
                           // For simplicity, this is a placeholder. You can update SellerHomePage to handle removal.
-                          Navigator.pop(context); // Close the page for now (update logic as needed)
+                          Navigator.pop(
+                              context); // Close the page for now (update logic as needed)
                         },
                       ),
                     ),
