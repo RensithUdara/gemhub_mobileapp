@@ -147,25 +147,25 @@ class _SellerHomePageState extends State<SellerHomePage>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 40),
-                          // Welcome Text with Animation and Centered
-                          const Text(
-                            'Welcome, Kasun!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.blue,
-                                  offset: Offset(0, 6),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
-                          const SizedBox(height: 60),
+                           const SizedBox(height: 40),
+                          // // Welcome Text with Animation and Centered
+                          // const Text(
+                          //   'Welcome, Kasun!',
+                          //   textAlign: TextAlign.center,
+                          //   style: TextStyle(
+                          //     color: Colors.white,
+                          //     fontSize: 36,
+                          //     fontWeight: FontWeight.bold,
+                          //     shadows: [
+                          //       Shadow(
+                          //         color: Colors.blue,
+                          //         offset: Offset(0, 6),
+                          //         blurRadius: 8,
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                          // const SizedBox(height: 60),
                           // Buttons with Hover, Tap Animations, and Centered
                           _buildButton(
                             context: context,
