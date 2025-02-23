@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gemhub/Seller/seller_home_page.dart';
 import 'package:gemhub/home_screen.dart';
 import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
 import 'package:gemhub/screens/auth_screens/signup_screen.dart';
@@ -85,10 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const ProfileScreen(
-                phone: '',
-                email: '',
-                name: '',
+              builder: (context) => const SellerHomePage(
+                // phone: '',
+                // email: '',
+                // name: '',
               ),
             ),
           );
@@ -111,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleForgotPassword(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+      MaterialPageRoute(builder: (context) => const SellerHomePage()),
     );
   }
 
