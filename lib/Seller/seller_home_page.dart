@@ -16,6 +16,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isHovered = false;
+  int _selectedIndex = 0; // Track the selected tab in the bottom navigation bar
+  List<String> _notifications = []; // List to store notification messages
 
   @override
   void initState() {
@@ -36,6 +38,79 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  // Method to add a notification and update the state
+  void _showNotification(String message) {
+    setState(() {
+      _notifications.add(message);
+    });
+  }
+
+  // Method to show notification details in a dialog
+  void _showNotificationDialog() {
+    if (_notifications.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: double.minPositive,
+          height: 200, // Adjust height as needed
+          child: ListView.builder(
+            itemCount: _notifications.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(
+                  _notifications[index],
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    setState(() {
+                      _notifications.removeAt(index);
+                    });
+                    if (_notifications.isEmpty) Navigator.pop(context);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _notifications.clear();
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 1) { // Notifications tab (index 1)
+      _showNotificationDialog();
+    }
   }
 
   @override
@@ -110,30 +185,30 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                         ),
                         const SizedBox(height: 40),
                         // Welcome Text with Animation and Centered
-                        // const Text(
-                        //   'Welcome, Kasun!',
-                        //   textAlign: TextAlign.center,
-                        //   style: TextStyle(
-                        //     color: Colors.white,
-                        //     fontSize: 36,
-                        //     fontWeight: FontWeight.bold,
-                        //     shadows: [
-                        //       Shadow(
-                        //         color: Colors.blue,
-                        //         offset: Offset(0, 6),
-                        //         blurRadius: 8,
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                        const Text(
+                          'Welcome, Kasun!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.blue,
+                                offset: Offset(0, 6),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
                         const SizedBox(height: 60),
                         // Buttons with Hover, Tap Animations, and Centered
                         _buildButton(
                           context: context,
                           title: 'PRODUCT LISTING',
                           icon: Icons.list_alt,
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final result = await Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder: (context, animation, secondaryAnimation) => const ProductListing(),
@@ -143,6 +218,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                                 transitionDuration: const Duration(milliseconds: 400),
                               ),
                             );
+                            if (result == true) {
+                              _showNotification('New product listed successfully!');
+                            }
                           },
                         ),
                         const SizedBox(height: 24),
@@ -150,8 +228,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                           context: context,
                           title: 'AUCTION',
                           icon: Icons.gavel,
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final result = await Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder: (context, animation, secondaryAnimation) => const AuctionProduct(),
@@ -161,6 +239,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                                 transitionDuration: const Duration(milliseconds: 400),
                               ),
                             );
+                            if (result == true) {
+                              _showNotification('New auction created successfully!');
+                            }
                           },
                         ),
                         const SizedBox(height: 24),
@@ -194,12 +275,45 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
           showUnselectedLabels: false,
           type: BottomNavigationBarType.fixed,
           iconSize: 32,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+          items: [
+            const BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: [
+                  const Icon(Icons.notifications),
+                  if (_notifications.isNotEmpty)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          _notifications.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              label: '',
+            ),
+            const BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
           ],
-          currentIndex: 0,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
           elevation: 12,
           selectedIconTheme: const IconThemeData(size: 34, color: Colors.blueAccent),
         ),

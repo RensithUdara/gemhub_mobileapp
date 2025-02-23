@@ -117,7 +117,7 @@ class _ProductListingState extends State<ProductListing> with SingleTickerProvid
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context); // Close success dialog
-              Navigator.pop(context); // Return to previous screen (optional)
+              Navigator.pop(context, true); // Return true to indicate success
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -197,46 +197,43 @@ class _ProductListingState extends State<ProductListing> with SingleTickerProvid
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(3, (index) => GestureDetector(
-                        onTap: () => _pickImage(index),
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.grey[900]!, Colors.grey[800]!],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.blue, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (index) => GestureDetector(
+                      onTap: () => _pickImage(index),
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.grey[900]!, Colors.grey[800]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          child: _images[index] != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: Image.file(
-                                    _images[index]!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Center(
-                                  child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
-                                ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.blue, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      )),
-                    ),
+                        child: _images[index] != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Image.file(
+                                  _images[index]!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Center(
+                                child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
+                              ),
+                      ),
+                    )),
                   ),
                   const SizedBox(height: 32),
                   _buildInputField(
