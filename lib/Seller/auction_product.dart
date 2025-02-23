@@ -112,7 +112,14 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context); // Close success dialog
-              Navigator.pop(context, true); // Return true to indicate success
+              Navigator.pop(
+                context,
+                {
+                  'title': _titleController.text,
+                  'quantity': int.tryParse(_quantityController.text) ?? 0,
+                  'imagePath': _images.firstWhere((image) => image != null)?.path,
+                },
+              ); // Return auction details
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,

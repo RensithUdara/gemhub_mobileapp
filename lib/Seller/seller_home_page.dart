@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // Add this package for animations
-import 'product_listing.dart';
+
 import 'auction_product.dart';
+import 'notifications_page.dart'; // New import for the Notifications page
+import 'product_listing.dart';
 
 class SellerHomePage extends StatefulWidget {
   const SellerHomePage({super.key});
@@ -11,13 +13,15 @@ class SellerHomePage extends StatefulWidget {
   State<SellerHomePage> createState() => _SellerHomePageState();
 }
 
-class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProviderStateMixin {
+class _SellerHomePageState extends State<SellerHomePage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isHovered = false;
   int _selectedIndex = 0; // Track the selected tab in the bottom navigation bar
-  List<String> _notifications = []; // List to store notification messages
+  final List<Map<String, dynamic>> _notifications =
+      []; // List to store notification data (image, title, quantity)
 
   @override
   void initState() {
@@ -26,7 +30,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _fadeAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
@@ -40,76 +45,34 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
     super.dispose();
   }
 
-  // Method to add a notification and update the state
-  void _showNotification(String message) {
+  // Method to add a notification with product details
+  void _showNotification(String title, int quantity, String? imagePath) {
     setState(() {
-      _notifications.add(message);
+      _notifications.add({
+        'title': title,
+        'quantity': quantity,
+        'imagePath': imagePath,
+      });
     });
-  }
-
-  // Method to show notification details in a dialog
-  void _showNotificationDialog() {
-    if (_notifications.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        content: SizedBox(
-          width: double.minPositive,
-          height: 200, // Adjust height as needed
-          child: ListView.builder(
-            itemCount: _notifications.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(
-                  _notifications[index],
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () {
-                    setState(() {
-                      _notifications.removeAt(index);
-                    });
-                    if (_notifications.isEmpty) Navigator.pop(context);
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _notifications.clear();
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 1) { // Notifications tab (index 1)
-      _showNotificationDialog();
+    if (index == 1) {
+      // Navigate to Notifications page
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              NotificationsPage(notifications: _notifications),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
     }
   }
 
@@ -123,7 +86,7 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
           children: [
             // Dynamic Gradient Background
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -131,7 +94,7 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                     Colors.black87,
                     Colors.black54,
                   ],
-                  stops: const [0.2, 0.8],
+                  stops: [0.2, 0.8],
                 ),
               ),
             ),
@@ -211,15 +174,22 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                             final result = await Navigator.push(
                               context,
                               PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => const ProductListing(),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  return FadeTransition(opacity: animation, child: child);
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const ProductListing(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  return FadeTransition(
+                                      opacity: animation, child: child);
                                 },
-                                transitionDuration: const Duration(milliseconds: 400),
+                                transitionDuration:
+                                    const Duration(milliseconds: 400),
                               ),
                             );
-                            if (result == true) {
-                              _showNotification('New product listed successfully!');
+                            if (result != null &&
+                                result is Map<String, dynamic>) {
+                              _showNotification(result['title'],
+                                  result['quantity'], result['imagePath']);
                             }
                           },
                         ),
@@ -232,15 +202,22 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                             final result = await Navigator.push(
                               context,
                               PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => const AuctionProduct(),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  return FadeTransition(opacity: animation, child: child);
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const AuctionProduct(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  return FadeTransition(
+                                      opacity: animation, child: child);
                                 },
-                                transitionDuration: const Duration(milliseconds: 400),
+                                transitionDuration:
+                                    const Duration(milliseconds: 400),
                               ),
                             );
-                            if (result == true) {
-                              _showNotification('New auction created successfully!');
+                            if (result != null &&
+                                result is Map<String, dynamic>) {
+                              _showNotification(result['title'],
+                                  result['quantity'], result['imagePath']);
                             }
                           },
                         ),
@@ -315,7 +292,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           elevation: 12,
-          selectedIconTheme: const IconThemeData(size: 34, color: Colors.blueAccent),
+          selectedIconTheme:
+              const IconThemeData(size: 34, color: Colors.blueAccent),
         ),
       ),
     );
@@ -340,7 +318,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -354,10 +333,12 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                   const SizedBox(width: 16),
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 12),
-                  const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.white),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 20, color: Colors.white),
                 ],
               ),
             ).animate().scale(duration: 250.ms, curve: Curves.easeInOut),
