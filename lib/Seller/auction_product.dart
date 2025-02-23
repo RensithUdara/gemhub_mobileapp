@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +23,9 @@ class _AuctionProductState extends State<AuctionProduct>
   final TextEditingController _pricingController = TextEditingController();
   final TextEditingController _startBidController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   @override
   void initState() {
@@ -53,6 +58,35 @@ class _AuctionProductState extends State<AuctionProduct>
     }
   }
 
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
+    for (var image in _images) {
+      if (image != null) {
+        String fileName = 'auction_images/${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
+        UploadTask uploadTask = _storage.ref(fileName).putFile(image);
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        imageUrls.add(downloadUrl);
+      }
+    }
+    return imageUrls;
+  }
+
+  Future<void> _saveAuctionToFirestore(List<String> imageUrls) async {
+    try {
+      await _firestore.collection('auctions').add({
+        'title': _titleController.text,
+        'pricing': double.tryParse(_pricingController.text) ?? 0.0,
+        'startBid': double.tryParse(_startBidController.text) ?? 0.0,
+        'quantity': int.tryParse(_quantityController.text) ?? 0,
+        'imageUrls': imageUrls,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      _showErrorDialog('Error saving auction: $e');
+    }
+  }
+
   void _showConfirmationDialog() {
     if (_formKey.currentState!.validate() &&
         _images.any((image) => image != null)) {
@@ -80,8 +114,10 @@ class _AuctionProductState extends State<AuctionProduct>
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context); // Close confirmation dialog
+                List<String> imageUrls = await _uploadImages();
+                await _saveAuctionToFirestore(imageUrls);
                 _showSuccessDialog(); // Show success dialog
               },
               style: ElevatedButton.styleFrom(
@@ -320,9 +356,7 @@ class _AuctionProductState extends State<AuctionProduct>
                                 size: 20, color: Colors.white),
                           ],
                         ),
-                      )
-                          .animate()
-                          .scale(duration: 200.ms, curve: Curves.easeInOut),
+                      ),
                     ),
                   ),
                 ],
