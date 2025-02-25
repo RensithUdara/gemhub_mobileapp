@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'reset_password_screen.dart'; 
-import 'login_screen.dart'; 
+import 'package:flutter/material.dart';
+
+import 'login_screen.dart';
+import 'reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -15,11 +16,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
 
-  bool isEmailSelected = true; 
-  bool isOTPSent = false; 
-  bool isPhoneNumberValid = false; 
-  bool isEmailValid = false; 
-  String verificationId = ""; 
+  bool isEmailSelected = true;
+  bool isOTPSent = false;
+  bool isPhoneNumberValid = false;
+  bool isEmailValid = false;
+  String verificationId = "";
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -40,7 +41,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
@@ -51,7 +53,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void toggleOption(bool isEmail) {
     setState(() {
       isEmailSelected = isEmail;
-      isOTPSent = false; 
+      isOTPSent = false;
     });
   }
 
@@ -64,7 +66,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void checkPhoneNumber(String value) {
     setState(() {
-      isPhoneNumberValid = value.length == 10; // Adjust for your phone number length
+      isPhoneNumberValid =
+          value.length == 10; // Adjust for your phone number length
     });
   }
 
@@ -72,7 +75,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await _auth.sendPasswordResetEmail(email: emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password reset email sent successfully!")),
+        const SnackBar(
+            content: Text("Password reset email sent successfully!")),
       );
 
       Navigator.pushReplacement(
@@ -90,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> sendOTP() async {
     try {
       await _auth.verifyPhoneNumber(
-        phoneNumber: "+94${phoneNumberController.text.trim()}", 
+        phoneNumber: "+94${phoneNumberController.text.trim()}",
         verificationCompleted: (PhoneAuthCredential credential) async {
           // Auto-verification (rare)
           await _auth.signInWithCredential(credential);
@@ -134,7 +138,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ResetPasswordScreen(phoneNumber: phoneNumberController.text.trim()),
+          builder: (context) => ResetPasswordScreen(
+              phoneNumber: phoneNumberController.text.trim()),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -174,9 +179,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     GestureDetector(
                       onTap: () => toggleOption(true),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: isEmailSelected ? Colors.black : Colors.grey[300],
+                          color:
+                              isEmailSelected ? Colors.black : Colors.grey[300],
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(10),
                             bottomLeft: Radius.circular(10),
@@ -185,7 +192,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         child: Text(
                           'Email',
                           style: TextStyle(
-                            color: isEmailSelected ? Colors.white : Colors.black,
+                            color:
+                                isEmailSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -194,9 +202,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     GestureDetector(
                       onTap: () => toggleOption(false),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: !isEmailSelected ? Colors.black : Colors.grey[300],
+                          color: !isEmailSelected
+                              ? Colors.black
+                              : Colors.grey[300],
                           borderRadius: const BorderRadius.only(
                             topRight: Radius.circular(10),
                             bottomRight: Radius.circular(10),
@@ -205,7 +216,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         child: Text(
                           'Phone',
                           style: TextStyle(
-                            color: !isEmailSelected ? Colors.white : Colors.black,
+                            color:
+                                !isEmailSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -226,7 +238,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: phoneNumberController,
                     keyboardType: TextInputType.phone,
                     onChanged: checkPhoneNumber,
-                    decoration: customInputDecoration('Enter your Phone Number'),
+                    decoration:
+                        customInputDecoration('Enter your Phone Number'),
                   ),
                 if (!isEmailSelected && isOTPSent)
                   TextField(
@@ -239,10 +252,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ElevatedButton(
                   onPressed: isEmailSelected
                       ? (isEmailValid ? sendResetEmail : null)
-                      : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
+                      : (isOTPSent
+                          ? verifyOTP
+                          : (isPhoneNumberValid ? sendOTP : null)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: (isEmailSelected && isEmailValid) ||
-                            (!isEmailSelected && (isOTPSent || isPhoneNumberValid))
+                            (!isEmailSelected &&
+                                (isOTPSent || isPhoneNumberValid))
                         ? Colors.black
                         : Colors.grey,
                     padding: const EdgeInsets.symmetric(
