@@ -1,12 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/Seller/seller_home_page.dart';
 import 'package:gemhub/home_screen.dart';
-import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
 import 'package:gemhub/screens/auth_screens/signup_screen.dart';
-import 'package:gemhub/screens/profile_screen/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -87,10 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const SellerHomePage(
-                // phone: '',
-                // email: '',
-                // name: '',
-              ),
+                  // phone: '',
+                  // email: '',
+                  // name: '',
+                  ),
             ),
           );
         } else {
