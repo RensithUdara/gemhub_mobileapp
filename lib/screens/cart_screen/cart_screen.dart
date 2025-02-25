@@ -74,7 +74,8 @@ class _CartScreenState extends State<CartScreen> {
                     itemBuilder: (context, index) {
                       final item = widget.cartItems[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         child: ListTile(
                           leading: Image.asset(
                             item.imagePath,
@@ -99,7 +100,8 @@ class _CartScreenState extends State<CartScreen> {
                                 onPressed: () => _incrementQuantity(index),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _removeItem(index),
                               ),
                             ],
