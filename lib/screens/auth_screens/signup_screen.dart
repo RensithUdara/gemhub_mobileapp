@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -19,7 +19,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
 
@@ -38,7 +39,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -51,7 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'phoneNumber': phoneNumberController.text.trim(),
         'role': isBuyer ? 'buyer' : 'seller',
       };
-      
+
       if (!isBuyer) {
         userData.addAll({
           'displayName': displayNameController.text.trim(),
@@ -61,12 +63,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       final String collectionName = isBuyer ? 'buyers' : 'sellers';
       await _firestore.collection(collectionName).doc(userId).set(userData);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("User registered successfully!")),
       );
       Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const LoginScreen()),
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -104,16 +107,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 if (!isBuyer) _customTextField('Address', addressController),
                 _customTextField('Username', usernameController),
                 _customTextField('Email', emailController),
-                _customTextField('Phone Number', phoneNumberController, keyboardType: TextInputType.phone),
-                _customTextField('Password', passwordController, isPassword: true),
-                _customTextField('Confirm Password', confirmPasswordController, isPassword: true),
+                _customTextField('Phone Number', phoneNumberController,
+                    keyboardType: TextInputType.phone),
+                _customTextField('Password', passwordController,
+                    isPassword: true),
+                _customTextField('Confirm Password', confirmPasswordController,
+                    isPassword: true),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saveUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -141,13 +148,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       color: Colors.black,
       borderWidth: 2,
       children: const [
-        Padding(padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), child: Text('Buyer')),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), child: Text('Seller')),
+        Padding(
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+            child: Text('Buyer')),
+        Padding(
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+            child: Text('Seller')),
       ],
     );
   }
 
-  Widget _customTextField(String label, TextEditingController controller, {bool isPassword = false, TextInputType keyboardType = TextInputType.text}) {
+  Widget _customTextField(String label, TextEditingController controller,
+      {bool isPassword = false,
+      TextInputType keyboardType = TextInputType.text}) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: TextFormField(
@@ -164,12 +177,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+                  icon: Icon(isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () =>
+                      setState(() => isPasswordVisible = !isPasswordVisible),
                 )
               : null,
         ),
-        validator: (value) => value == null || value.isEmpty ? "This field is required" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "This field is required" : null,
       ),
     );
   }
