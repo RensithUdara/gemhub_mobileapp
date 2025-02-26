@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/Seller/seller_home_page.dart';
 import 'package:gemhub/home_screen.dart';
+import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
 import 'package:gemhub/screens/auth_screens/signup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -96,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleForgotPassword(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SellerHomePage()), // Should this be a ForgotPasswordScreen?
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()), // Should this be a ForgotPasswordScreen?
     );
   }
 
@@ -208,13 +209,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   customTextField(
                     'Password',
                     passwordController,
                     obscureText: !isPasswordVisible,
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -237,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: isLoading ? null : _validateLogin,
                     style: ElevatedButton.styleFrom(
@@ -262,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
