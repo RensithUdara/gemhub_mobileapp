@@ -39,13 +39,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
+      // Create user with Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
       String userId = userCredential.user?.uid ?? '';
+      if (userId.isEmpty) {
+        throw Exception("Failed to retrieve user ID after sign-up");
+      }
+
+      // Prepare user data for Firestore
       Map<String, dynamic> userData = {
         'firebaseUid': userId,
         'username': usernameController.text.trim(),
@@ -61,9 +66,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
       }
 
+      // Write to the appropriate Firestore collection
       final String collectionName = isBuyer ? 'buyers' : 'sellers';
       await _firestore.collection(collectionName).doc(userId).set(userData);
 
+      // Show success message and navigate to login screen
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("User registered successfully!")),
       );
@@ -73,7 +80,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.message}")),
+        SnackBar(content: Text("Authentication Error: ${e.message}")),
+      );
+    } on FirebaseException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Firestore Error: ${e.message}")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Unexpected Error: $e")),
       );
     }
   }
@@ -165,7 +180,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       padding: const EdgeInsets.only(top: 12),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword ? !isPasswordVisible : false,
+        obscureText: isPassword
+            ? (label == 'Password'
+                ? !isPasswordVisible
+                : !isConfirmPasswordVisible)
+            : false,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
@@ -177,11 +196,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(isPasswordVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  onPressed: () =>
-                      setState(() => isPasswordVisible = !isPasswordVisible),
+                  icon: Icon(
+                      (label == 'Password' ? isPasswordVisible : isConfirmPasswordVisible)
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                  onPressed: () => setState(() {
+                    if (label == 'Password') {
+                      isPasswordVisible = !isPasswordVisible;
+                    } else {
+                      isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                    }
+                  }),
                 )
               : null,
         ),
@@ -189,5 +214,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
             value == null || value.isEmpty ? "This field is required" : null,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    displayNameController.dispose();
+    addressController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    emailController.dispose();
+    phoneNumberController.dispose();
+    super.dispose();
   }
 }
