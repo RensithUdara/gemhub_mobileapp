@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
   bool rememberMe = false;
+  bool isLoading = false; // Added for loading state
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -45,8 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _saveCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (rememberMe) {
-      await prefs.setString('email', emailController.text);
-      await prefs.setString('password', passwordController.text);
+      await prefs.setString('email', emailController.text.trim());
+      await prefs.setString('password', passwordController.text.trim());
     } else {
       await prefs.remove('email');
       await prefs.remove('password');
@@ -54,13 +55,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _validateLogin() async {
-    String email = emailController.text;
-    String password = passwordController.text;
+    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
+      _showSnackBar('Please fill in all fields');
+      return;
+    }
+
+    setState(() => isLoading = true);
 
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
       await _saveCredentials();
@@ -68,54 +73,34 @@ class _LoginScreenState extends State<LoginScreen> {
       String? userId = userCredential.user?.uid;
 
       if (userId != null) {
-        DocumentSnapshot buyerSnapshot =
-            await _firestore.collection('buyers').doc(userId).get();
-        DocumentSnapshot sellerSnapshot =
-            await _firestore.collection('sellers').doc(userId).get();
+        DocumentSnapshot buyerSnapshot = await _firestore.collection('buyers').doc(userId).get();
+        DocumentSnapshot sellerSnapshot = await _firestore.collection('sellers').doc(userId).get();
 
         if (buyerSnapshot.exists) {
-          // Buyer → Navigate to HomeScreen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
+          _navigateTo(const HomeScreen());
         } else if (sellerSnapshot.exists) {
-          // Seller → Navigate to ProfileScreen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SellerHomePage(
-                  // phone: '',
-                  // email: '',
-                  // name: '',
-                  ),
-            ),
-          );
+          _navigateTo(const SellerHomePage());
         } else {
-          throw Exception("User role not found.");
+          throw Exception('User role not found.');
         }
       }
     } on FirebaseAuthException catch (e) {
-      String errorMessage = e.message ?? 'Login failed. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      _showSnackBar(e.message ?? 'Login failed. Please try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
-      );
+      _showSnackBar('Error: $e');
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
   void _handleForgotPassword(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SellerHomePage()),
+      MaterialPageRoute(builder: (context) => const SellerHomePage()), // Should this be a ForgotPasswordScreen?
     );
   }
 
-  InputDecoration customInputDecoration(String labelText,
-      {bool isPasswordField = false}) {
+  InputDecoration customInputDecoration(String labelText, {bool isPasswordField = false}) {
     return InputDecoration(
       labelText: labelText,
       filled: true,
@@ -130,11 +115,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.0),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: Colors.blue, width: 2.0),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
       suffixIcon: isPasswordField
@@ -143,26 +126,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                 color: Colors.grey,
               ),
-              onPressed: () {
-                setState(() {
-                  isPasswordVisible = !isPasswordVisible;
-                });
-              },
+              onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
             )
           : null,
     );
   }
 
-  Widget customTextField(String labelText, TextEditingController controller,
-      {bool obscureText = false,
-      TextInputType keyboardType = TextInputType.text}) {
+  Widget customTextField(
+    String labelText,
+    TextEditingController controller, {
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10.0),
       decoration: BoxDecoration(
         boxShadow: const [
           BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
+            color: Colors.black12,
+            blurRadius: 6.0,
+            offset: Offset(0, 3),
           ),
         ],
         borderRadius: BorderRadius.circular(16.0),
@@ -171,8 +154,24 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        decoration:
-            customInputDecoration(labelText, isPasswordField: obscureText),
+        decoration: customInputDecoration(labelText, isPasswordField: obscureText),
+      ),
+    );
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(10.0),
       ),
     );
   }
@@ -180,112 +179,116 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  "assets/images/logo_new.png",
-                  height: 100,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Log In',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+      backgroundColor: Colors.grey[100],
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "assets/images/logo_new.png",
+                    height: 120,
+                    fit: BoxFit.contain,
                   ),
-                ),
-                const SizedBox(height: 20),
-                customTextField('Email', emailController,
-                    keyboardType: TextInputType.emailAddress),
-                const SizedBox(height: 20),
-                customTextField(
-                  'Password',
-                  passwordController,
-                  obscureText: !isPasswordVisible,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: rememberMe,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              rememberMe = value ?? false;
-                            });
-                          },
-                        ),
-                        const Text('Remember me'),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () => _handleForgotPassword(context),
-                      child: const Text(
-                        'Forgot password?',
-                        style: TextStyle(
-                          color: Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _validateLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 40.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: const Text(
-                    'Log in',
+                  const SizedBox(height: 30),
+                  const Text(
+                    'Log In',
                     style: TextStyle(
-                      fontSize: 18.0,
-                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignUpScreen(),
+                  const SizedBox(height: 30),
+                  customTextField(
+                    'Email',
+                    emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 20),
+                  customTextField(
+                    'Password',
+                    passwordController,
+                    obscureText: !isPasswordVisible,
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: rememberMe,
+                            onChanged: (value) => setState(() => rememberMe = value ?? false),
+                            activeColor: Colors.blue,
                           ),
-                        );
-                      },
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          color: Colors.blue,
+                          const Text('Remember me', style: TextStyle(color: Colors.black54)),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: () => _handleForgotPassword(context),
+                        child: const Text(
+                          'Forgot password?',
+                          style: TextStyle(color: Colors.redAccent),
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: isLoading ? null : _validateLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      elevation: 5,
                     ),
-                  ],
-                ),
-              ],
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Log In',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Don't have an account?", style: TextStyle(color: Colors.black54)),
+                      TextButton(
+                        onPressed: () => _navigateTo(const SignUpScreen()),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }
