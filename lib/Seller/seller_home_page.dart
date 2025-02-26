@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // Add this package for animations
+import 'package:flutter_animate/flutter_animate.dart';
 
-import 'auction_product.dart'
-    as auction; // Use a prefix for auction_product.dart
+import 'auction_product.dart' as auction;
 import 'notifications_page.dart';
-import 'product_listing.dart'
-    as product; // Use a prefix for product_listing.dart
+import 'product_listing.dart' as product;
 
 class SellerHomePage extends StatefulWidget {
   const SellerHomePage({super.key});
@@ -21,9 +19,8 @@ class _SellerHomePageState extends State<SellerHomePage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isHovered = false;
-  int _selectedIndex = 0; // Track the selected tab in the bottom navigation bar
-  final List<Map<String, dynamic>> _notifications =
-      []; // List to store notification data
+  int _selectedIndex = 0;
+  final List<Map<String, dynamic>> _notifications = [];
 
   @override
   void initState() {
@@ -47,7 +44,6 @@ class _SellerHomePageState extends State<SellerHomePage>
     super.dispose();
   }
 
-  // Method to add a notification with product/auction details and type
   void _showNotification(
       String title, int quantity, String? imagePath, String type) {
     setState(() {
@@ -55,28 +51,83 @@ class _SellerHomePageState extends State<SellerHomePage>
         'title': title,
         'quantity': quantity,
         'imagePath': imagePath,
-        'type': type, // 'product' or 'auction'
+        'type': type,
       });
     });
+  }
+
+  // Add logout confirmation dialog
+  Future<void> _showLogoutDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Logout',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.blue),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.red),
+              ),
+              onPressed: () {
+                // Add your logout logic here
+                // For example: Navigate to login screen
+                Navigator.of(context).pop();
+                // Replace with your actual logout navigation
+                // Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 1) {
-      // Navigate to Notifications page
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              NotificationsPage(notifications: _notifications),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+    switch (index) {
+      case 1: // Notifications
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                NotificationsPage(notifications: _notifications),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+        break;
+      case 3: // Logout
+        _showLogoutDialog();
+        break;
     }
   }
 
@@ -88,7 +139,6 @@ class _SellerHomePageState extends State<SellerHomePage>
         backgroundColor: Colors.black,
         body: Stack(
           children: [
-            // Dynamic Gradient Background
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -113,7 +163,6 @@ class _SellerHomePageState extends State<SellerHomePage>
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Avatar with Glow Effect and Centered
                           MouseRegion(
                             onEnter: (_) => setState(() => _isHovered = true),
                             onExit: (_) => setState(() => _isHovered = false),
@@ -153,25 +202,6 @@ class _SellerHomePageState extends State<SellerHomePage>
                             ),
                           ),
                           const SizedBox(height: 40),
-                          // // Welcome Text with Animation and Centered
-                          // const Text(
-                          //   'Welcome, Kasun!',
-                          //   textAlign: TextAlign.center,
-                          //   style: TextStyle(
-                          //     color: Colors.white,
-                          //     fontSize: 36,
-                          //     fontWeight: FontWeight.bold,
-                          //     shadows: [
-                          //       Shadow(
-                          //         color: Colors.blue,
-                          //         offset: Offset(0, 6),
-                          //         blurRadius: 8,
-                          //       ),
-                          //     ],
-                          //   ),
-                          // ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
-                          // const SizedBox(height: 60),
-                          // Buttons with Hover, Tap Animations, and Centered
                           _buildButton(
                             context: context,
                             title: 'PRODUCT LISTING',
@@ -301,6 +331,10 @@ class _SellerHomePageState extends State<SellerHomePage>
               label: '',
             ),
             const BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.logout),
+              label: '',
+            ),
           ],
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
