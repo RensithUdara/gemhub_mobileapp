@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 import 'auction_product.dart' as auction;
 import 'notifications_page.dart';
@@ -56,55 +57,67 @@ class _SellerHomePageState extends State<SellerHomePage>
     });
   }
 
-  // Add logout confirmation dialog
-  Future<void> _showLogoutDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.black87,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Logout',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-          content: const Text(
-            'Are you sure you want to logout?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.blue),
+            backgroundColor: Colors.black87, // Match app theme
+            title: const Row(
+              children: [
+                Icon(
+                  Icons.logout,
+                  color: Colors.redAccent,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Confirm Logout',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to logout?',
+              style: TextStyle(fontSize: 16, color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.red),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              onPressed: () {
-                // Add your logout logic here
-                // For example: Navigate to login screen
-                Navigator.of(context).pop();
-                // Replace with your actual logout navigation
-                // Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
-          ],
-        );
-      },
-    );
+            ],
+          ),
+        )) ??
+        false;
   }
 
   void _onItemTapped(int index) {
@@ -126,221 +139,223 @@ class _SellerHomePageState extends State<SellerHomePage>
         );
         break;
       case 3: // Logout
-        _showLogoutDialog();
+        _onWillPop(); // Use the same logout dialog
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black87,
-                    Colors.black54,
-                  ],
-                  stops: [0.2, 0.8],
+    return WillPopScope(
+      onWillPop: _onWillPop, // Handle back button
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.black87,
+                      Colors.black54,
+                    ],
+                    stops: [0.2, 0.8],
+                  ),
                 ),
               ),
-            ),
-            SafeArea(
-              child: Center(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          MouseRegion(
-                            onEnter: (_) => setState(() => _isHovered = true),
-                            onExit: (_) => setState(() => _isHovered = false),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.blue, width: 2),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: _isHovered
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.blue.withOpacity(0.5),
-                                          blurRadius: 20,
-                                          spreadRadius: 5,
-                                          offset: const Offset(0, 0),
-                                        ),
-                                      ]
-                                    : [
-                                        BoxShadow(
-                                          color: Colors.blue.withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(18),
-                                child: Image.asset(
-                                  'assets/images/logo_new.png',
-                                  width: 200,
-                                  height: 200,
-                                  fit: BoxFit.cover,
+              SafeArea(
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            MouseRegion(
+                              onEnter: (_) => setState(() => _isHovered = true),
+                              onExit: (_) => setState(() => _isHovered = false),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: Colors.blue, width: 2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: _isHovered
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.blue.withOpacity(0.5),
+                                            blurRadius: 20,
+                                            spreadRadius: 5,
+                                            offset: const Offset(0, 0),
+                                          ),
+                                        ]
+                                      : [
+                                          BoxShadow(
+                                            color: Colors.blue.withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Image.asset(
+                                    'assets/images/logo_new.png',
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 40),
-                          _buildButton(
-                            context: context,
-                            title: 'PRODUCT LISTING',
-                            icon: Icons.list_alt,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      const product.ProductListing(),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
-                                  },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 400),
-                                ),
-                              );
-                              if (result != null &&
-                                  result is Map<String, dynamic>) {
-                                _showNotification(
-                                    result['title'],
-                                    result['quantity'],
-                                    result['imagePath'],
-                                    'product');
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          _buildButton(
-                            context: context,
-                            title: 'AUCTION',
-                            icon: Icons.gavel,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      const auction.AuctionProduct(),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
-                                  },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 400),
-                                ),
-                              );
-                              if (result != null &&
-                                  result is Map<String, dynamic>) {
-                                _showNotification(
-                                    result['title'],
-                                    result['quantity'],
-                                    result['imagePath'],
-                                    'auction');
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          _buildButton(
-                            context: context,
-                            title: 'ORDER HISTORY',
-                            icon: Icons.history,
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 24),
-                          _buildButton(
-                            context: context,
-                            title: 'AUCTION HISTORY',
-                            icon: Icons.timeline,
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 40),
-                        ],
+                            const SizedBox(height: 40),
+                            _buildButton(
+                              context: context,
+                              title: 'PRODUCT LISTING',
+                              icon: Icons.list_alt,
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const product.ProductListing(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      return FadeTransition(
+                                          opacity: animation, child: child);
+                                    },
+                                    transitionDuration:
+                                        const Duration(milliseconds: 400),
+                                  ),
+                                );
+                                if (result != null &&
+                                    result is Map<String, dynamic>) {
+                                  _showNotification(
+                                      result['title'],
+                                      result['quantity'],
+                                      result['imagePath'],
+                                      'product');
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            _buildButton(
+                              context: context,
+                              title: 'AUCTION',
+                              icon: Icons.gavel,
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const auction.AuctionProduct(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      return FadeTransition(
+                                          opacity: animation, child: child);
+                                    },
+                                    transitionDuration:
+                                        const Duration(milliseconds: 400),
+                                  ),
+                                );
+                                if (result != null &&
+                                    result is Map<String, dynamic>) {
+                                  _showNotification(
+                                      result['title'],
+                                      result['quantity'],
+                                      result['imagePath'],
+                                      'auction');
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            _buildButton(
+                              context: context,
+                              title: 'ORDER HISTORY',
+                              icon: Icons.history,
+                              onTap: () {},
+                            ),
+                            const SizedBox(height: 24),
+                            _buildButton(
+                              context: context,
+                              title: 'AUCTION HISTORY',
+                              icon: Icons.timeline,
+                              onTap: () {},
+                            ),
+                            const SizedBox(height: 40),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.black,
-          selectedItemColor: Colors.lightBlueAccent,
-          unselectedItemColor: Colors.grey,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          type: BottomNavigationBarType.fixed,
-          iconSize: 32,
-          items: [
-            const BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-            BottomNavigationBarItem(
-              icon: Stack(
-                children: [
-                  const Icon(Icons.notifications),
-                  if (_notifications.isNotEmpty)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          _notifications.length.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
+            ],
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Colors.black,
+            selectedItemColor: Colors.lightBlueAccent,
+            unselectedItemColor: Colors.grey,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            type: BottomNavigationBarType.fixed,
+            iconSize: 32,
+            items: [
+              const BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+              BottomNavigationBarItem(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.notifications),
+                    if (_notifications.isNotEmpty)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 12,
+                            minHeight: 12,
+                          ),
+                          child: Text(
+                            _notifications.length.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
+                label: '',
               ),
-              label: '',
-            ),
-            const BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.logout),
-              label: '',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          elevation: 12,
-          selectedIconTheme:
-              const IconThemeData(size: 34, color: Colors.blueAccent),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.person), label: ''),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.logout), label: ''),
+            ],
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+            elevation: 12,
+            selectedIconTheme:
+                const IconThemeData(size: 34, color: Colors.blueAccent),
+          ),
         ),
       ),
     );
