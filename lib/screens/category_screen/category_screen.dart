@@ -13,21 +13,38 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _searchQuery = '';
+  String _sortOrder = 'asc'; // Default sorting order
+  List<Map<String, dynamic>> _products = [];
 
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
 
-  // 🔹 Fetch products filtered by category (No Sorting Required)
-  Stream<List<Map<String, dynamic>>> _getFilteredProducts(String searchQuery) {
-    Query query = _productsCollection.where('category', isEqualTo: widget.categoryTitle);
+  // 🔹 Fetch products filtered by category
+  void _fetchProducts() {
+    _productsCollection
+        .where('category', isEqualTo: widget.categoryTitle)
+        .get()
+        .then((snapshot) {
+      setState(() {
+        _products = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        _applySorting();
+      });
+    });
+  }
 
-    // Apply search filter
-    if (searchQuery.isNotEmpty) {
-      query = query.orderBy('title').startAt([searchQuery]).endAt(['$searchQuery\uf8ff']);
-    }
+  // 🔹 Apply sorting based on price
+  void _applySorting() {
+    setState(() {
+      _products.sort((a, b) => _sortOrder == 'asc'
+          ? a['price'].compareTo(b['price'])
+          : b['price'].compareTo(a['price']));
+    });
+  }
 
-    return query.snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
   }
 
   @override
@@ -37,6 +54,28 @@ class _CategoryScreenState extends State<CategoryScreen> {
         backgroundColor: Colors.blue[700],
         title: Text(widget.categoryTitle,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+        actions: [
+          // 🔹 Sort Button
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              setState(() {
+                _sortOrder = value;
+                _applySorting();
+              });
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'asc',
+                child: Text('Price: Low to High'),
+              ),
+              const PopupMenuItem(
+                value: 'desc',
+                child: Text('Price: High to Low'),
+              ),
+            ],
+            icon: const Icon(Icons.sort, color: Colors.white),
+          ),
+        ],
       ),
       body: Container(
         color: Colors.lightBlue[50], // Set background color to light blue
@@ -68,18 +107,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
             const SizedBox(height: 20),
             // 🔹 Product Grid
             Expanded(
-              child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _getFilteredProducts(_searchQuery),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return const Center(child: Text('Error loading products.'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No products found.'));
-                  } else {
-                    final products = snapshot.data!;
-                    return GridView.builder(
+              child: _products.isEmpty
+                  ? const Center(child: Text('No products found.'))
+                  : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -87,18 +117,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         crossAxisSpacing: 15,
                         mainAxisSpacing: 15,
                       ),
-                      itemCount: products.length,
+                      itemCount: _products.length,
                       itemBuilder: (context, index) {
                         return ProductCard(
-                          imagePath: products[index]['imagePath'],
-                          title: products[index]['title'],
-                          price: 'Rs. ${products[index]['price']}',
+                          imagePath: _products[index]['imagePath'],
+                          title: _products[index]['title'],
+                          price: 'Rs. ${_products[index]['price']}',
                         );
                       },
-                    );
-                  }
-                },
-              ),
+                    ),
             ),
           ],
         ),
