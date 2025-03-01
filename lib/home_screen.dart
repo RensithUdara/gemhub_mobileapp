@@ -277,8 +277,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     children: const [
                       CategoryCard(imagePath: 'assets/images/category1.jpg', title: 'Blue Sapphires'),
-                      CategoryCard(imagePath: 'assets/images/category2.jpg', title: 'White Sapphire'),
-                      CategoryCard(imagePath: 'assets/images/category3.jpg', title: 'Yellow Sapphire'),
+                      CategoryCard(imagePath: 'assets/images/category2.jpg', title: 'White Sapphires'),
+                      CategoryCard(imagePath: 'assets/images/category3.jpg', title: 'Yellow Sapphires'),
                     ],
                   ),
                   const SizedBox(height: 15),
