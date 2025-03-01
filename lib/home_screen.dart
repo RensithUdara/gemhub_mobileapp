@@ -1,16 +1,16 @@
 // Now, let's improve the HomeScreen
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/providers/banner_provider.dart';
-import 'package:gemhub/screens/category_screen/category_card.dart';
-import 'package:provider/provider.dart';
 import 'package:gemhub/screens/auction_screen/auction_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 import 'package:gemhub/screens/cart_screen/cart_screen.dart';
+import 'package:gemhub/screens/category_screen/category_card.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 import 'package:gemhub/screens/profile_screen/profile_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,12 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchUserName() async {
     try {
-      // Replace 'userId' with actual user ID (perhaps from auth system)
+      // Replace 'userId' with actual user ID from your authentication system
       var user = FirebaseFirestore.instance.collection('users').doc('userId');
       var docSnapshot = await user.get();
       if (docSnapshot.exists) {
         setState(() {
-          userName = docSnapshot.data()?['username'] ?? 'Guest';
+          userName =
+              docSnapshot.data()?['name'] ?? 'Guest'; // Fetch the 'name' field
         });
       }
     } catch (e) {
@@ -63,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
+          MaterialPageRoute(
+              builder: (context) => const CartScreen(cartItems: [])),
         );
         break;
       case 3:
@@ -92,20 +94,23 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Icon(Icons.logout, color: Colors.redAccent),
                 SizedBox(width: 10),
-                Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Confirm Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             content: const Text('Are you sure you want to logout?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                child:
+                    const Text('Cancel', style: TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -115,7 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                child:
+                    const Text('Logout', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -177,8 +183,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     'Welcome $userName,',
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 26, fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 10),
                   TextField(
                     decoration: InputDecoration(
@@ -226,16 +234,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           aspectRatio: 16 / 9,
                           viewportFraction: 0.8,
                         ),
-                        items: bannerProvider.bannerList.map((item) => Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            image: DecorationImage(
-                              image: NetworkImage(item),
-                              fit: BoxFit.cover,
-                              onError: (exception, stackTrace) => const Icon(Icons.error),
-                            ),
-                          ),
-                        )).toList(),
+                        items: bannerProvider.bannerList
+                            .map((item) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15),
+                                    image: DecorationImage(
+                                      image: NetworkImage(item),
+                                      fit: BoxFit.cover,
+                                      onError: (exception, stackTrace) =>
+                                          const Icon(Icons.error),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
                       );
                     },
                   ),
@@ -246,7 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Text(
                         'Categories',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       TextButton(
                         onPressed: () {
@@ -254,15 +266,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => Scaffold(
-                                appBar: AppBar(title: const Text('All Categories')),
+                                appBar:
+                                    AppBar(title: const Text('All Categories')),
                                 body: const Center(
-                                  child: Text('All categories will be displayed here.'),
+                                  child: Text(
+                                      'All categories will be displayed here.'),
                                 ),
                               ),
                             ),
                           );
                         },
-                        child: const Text('See All', style: TextStyle(color: Colors.blue)),
+                        child: const Text('See All',
+                            style: TextStyle(color: Colors.blue)),
                       ),
                     ],
                   ),
@@ -276,9 +291,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(8),
                     physics: const NeverScrollableScrollPhysics(),
                     children: const [
-                      CategoryCard(imagePath: 'assets/images/category1.jpg', title: 'Blue Sapphires'),
-                      CategoryCard(imagePath: 'assets/images/category2.jpg', title: 'White Sapphires'),
-                      CategoryCard(imagePath: 'assets/images/category3.jpg', title: 'Yellow Sapphires'),
+                      CategoryCard(
+                          imagePath: 'assets/images/category1.jpg',
+                          title: 'Blue Sapphires'),
+                      CategoryCard(
+                          imagePath: 'assets/images/category2.jpg',
+                          title: 'White Sapphires'),
+                      CategoryCard(
+                          imagePath: 'assets/images/category3.jpg',
+                          title: 'Yellow Sapphires'),
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -296,12 +317,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(8),
                     physics: const NeverScrollableScrollPhysics(),
                     children: const [
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394', title: '4.37ct Natural Blue Sapphire', price: 'Rs 4,038,500.00'),
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980', title: '1.17ct Natural Pink Sapphire', price: 'Rs.549,000.00'),
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394', title: '4.37ct Natural Blue Sapphire', price: 'Rs 4,038,500.00'),
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980', title: '1.17ct Natural Pink Sapphire', price: 'Rs.549,000.00'),
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394', title: '4.37ct Natural Blue Sapphire', price: 'Rs 4,038,500.00'),
-                      ProductCard(imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980', title: '1.17ct Natural Pink Sapphire', price: 'Rs.549,000.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394',
+                          title: '4.37ct Natural Blue Sapphire',
+                          price: 'Rs 4,038,500.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                          title: '1.17ct Natural Pink Sapphire',
+                          price: 'Rs.549,000.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394',
+                          title: '4.37ct Natural Blue Sapphire',
+                          price: 'Rs 4,038,500.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                          title: '1.17ct Natural Pink Sapphire',
+                          price: 'Rs.549,000.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394',
+                          title: '4.37ct Natural Blue Sapphire',
+                          price: 'Rs 4,038,500.00'),
+                      ProductCard(
+                          imagePath:
+                              'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.firebasestorage.app/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                          title: '1.17ct Natural Pink Sapphire',
+                          price: 'Rs.549,000.00'),
                     ],
                   ),
                 ],
@@ -316,11 +361,13 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             backgroundColor: const Color.fromARGB(255, 173, 216, 230),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             elevation: 8,
             child: const Icon(Icons.gavel),
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: AnimatedBottomNavigationBar(
             icons: iconList,
             activeIndex: _selectedIndex,
