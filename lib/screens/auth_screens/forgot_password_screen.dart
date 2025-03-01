@@ -24,6 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Custom Input Decoration
   InputDecoration customInputDecoration(String labelText) {
     return InputDecoration(
       labelText: labelText,
@@ -41,15 +42,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
     );
   }
 
-  // Switch between email and phone options
+  // Toggle between Email and Phone Options
   void toggleOption(bool isEmail) {
     setState(() {
       isEmailSelected = isEmail;
@@ -57,26 +57,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
   }
 
-  // Validate email input
+  // Validate Email Input
   void checkEmail(String value) {
     setState(() {
       isEmailValid = value.isNotEmpty && value.contains('@');
     });
   }
 
+  // Validate Phone Number Input
   void checkPhoneNumber(String value) {
     setState(() {
-      isPhoneNumberValid =
-          value.length == 10; // Adjust for your phone number length
+      isPhoneNumberValid = value.length == 10; // Adjust for your phone number length
     });
   }
 
+  // Send Password Reset Email
   Future<void> sendResetEmail() async {
     try {
       await _auth.sendPasswordResetEmail(email: emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Password reset email sent successfully!")),
+        const SnackBar(content: Text("Password reset email sent successfully!")),
       );
 
       Navigator.pushReplacement(
@@ -90,14 +90,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
   }
 
-  // Send OTP for phone option
+  // Send OTP for Phone Option
   Future<void> sendOTP() async {
     try {
+      if (!isPhoneNumberValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter a valid phone number")),
+        );
+        return;
+      }
+
       await _auth.verifyPhoneNumber(
         phoneNumber: "+94${phoneNumberController.text.trim()}",
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-verification (rare)
+          // Auto-verification (rare case)
           await _auth.signInWithCredential(credential);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResetPasswordScreen(
+                phoneNumber: phoneNumberController.text.trim(),
+              ),
+            ),
+          );
         },
         verificationFailed: (FirebaseAuthException e) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -119,14 +134,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text("An error occurred: ${e.toString()}")),
       );
     }
   }
 
-  // Verify OTP for phone option
+  // Verify OTP for Phone Option
   Future<void> verifyOTP() async {
     try {
+      if (otpController.text.trim().isEmpty || otpController.text.length != 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter a valid 6-digit OTP")),
+        );
+        return;
+      }
+
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
         smsCode: otpController.text.trim(),
@@ -139,7 +161,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         context,
         MaterialPageRoute(
           builder: (context) => ResetPasswordScreen(
-              phoneNumber: phoneNumberController.text.trim()),
+            phoneNumber: phoneNumberController.text.trim(),
+          ),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -160,6 +183,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // App Logo
                 Image.asset(
                   "assets/images/logo_new.png",
                   height: 100,
@@ -173,17 +197,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Email/Phone Toggle Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
                       onTap: () => toggleOption(true),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color:
-                              isEmailSelected ? Colors.black : Colors.grey[300],
+                          color: isEmailSelected ? Colors.black : Colors.grey[300],
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(10),
                             bottomLeft: Radius.circular(10),
@@ -192,8 +216,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         child: Text(
                           'Email',
                           style: TextStyle(
-                            color:
-                                isEmailSelected ? Colors.white : Colors.black,
+                            color: isEmailSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -202,12 +225,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     GestureDetector(
                       onTap: () => toggleOption(false),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: !isEmailSelected
-                              ? Colors.black
-                              : Colors.grey[300],
+                          color: !isEmailSelected ? Colors.black : Colors.grey[300],
                           borderRadius: const BorderRadius.only(
                             topRight: Radius.circular(10),
                             bottomRight: Radius.circular(10),
@@ -216,8 +236,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         child: Text(
                           'Phone',
                           style: TextStyle(
-                            color:
-                                !isEmailSelected ? Colors.white : Colors.black,
+                            color: !isEmailSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -226,6 +245,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
+
+                // Input Fields
                 if (isEmailSelected)
                   TextField(
                     controller: emailController,
@@ -238,8 +259,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: phoneNumberController,
                     keyboardType: TextInputType.phone,
                     onChanged: checkPhoneNumber,
-                    decoration:
-                        customInputDecoration('Enter your Phone Number'),
+                    decoration: customInputDecoration('Enter your Phone Number'),
                   ),
                 if (!isEmailSelected && isOTPSent)
                   TextField(
@@ -249,22 +269,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     decoration: customInputDecoration('Enter OTP'),
                   ),
                 const SizedBox(height: 20),
+
+                // Action Button
                 ElevatedButton(
                   onPressed: isEmailSelected
                       ? (isEmailValid ? sendResetEmail : null)
-                      : (isOTPSent
-                          ? verifyOTP
-                          : (isPhoneNumberValid ? sendOTP : null)),
+                      : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: (isEmailSelected && isEmailValid) ||
-                            (!isEmailSelected &&
-                                (isOTPSent || isPhoneNumberValid))
+                            (!isEmailSelected && (isOTPSent || isPhoneNumberValid))
                         ? Colors.black
                         : Colors.grey,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 40.0,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 40.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
