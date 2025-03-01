@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AuctionScreen extends StatelessWidget {
@@ -41,74 +42,77 @@ class AuctionScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () {
-              // Refresh auctions logic here
-            },
+            onPressed: () {},
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-        child: ListView(
-          children: const [
-            Text(
-              'Live Bidding',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: Colors.blueGrey,
-              ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('auctions')
+            .orderBy('endTime')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final auctions = snapshot.data!.docs;
+
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+            child: ListView(
+              children: [
+                const Text(
+                  'Live Bidding',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...auctions.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: AuctionItemCard(
+                      auctionId: doc.id,
+                      imagePath: data['imagePath'],
+                      title: data['title'],
+                      currentBid: data['currentBid'],
+                      endTime: DateTime.parse(data['endTime']),
+                      minimumIncrement: data['minimumIncrement'],
+                    ),
+                  );
+                }).toList(),
+              ],
             ),
-            SizedBox(height: 16),
-            AuctionItemCard(
-              imagePath: 'assets/images/gem01.jpg',
-              title: 'Natural Emerald 3.5ct',
-              currentBid: 150000,
-              endTime: Duration(minutes: 1), // Shortened for demo
-              minimumIncrement: 500,
-              currentUserId: 'user1',
-            ),
-            SizedBox(height: 20),
-            AuctionItemCard(
-              imagePath: 'assets/images/gem01.jpg',
-              title: 'Ruby Gemstone 2.7ct',
-              currentBid: 250000,
-              endTime: Duration(minutes: 2),
-              minimumIncrement: 1000,
-              currentUserId: 'user1',
-            ),
-            SizedBox(height: 20),
-            AuctionItemCard(
-              imagePath: 'assets/images/gem01.jpg',
-              title: 'Sapphire Gemstone 5.0ct',
-              currentBid: 500000,
-              endTime: Duration(minutes: 3),
-              minimumIncrement: 2000,
-              currentUserId: 'user1',
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
 class AuctionItemCard extends StatefulWidget {
+  final String auctionId;
   final String imagePath;
   final String title;
   final int currentBid;
-  final Duration endTime;
+  final DateTime endTime;
   final int minimumIncrement;
-  final String currentUserId;
 
   const AuctionItemCard({
     super.key,
+    required this.auctionId,
     required this.imagePath,
     required this.title,
     required this.currentBid,
     required this.endTime,
-    this.minimumIncrement = 100,
-    required this.currentUserId,
+    required this.minimumIncrement,
   });
 
   @override
@@ -125,12 +129,13 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   late AnimationController _animationController;
   late Animation<double> _bidAnimation;
   String? _winningUserId;
+  late StreamSubscription<DocumentSnapshot> _auctionSubscription;
 
   @override
   void initState() {
     super.initState();
     _currentBid = widget.currentBid;
-    _remainingTime = widget.endTime;
+    _remainingTime = widget.endTime.difference(DateTime.now());
     _timer = Timer.periodic(const Duration(seconds: 1), _updateTime);
 
     _animationController = AnimationController(
@@ -140,172 +145,229 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     _bidAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
+
+    _setupRealtimeListener();
+  }
+
+  void _setupRealtimeListener() {
+    _auctionSubscription = FirebaseFirestore.instance
+        .collection('auctions')
+        .doc(widget.auctionId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        setState(() {
+          _currentBid = data['currentBid'];
+          _winningUserId = data['winningUserId'];
+        });
+        if (data['currentBid'] > widget.currentBid) {
+          _animationController.forward(from: 0.0);
+        }
+      }
+    });
   }
 
   void _updateTime(Timer timer) {
-    if (_remainingTime.inSeconds > 0) {
+    final now = DateTime.now();
+    if (widget.endTime.isAfter(now)) {
       setState(() {
-        _remainingTime -= const Duration(seconds: 1);
+        _remainingTime = widget.endTime.difference(now);
       });
     } else {
       _timer.cancel();
-      if (_winningUserId == null && _currentBid > widget.currentBid) {
-        setState(() {
-          _winningUserId = widget.currentUserId;
-        });
-      }
     }
   }
 
-  Future<void> _placeBid() async {
-    final enteredBid = int.tryParse(_bidController.text.trim());
+Future<void> _placeBid() async {
+  final enteredBid = int.tryParse(_bidController.text.trim());
+  final currentUser = FirebaseAuth.instance.currentUser;
 
-    if (enteredBid == null) {
-      _showSnackBar('Please enter a valid number');
-      return;
-    }
+  print("Current user: ${currentUser?.uid}");
+  if (currentUser == null) {
+    _showSnackBar('Please log in to bid');
+    return;
+  }
 
-    if (enteredBid <= _currentBid) {
-      _showSnackBar('Bid must exceed current bid');
-      return;
-    }
+  if (enteredBid == null) {
+    _showSnackBar('Please enter a valid number');
+    return;
+  }
 
-    if ((enteredBid - _currentBid) < widget.minimumIncrement) {
-      _showSnackBar(
-          'Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
-      return;
-    }
+  if (enteredBid <= _currentBid) {
+    _showSnackBar('Bid must exceed current bid');
+    return;
+  }
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.6),
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 16,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue[50]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.blue[600]!, Colors.blue[400]!],
-                  ),
-                ),
-                child: const Icon(
-                  Icons.gavel,
-                  size: 32,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Confirm Bid',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.blue[900],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Place bid of:',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _formatCurrency(enteredBid),
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      backgroundColor: Colors.grey[200],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      backgroundColor: Colors.blue[700],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 6,
-                    ),
-                    child: const Text(
-                      'Confirm',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+  if ((enteredBid - _currentBid) < widget.minimumIncrement) {
+    _showSnackBar(
+        'Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
+    return;
+  }
+
+  // Check if auction document exists
+  final doc = await FirebaseFirestore.instance
+      .collection('auctions')
+      .doc(widget.auctionId)
+      .get();
+  if (!doc.exists) {
+    _showSnackBar('Auction not found');
+    return;
+  }
+  print("Document data: ${doc.data()}");
+
+  // Confirmation dialog (unchanged)
+  final confirm = await showDialog<bool>(
+    context: context,
+    barrierColor: Colors.black.withOpacity(0.6),
+    builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 16,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blue[50]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Colors.blue[600]!, Colors.blue[400]!],
+                ),
+              ),
+              child: const Icon(
+                Icons.gavel,
+                size: 32,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Confirm Bid',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Colors.blue[900],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Place bid of:',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _formatCurrency(enteredBid),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    backgroundColor: Colors.grey[200],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    backgroundColor: Colors.blue[700],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 6,
+                  ),
+                  child: const Text(
+                    'Confirm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    );
+    ),
+  );
 
-    if (confirm ?? false) {
-      setState(() => _isLoading = true);
-      await Future.delayed(const Duration(milliseconds: 500));
-
+  if (confirm ?? false) {
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('auctions')
+          .doc(widget.auctionId)
+          .update({
+        'currentBid': enteredBid,
+        'winningUserId': currentUser.uid,
+        'lastBidTime': FieldValue.serverTimestamp(),
+      });
       setState(() {
         _currentBid = enteredBid;
-        _winningUserId = widget.currentUserId;
+        _winningUserId = currentUser.uid;
         _isLoading = false;
       });
-      _animationController.forward(from: 0.0);
       _bidController.clear();
       _showSnackBar('Bid placed successfully!');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackBar('Error placing bid: $e');
     }
   }
+}
 
   Future<void> _handlePayment() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1000));
-    setState(() => _isLoading = false);
-    _showSnackBar('Payment processing initiated!');
+    try {
+      await FirebaseFirestore.instance
+          .collection('auctions')
+          .doc(widget.auctionId)
+          .update({
+        'paymentStatus': 'pending',
+        'paymentInitiatedAt': FieldValue.serverTimestamp(),
+      });
+      setState(() => _isLoading = false);
+      _showSnackBar('Payment processing initiated!');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackBar('Payment error: $e');
+    }
   }
 
   void _showSnackBar(String message) {
@@ -327,13 +389,20 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     );
   }
 
-  String _formatTime(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(duration.inHours);
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$hours:$minutes:$seconds';
+String _formatTime(Duration duration) {
+  if (duration.inSeconds <= 0) {
+    return '00d : 00h : 00m : 00s';
   }
+  
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  
+  final days = duration.inDays;
+  final hours = twoDigits(duration.inHours.remainder(24));
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  
+  return '${days}d : ${hours}h : ${minutes}m : ${seconds}s';
+}
 
   String _formatCurrency(int amount) {
     return 'Rs.${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
@@ -341,6 +410,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
 
   @override
   void dispose() {
+    _auctionSubscription.cancel();
     _timer.cancel();
     _bidController.dispose();
     _animationController.dispose();
@@ -350,7 +420,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   @override
   Widget build(BuildContext context) {
     bool isAuctionActive = _remainingTime.inSeconds > 0;
-    bool isCurrentUserWinner = _winningUserId == widget.currentUserId;
+    bool isCurrentUserWinner = 
+        _winningUserId == FirebaseAuth.instance.currentUser?.uid;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -652,7 +723,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   String _getButtonText() {
     if (_remainingTime.inSeconds > 0) {
       return 'Place Bid';
-    } else if (_winningUserId == widget.currentUserId) {
+    } else if (_winningUserId == FirebaseAuth.instance.currentUser?.uid) {
       return 'Pay Now';
     } else {
       return 'Auction Ended';
@@ -662,7 +733,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   VoidCallback? _getButtonAction() {
     if (_remainingTime.inSeconds > 0 && !_isLoading) {
       return _placeBid;
-    } else if (_winningUserId == widget.currentUserId && !_isLoading) {
+    } else if (_winningUserId == FirebaseAuth.instance.currentUser?.uid &&
+        !_isLoading) {
       return _handlePayment;
     } else {
       return null;
