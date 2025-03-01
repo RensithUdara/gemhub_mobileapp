@@ -15,6 +15,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   String _searchQuery = '';
   String _sortOrder = 'asc'; // Default sorting order
   List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> _filteredProducts = [];
 
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
@@ -27,15 +28,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
         .then((snapshot) {
       setState(() {
         _products = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-        _applySorting();
+        _applyFilters();
       });
     });
   }
 
-  // 🔹 Apply sorting based on price
-  void _applySorting() {
+  // 🔹 Apply sorting and search filtering
+  void _applyFilters() {
     setState(() {
-      _products.sort((a, b) => _sortOrder == 'asc'
+      _filteredProducts = _products
+          .where((product) => product['title'].toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
+      _filteredProducts.sort((a, b) => _sortOrder == 'asc'
           ? a['price'].compareTo(b['price'])
           : b['price'].compareTo(a['price']));
     });
@@ -60,7 +64,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
             onSelected: (value) {
               setState(() {
                 _sortOrder = value;
-                _applySorting();
+                _applyFilters();
               });
             },
             itemBuilder: (context) => [
@@ -89,6 +93,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value.trim();
+                  _applyFilters();
                 });
               },
               decoration: InputDecoration(
@@ -107,7 +112,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
             const SizedBox(height: 20),
             // 🔹 Product Grid
             Expanded(
-              child: _products.isEmpty
+              child: _filteredProducts.isEmpty
                   ? const Center(child: Text('No products found.'))
                   : GridView.builder(
                       gridDelegate:
@@ -117,12 +122,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         crossAxisSpacing: 15,
                         mainAxisSpacing: 15,
                       ),
-                      itemCount: _products.length,
+                      itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
                         return ProductCard(
-                          imagePath: _products[index]['imagePath'],
-                          title: _products[index]['title'],
-                          price: 'Rs. ${_products[index]['price']}',
+                          imagePath: _filteredProducts[index]['imagePath'],
+                          title: _filteredProducts[index]['title'],
+                          price: 'Rs. ${_filteredProducts[index]['price']}',
                         );
                       },
                     ),
