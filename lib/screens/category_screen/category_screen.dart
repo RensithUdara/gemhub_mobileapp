@@ -12,33 +12,22 @@ class CategoryScreen extends StatefulWidget {
 }
 
 class _CategoryScreenState extends State<CategoryScreen> {
-  String _selectedSortOption = 'Price low to high';
   String _searchQuery = '';
 
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
 
-  Stream<List<Map<String, dynamic>>> _getSortedProducts(
-      String sortOption, String searchQuery) {
-    Query query = _productsCollection;
+  // 🔹 Fetch products filtered by category (No Sorting Required)
+  Stream<List<Map<String, dynamic>>> _getFilteredProducts(String searchQuery) {
+    Query query = _productsCollection.where('category', isEqualTo: widget.categoryTitle);
 
     // Apply search filter
     if (searchQuery.isNotEmpty) {
-      query = query
-          .orderBy('title')
-          .startAt([searchQuery]).endAt(['$searchQuery\uf8ff']);
+      query = query.orderBy('title').startAt([searchQuery]).endAt(['$searchQuery\uf8ff']);
     }
 
-    // Apply sorting
-    if (sortOption == 'Price low to high') {
-      query = query.orderBy('price', descending: false);
-    } else if (sortOption == 'Price high to low') {
-      query = query.orderBy('price', descending: true);
-    }
-
-    return query.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => doc.data() as Map<String, dynamic>)
-        .toList());
+    return query.snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
   }
 
   @override
@@ -55,7 +44,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            // Search bar
+            // 🔹 Search Bar
             TextField(
               onChanged: (value) {
                 setState(() {
@@ -76,41 +65,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // Sorting options
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Sort By:',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                DropdownButton<String>(
-                  value: _selectedSortOption,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Price low to high',
-                      child: Text('Price low to high'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Price high to low',
-                      child: Text('Price high to low'),
-                    ),
-                  ],
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedSortOption = newValue!;
-                    });
-                  },
-                  dropdownColor: Colors.blue[50],
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
-                  underline: const SizedBox(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Product Grid with Firestore data
+            // 🔹 Product Grid
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _getSortedProducts(_selectedSortOption, _searchQuery),
+                stream: _getFilteredProducts(_searchQuery),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
