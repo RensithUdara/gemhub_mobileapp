@@ -132,7 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ElevatedButton(
                   onPressed: _saveUser,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 50, vertical: 14),
@@ -159,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       onPressed: (index) => setState(() => isBuyer = index == 0),
       borderRadius: BorderRadius.circular(12),
       selectedColor: Colors.white,
-      fillColor: Colors.green,
+      fillColor: Colors.blue,
       color: Colors.black,
       borderWidth: 2,
       children: const [
