@@ -38,7 +38,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
         title: Text(widget.categoryTitle,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.lightBlue[50], // Set background color to light blue
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
