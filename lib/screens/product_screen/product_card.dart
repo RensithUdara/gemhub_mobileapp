@@ -65,7 +65,7 @@ class _ProductCardState extends State<ProductCard> {
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
-                child: Image.asset(
+                child: Image.network(
                   widget.imagePath,
                   width: double.infinity,
                   height: 120,
