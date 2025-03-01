@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Add this import
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProductListing extends StatefulWidget {
@@ -30,7 +29,8 @@ class _ProductListingState extends State<ProductListing>
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Add Firebase Auth instance
+  final FirebaseAuth _auth =
+      FirebaseAuth.instance; // Add Firebase Auth instance
 
   @override
   void initState() {
@@ -82,7 +82,8 @@ class _ProductListingState extends State<ProductListing>
             cacheControl: 'public,max-age=31536000',
             contentType: 'image/jpeg',
           );
-          UploadTask uploadTask = _storage.ref(fileName).putFile(image, metadata);
+          UploadTask uploadTask =
+              _storage.ref(fileName).putFile(image, metadata);
           TaskSnapshot snapshot = await uploadTask;
           String downloadUrl = await snapshot.ref.getDownloadURL();
           imageUrls.add(downloadUrl);
@@ -133,7 +134,8 @@ class _ProductListingState extends State<ProductListing>
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Listing',
             style: TextStyle(
@@ -354,19 +356,11 @@ class _ProductListingState extends State<ProductListing>
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Pricing',
-                    hint: 'Enter price (e.g., 10)',
+                    hint: 'Enter price ',
                     controller: _pricingController,
                     validator: (value) =>
                         value!.isEmpty ? 'Pricing is required' : null,
                     keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildInputField(
-                    label: 'Unit of measure',
-                    hint: 'e.g., kg, liters',
-                    controller: _unitController,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Unit of measure is required' : null,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
@@ -504,9 +498,12 @@ class _ProductListingState extends State<ProductListing>
           dropdownColor: Colors.grey[900],
           style: const TextStyle(color: Colors.white, fontSize: 16),
           items: const [
-            DropdownMenuItem(value: 'Electronics', child: Text('Electronics')),
-            DropdownMenuItem(value: 'Food', child: Text('Food')),
-            DropdownMenuItem(value: 'Clothing', child: Text('Clothing')),
+            DropdownMenuItem(
+                value: 'Blue Sapphires', child: Text('Blue Sapphires')),
+            DropdownMenuItem(
+                value: 'White Sapphires', child: Text('White Sapphires')),
+            DropdownMenuItem(
+                value: 'Yellow Sapphires', child: Text('Yellow Sapphires')),
           ],
           onChanged: onChanged,
           validator: validator,
