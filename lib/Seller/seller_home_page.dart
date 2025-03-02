@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gemhub/Seller/listed_product_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 import 'auction_product.dart' as auction;
@@ -131,7 +132,8 @@ class _SellerHomePageState extends State<SellerHomePage>
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 NotificationsPage(notifications: _notifications),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
             transitionDuration: const Duration(milliseconds: 400),
@@ -281,9 +283,16 @@ class _SellerHomePageState extends State<SellerHomePage>
                             const SizedBox(height: 24),
                             _buildButton(
                               context: context,
-                              title: 'ORDER HISTORY',
+                              title: 'LISTED PRODUCTS',
                               icon: Icons.history,
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ListedProductScreen()),
+                                );
+                              },
                             ),
                             const SizedBox(height: 24),
                             _buildButton(
