@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this import
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,8 +29,7 @@ class _ProductListingState extends State<ProductListing>
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final FirebaseAuth _auth =
-      FirebaseAuth.instance; // Add Firebase Auth instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -65,51 +64,51 @@ class _ProductListingState extends State<ProductListing>
     }
   }
 
-  Future<List<String>> _uploadImages() async {
-    // Check if user is authenticated
+  Future<String?> _uploadFirstImage() async {
     if (_auth.currentUser == null) {
       _showErrorDialog('You must be signed in to upload images.');
-      return [];
+      return null;
     }
 
-    List<String> imageUrls = [];
-    for (var image in _images) {
-      if (image != null) {
-        String fileName =
-            'product_images/${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
-        try {
-          SettableMetadata metadata = SettableMetadata(
-            cacheControl: 'public,max-age=31536000',
-            contentType: 'image/jpeg',
-          );
-          UploadTask uploadTask =
-              _storage.ref(fileName).putFile(image, metadata);
-          TaskSnapshot snapshot = await uploadTask;
-          String downloadUrl = await snapshot.ref.getDownloadURL();
-          imageUrls.add(downloadUrl);
-        } on FirebaseException catch (e) {
-          // Enhanced error handling for Firebase-specific issues
-          String errorMessage = 'Error uploading image: ${e.message}';
-          if (e.code == 'permission-denied') {
-            errorMessage =
-                'Permission denied. Check your authentication status or storage rules.';
-          }
-          _showErrorDialog(errorMessage);
-          return [];
-        } catch (e) {
-          _showErrorDialog('Unexpected error uploading image: $e');
-          return [];
-        }
-      }
+    File? firstImage = _images.firstWhere((image) => image != null, orElse: () => null);
+    
+    if (firstImage == null) {
+      _showErrorDialog('Please select at least one image.');
+      return null;
     }
-    return imageUrls;
+
+    String fileName = 
+        'product_images/${DateTime.now().millisecondsSinceEpoch}_${firstImage.path.split('/').last}';
+    
+    try {
+      SettableMetadata metadata = SettableMetadata(
+        cacheControl: 'public,max-age=31536000',
+        contentType: 'image/jpeg',
+      );
+      
+      UploadTask uploadTask = _storage.ref(fileName).putFile(firstImage, metadata);
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } on FirebaseException catch (e) {
+      String errorMessage = 'Error uploading image: ${e.message}';
+      if (e.code == 'permission-denied') {
+        errorMessage = 'Permission denied. Check your authentication status or storage rules.';
+      }
+      _showErrorDialog(errorMessage);
+      return null;
+    } catch (e) {
+      _showErrorDialog('Unexpected error uploading image: $e');
+      return null;
+    }
   }
 
-  Future<void> _saveProductToFirestore(List<String> imageUrls) async {
-    if (imageUrls.isEmpty) {
-      _showErrorDialog('No images uploaded. Please try again.');
+  Future<void> _saveProductToFirestore(String? imageUrl) async {
+    if (imageUrl == null) {
+      _showErrorDialog('Image upload failed. Please try again.');
       return;
     }
+    
     try {
       await _firestore.collection('products').add({
         'title': _titleController.text,
@@ -118,9 +117,9 @@ class _ProductListingState extends State<ProductListing>
         'unit': _unitController.text,
         'quantity': int.tryParse(_quantityController.text) ?? 0,
         'description': _descriptionController.text,
-        'imageUrls': imageUrls,
+        'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
-        'userId': _auth.currentUser?.uid, // Optional: Link product to user
+        'userId': _auth.currentUser?.uid,
       });
     } catch (e) {
       _showErrorDialog('Error saving product: $e');
@@ -128,14 +127,13 @@ class _ProductListingState extends State<ProductListing>
   }
 
   void _showConfirmationDialog() {
-    if (_formKey.currentState!.validate() &&
+    if (_formKey.currentState!.validate() && 
         _images.any((image) => image != null)) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Listing',
             style: TextStyle(
@@ -155,11 +153,11 @@ class _ProductListingState extends State<ProductListing>
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context); // Close confirmation dialog
-                List<String> imageUrls = await _uploadImages();
-                if (imageUrls.isNotEmpty) {
-                  await _saveProductToFirestore(imageUrls);
-                  _showSuccessDialog(); // Show success only if upload succeeds
+                Navigator.pop(context);
+                String? imageUrl = await _uploadFirstImage();
+                if (imageUrl != null) {
+                  await _saveProductToFirestore(imageUrl);
+                  _showSuccessDialog();
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -196,14 +194,13 @@ class _ProductListingState extends State<ProductListing>
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Close success dialog
+              Navigator.pop(context);
               Navigator.pop(
                 context,
                 {
                   'title': _titleController.text,
                   'quantity': int.tryParse(_quantityController.text) ?? 0,
-                  'imagePath':
-                      _images.firstWhere((image) => image != null)?.path,
+                  'imagePath': _images.firstWhere((image) => image != null)?.path,
                   'type': 'product',
                 },
               );
@@ -254,7 +251,6 @@ class _ProductListingState extends State<ProductListing>
 
   @override
   Widget build(BuildContext context) {
-    // Rest of your build method remains unchanged
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -281,7 +277,7 @@ class _ProductListingState extends State<ProductListing>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
-                    'Photos (3 required, first will be displayed)',
+                    'Photos (select first image to upload)',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
@@ -356,7 +352,7 @@ class _ProductListingState extends State<ProductListing>
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Pricing',
-                    hint: 'Enter price ',
+                    hint: 'Enter price',
                     controller: _pricingController,
                     validator: (value) =>
                         value!.isEmpty ? 'Pricing is required' : null,
