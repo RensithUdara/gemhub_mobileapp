@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required String phone, required String email, required String name});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -40,8 +40,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchUserData() async {
+    setState(() => isLoading = true);
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to view your profile.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+      return;
+    }
 
     try {
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
@@ -55,13 +67,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching user data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load profile: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await showModalBottomSheet<File?>(
+    final pickedFile = await showModalBottomSheet<XFile?>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -72,10 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Choose Profile Picture',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              const Text('Choose Profile Picture', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               _buildBottomSheetTile(Icons.camera_alt, 'Take a Photo', Colors.blueAccent, () async {
                 Navigator.of(context).pop(await picker.pickImage(source: ImageSource.camera));
@@ -108,34 +121,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<String?> _uploadProfileImage(File? imageFile) async {
-    if (imageFile == null) return null;
+    if (imageFile == null) return imageUrl; // Return existing URL if no new image
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to upload an image.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+
     try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId == null) return null;
       final ref = FirebaseStorage.instance.ref().child('profile_images').child('$userId.jpg');
       await ref.putFile(imageFile);
-      return await ref.getDownloadURL();
+      final newImageUrl = await ref.getDownloadURL();
+      return newImageUrl;
     } catch (e) {
-      print('Error uploading image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload image: $e'), backgroundColor: Colors.red),
+      );
       return null;
     }
   }
 
-  Future<void> _saveUserDetails(String name, String email, String phone, String? imageUrl) async {
+  Future<void> _saveUserDetails(String name, String email, String phone, String? newImageUrl) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to save your profile.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId == null) return;
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'name': name,
         'email': email,
         'phone': phone,
-        'imageUrl': imageUrl,
-      });
+        'imageUrl': newImageUrl ?? imageUrl, // Use new URL or keep existing
+      }, SetOptions(merge: true));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
-      print('Error saving user details: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save profile: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -159,8 +198,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
@@ -226,11 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -280,18 +315,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: CircleAvatar(
                             radius: 70,
-                            backgroundImage: imageUrl != null
-                                ? NetworkImage(imageUrl!)
-                                : (_profileImage != null
-                                    ? FileImage(_profileImage!)
-                                    : null) as ImageProvider?,
+                            backgroundImage: _profileImage != null
+                                ? FileImage(_profileImage!)
+                                : (imageUrl != null ? NetworkImage(imageUrl!) as ImageProvider<Object>? : null),
                             backgroundColor: Colors.grey[200],
-                            child: imageUrl == null && _profileImage == null
-                                ? const Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.blueAccent,
-                                    size: 40,
-                                  )
+                            child: _profileImage == null && imageUrl == null
+                                ? const Icon(Icons.camera_alt, color: Colors.blueAccent, size: 40)
                                 : null,
                           ),
                         ),
@@ -335,15 +364,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: _isEditing
                             ? () async {
                                 setState(() => isLoading = true);
-                                final imageUrl = await _uploadProfileImage(_profileImage);
+                                final newImageUrl = await _uploadProfileImage(_profileImage);
+                                if (_profileImage != null && newImageUrl == null) {
+                                  // If a new image was selected but upload failed, stop the save process
+                                  setState(() => isLoading = false);
+                                  return;
+                                }
                                 await _saveUserDetails(
                                   _nameController.text,
                                   _emailController.text,
                                   _phoneController.text,
-                                  imageUrl,
+                                  newImageUrl,
                                 );
                                 setState(() {
                                   _isEditing = false;
+                                  imageUrl = newImageUrl; // Update local imageUrl
                                   isLoading = false;
                                 });
                               }
