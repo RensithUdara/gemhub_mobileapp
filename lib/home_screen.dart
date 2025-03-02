@@ -73,9 +73,9 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => const ProfileScreen(
-              name: '',
-              email: '',
-              phone: '',
+              // name: '',
+              // email: '',
+              // phone: '',
             ),
           ),
         );
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white),
+                icon: const Icon(Icons.logout, color: Colors.red),
                 onPressed: _onWillPop,
               ),
             ],
