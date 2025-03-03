@@ -16,32 +16,55 @@ class _CategoryScreenState extends State<CategoryScreen> {
   String _sortOrder = 'asc'; // Default sorting order
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
+  bool _isLoading = true; // Add loading state
 
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
 
-  // 🔹 Fetch products filtered by category
+  // Fetch products filtered by category
   void _fetchProducts() {
     _productsCollection
         .where('category', isEqualTo: widget.categoryTitle)
-        .get()
-        .then((snapshot) {
+        .snapshots()
+        .listen((snapshot) {
       setState(() {
-        _products = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        _products = snapshot.docs
+            .map((doc) => {
+                  'id': doc.id,
+                  ...doc.data() as Map<String, dynamic>,
+                })
+            .toList();
         _applyFilters();
+        _isLoading = false;
       });
+    }, onError: (error) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching products: $error')),
+      );
     });
   }
 
-  // 🔹 Apply sorting and search filtering
+  // Apply sorting and search filtering
   void _applyFilters() {
     setState(() {
       _filteredProducts = _products
-          .where((product) => product['title'].toLowerCase().contains(_searchQuery.toLowerCase()))
+          .where((product) => product['title']
+              .toString()
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()))
           .toList();
-      _filteredProducts.sort((a, b) => _sortOrder == 'asc'
-          ? a['price'].compareTo(b['price'])
-          : b['price'].compareTo(a['price']));
+
+      _filteredProducts.sort((a, b) {
+        // Handle null pricing with a default value (e.g., 0)
+        final aPrice = a['pricing'] as num? ?? 0;
+        final bPrice = b['pricing'] as num? ?? 0;
+        return _sortOrder == 'asc'
+            ? aPrice.compareTo(bPrice)
+            : bPrice.compareTo(aPrice);
+      });
     });
   }
 
@@ -59,7 +82,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
         title: Text(widget.categoryTitle,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
         actions: [
-          // 🔹 Sort Button
           PopupMenuButton<String>(
             onSelected: (value) {
               setState(() {
@@ -82,13 +104,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
         ],
       ),
       body: Container(
-        color: Colors.lightBlue[50], // Set background color to light blue
+        color: Colors.lightBlue[50],
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            // 🔹 Search Bar
+            // Search Bar
             TextField(
               onChanged: (value) {
                 setState(() {
@@ -110,30 +132,80 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // 🔹 Product Grid
+            // Product Grid
             Expanded(
-              child: _filteredProducts.isEmpty
-                  ? const Center(child: Text('No products found.'))
-                  : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                      ),
-                      itemCount: _filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        return ProductCard(
-                          imagePath: _filteredProducts[index]['imagePath'],
-                          title: _filteredProducts[index]['title'],
-                          price: 'Rs. ${_filteredProducts[index]['price']}',
-                        );
-                      },
-                    ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredProducts.isEmpty
+                      ? const Center(child: Text('No products found.'))
+                      : GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: 15,
+                            mainAxisSpacing: 15,
+                          ),
+                          itemCount: _filteredProducts.length,
+                          itemBuilder: (context, index) {
+                            final product = _filteredProducts[index];
+                            return GestureDetector(
+                              onTap: () {
+                                _showProductDetails(context, product);
+                              },
+                              child: ProductCard(
+                                imagePath: product['imageUrl'] ?? '',
+                                title: product['title'] ?? 'Untitled',
+                                price:
+                                    'Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}',
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Show product details in a dialog
+  void _showProductDetails(BuildContext context, Map<String, dynamic> product) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(product['title'] ?? 'Untitled'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (product['imageUrl'] != null && product['imageUrl'].isNotEmpty)
+                Image.network(
+                  product['imageUrl'],
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.error),
+                ),
+              const SizedBox(height: 10),
+              Text(
+                  'Price: Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}'),
+              Text('Quantity: ${product['quantity']?.toString() ?? 'N/A'}'),
+              Text('Unit: ${product['unit'] ?? 'N/A'}'),
+              const SizedBox(height: 10),
+              Text('Description: ${product['description'] ?? 'No description'}'),
+              Text('Category: ${product['category'] ?? 'N/A'}'),
+              Text('Listed by: ${product['userId'] ?? 'Unknown'}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
