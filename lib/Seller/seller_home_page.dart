@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gemhub/Seller/listed_auction_screen.dart';
 import 'package:gemhub/Seller/listed_product_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
@@ -299,7 +300,14 @@ class _SellerHomePageState extends State<SellerHomePage>
                               context: context,
                               title: 'AUCTION HISTORY',
                               icon: Icons.timeline,
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ListedAuctionScreen()),
+                                );
+                              },
                             ),
                             const SizedBox(height: 40),
                           ],
