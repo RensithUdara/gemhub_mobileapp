@@ -1,10 +1,10 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // Add this for date formatting
 
 class AuctionProduct extends StatefulWidget {
   const AuctionProduct({super.key});
@@ -13,19 +13,19 @@ class AuctionProduct extends StatefulWidget {
   State<AuctionProduct> createState() => _AuctionProductState();
 }
 
-class _AuctionProductState extends State<AuctionProduct>
-    with SingleTickerProviderStateMixin {
+class _AuctionProductState extends State<AuctionProduct> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  final List<File?> _images = List.filled(3, null);
+  File? _image;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _pricingController = TextEditingController();
-  final TextEditingController _startBidController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _currentBidController = TextEditingController();
+  final TextEditingController _minimumIncrementController = TextEditingController();
+  final TextEditingController _endTimeController = TextEditingController();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  DateTime? _selectedEndTime;
 
   @override
   void initState() {
@@ -42,44 +42,79 @@ class _AuctionProductState extends State<AuctionProduct>
   void dispose() {
     _controller.dispose();
     _titleController.dispose();
-    _pricingController.dispose();
-    _startBidController.dispose();
-    _quantityController.dispose();
+    _currentBidController.dispose();
+    _minimumIncrementController.dispose();
+    _endTimeController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImage(int index) async {
+  Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _images[index] = File(pickedFile.path);
+        _image = File(pickedFile.path);
       });
     }
   }
 
-  Future<List<String>> _uploadImages() async {
-    List<String> imageUrls = [];
-    for (var image in _images) {
-      if (image != null) {
-        String fileName = 'auction_images/${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
-        UploadTask uploadTask = _storage.ref(fileName).putFile(image);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
-      }
+  Future<String?> _uploadImage() async {
+    if (_image != null) {
+      String fileName = 'auction_images/${DateTime.now().millisecondsSinceEpoch}_${_image!.path.split('/').last}';
+      UploadTask uploadTask = _storage.ref(fileName).putFile(_image!);
+      TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
     }
-    return imageUrls;
+    return null;
   }
 
-  Future<void> _saveAuctionToFirestore(List<String> imageUrls) async {
+  Future<void> _selectDateTime(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _selectedEndTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+          // Format for display
+          _endTimeController.text = DateFormat('yyyy-MM-dd HH:mm').format(_selectedEndTime!);
+        });
+      }
+    }
+  }
+
+  Future<void> _saveAuctionToFirestore(String? imageUrl) async {
     try {
+      // Convert to ISO 8601 format for Firebase
+      String endTimeIso = _selectedEndTime != null 
+          ? _selectedEndTime!.toUtc().toIso8601String() 
+          : DateTime.now().toUtc().toIso8601String();
+
       await _firestore.collection('auctions').add({
         'title': _titleController.text,
-        'pricing': double.tryParse(_pricingController.text) ?? 0.0,
-        'startBid': double.tryParse(_startBidController.text) ?? 0.0,
-        'quantity': int.tryParse(_quantityController.text) ?? 0,
-        'imageUrls': imageUrls,
+        'currentBid': double.tryParse(_currentBidController.text) ?? 0.0,
+        'endTime': endTimeIso,
+        'imagePath': imageUrl,
+        'lastBidTime': FieldValue.serverTimestamp(),
+        'minimumIncrement': double.tryParse(_minimumIncrementController.text) ?? 0.0,
+        'paymentInitiatedAt': null,
+        'paymentStatus': 'pending',
+        'winningUserId': null,
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -88,18 +123,15 @@ class _AuctionProductState extends State<AuctionProduct>
   }
 
   void _showConfirmationDialog() {
-    if (_formKey.currentState!.validate() &&
-        _images.any((image) => image != null)) {
+    if (_formKey.currentState!.validate() && _image != null && _selectedEndTime != null) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Auction',
-            style: TextStyle(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           content: const Text(
             'Are you sure you want to start this auction?',
@@ -108,23 +140,19 @@ class _AuctionProductState extends State<AuctionProduct>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context); // Close confirmation dialog
-                List<String> imageUrls = await _uploadImages();
-                await _saveAuctionToFirestore(imageUrls);
-                _showSuccessDialog(); // Show success dialog
+                Navigator.pop(context);
+                String? imageUrl = await _uploadImage();
+                await _saveAuctionToFirestore(imageUrl);
+                _showSuccessDialog();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Confirm'),
             ),
@@ -132,7 +160,7 @@ class _AuctionProductState extends State<AuctionProduct>
         ),
       );
     } else {
-      _showErrorDialog('Please fill all fields and upload at least one photo.');
+      _showErrorDialog('Please fill all fields, upload an image, and select an end time.');
     }
   }
 
@@ -144,8 +172,7 @@ class _AuctionProductState extends State<AuctionProduct>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Success!',
-          style: TextStyle(
-              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: const Text(
           'Your auction has been created successfully!',
@@ -154,23 +181,17 @@ class _AuctionProductState extends State<AuctionProduct>
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Close success dialog
-              Navigator.pop(
-                context,
-                {
-                  'title': _titleController.text,
-                  'quantity': int.tryParse(_quantityController.text) ?? 0,
-                  'imagePath':
-                      _images.firstWhere((image) => image != null)?.path,
-                  'type': 'auction', // Indicate this is an auction
-                },
-              ); // Return auction details with type
+              Navigator.pop(context);
+              Navigator.pop(context, {
+                'title': _titleController.text,
+                'imagePath': _image?.path,
+                'type': 'auction',
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -187,8 +208,7 @@ class _AuctionProductState extends State<AuctionProduct>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Error',
-          style: TextStyle(
-              color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: Text(
           message,
@@ -200,8 +220,7 @@ class _AuctionProductState extends State<AuctionProduct>
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -223,8 +242,7 @@ class _AuctionProductState extends State<AuctionProduct>
         ),
         title: const Text(
           'Auction Product',
-          style: TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
@@ -238,94 +256,100 @@ class _AuctionProductState extends State<AuctionProduct>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
-                    'Photos (3 required, first will be displayed)',
+                    'Photo (First image will be displayed)',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                          3,
-                          (index) => GestureDetector(
-                                onTap: () => _pickImage(index),
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.grey[900]!,
-                                        Colors.grey[800]!
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                        color: Colors.blue, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blue.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: _images[index] != null
-                                      ? ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(14),
-                                          child: Image.file(
-                                            _images[index]!,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : const Center(
-                                          child: Icon(Icons.camera_alt,
-                                              color: Colors.white, size: 40),
-                                        ),
-                                ),
-                              )),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.grey[900]!, Colors.grey[800]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _image != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.file(_image!, fit: BoxFit.cover),
+                            )
+                          : const Center(
+                              child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 32),
                   _buildInputField(
                     label: 'Title',
-                    hint: 'Enter auction title',
+                    hint: 'Enter auction title (e.g., Keeri Samba - 1000kg)',
                     controller: _titleController,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Title is required' : null,
+                    validator: (value) => value!.isEmpty ? 'Title is required' : null,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
-                    label: 'Pricing',
-                    hint: 'Enter price (e.g., 10)',
-                    controller: _pricingController,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Pricing is required' : null,
+                    label: 'Current Bid',
+                    hint: 'Enter current bid (e.g., 160000)',
+                    controller: _currentBidController,
+                    validator: (value) => value!.isEmpty ? 'Current bid is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
-                    label: 'Start bid price',
-                    hint: 'Enter starting bid',
-                    controller: _startBidController,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Start bid price is required' : null,
+                    label: 'Minimum Increment',
+                    hint: 'Enter minimum increment (e.g., 500)',
+                    controller: _minimumIncrementController,
+                    validator: (value) => value!.isEmpty ? 'Minimum increment is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
-                  _buildInputField(
-                    label: 'Product quantity',
-                    hint: 'Enter quantity',
-                    controller: _quantityController,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Quantity is required' : null,
-                    keyboardType: TextInputType.number,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'End Time',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => _selectDateTime(context),
+                        child: AbsorbPointer(
+                          child: TextFormField(
+                            controller: _endTimeController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.grey[900],
+                              hintText: 'Select date and time',
+                              hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: Colors.blue, width: 2),
+                              ),
+                              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+                              suffixIcon: const Icon(Icons.calendar_today, color: Colors.blue),
+                            ),
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
+                            validator: (value) => value!.isEmpty ? 'End time is required' : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 32),
                   Center(
@@ -348,12 +372,10 @@ class _AuctionProductState extends State<AuctionProduct>
                           children: [
                             Text(
                               'ALL DONE',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.check_circle,
-                                size: 20, color: Colors.white),
+                            Icon(Icons.check_circle, size: 20, color: Colors.white),
                           ],
                         ),
                       ),
