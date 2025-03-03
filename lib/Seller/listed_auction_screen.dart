@@ -1,285 +1,323 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // For date formatting
 
-class ListedAuctionScreen extends StatefulWidget {
+class ListedAuctionScreen extends StatelessWidget {
   const ListedAuctionScreen({super.key});
-
-  @override
-  State<ListedAuctionScreen> createState() => _ListedAuctionScreenState();
-}
-
-class _ListedAuctionScreenState extends State<ListedAuctionScreen> {
-  String _searchQuery = '';
-  String _sortOrder = 'asc'; // Default sorting order by current bid
-  List<Map<String, dynamic>> _auctions = [];
-  List<Map<String, dynamic>> _filteredAuctions = [];
-  bool _isLoading = true;
-
-  final CollectionReference _auctionsCollection =
-      FirebaseFirestore.instance.collection('auctions');
-
-  // Fetch all auctions
-  void _fetchAuctions() {
-    _auctionsCollection.snapshots().listen((snapshot) {
-      setState(() {
-        _auctions = snapshot.docs
-            .map((doc) => {
-                  'id': doc.id,
-                  ...doc.data() as Map<String, dynamic>,
-                })
-            .toList();
-        _applyFilters();
-        _isLoading = false;
-      });
-    }, onError: (error) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching auctions: $error')),
-      );
-    });
-  }
-
-  // Apply sorting and search filtering
-  void _applyFilters() {
-    setState(() {
-      _filteredAuctions = _auctions
-          .where((auction) => auction['title']
-              .toString()
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()))
-          .toList();
-
-      _filteredAuctions.sort((a, b) {
-        final aBid = a['currentBid'] as num? ?? 0;
-        final bBid = b['currentBid'] as num? ?? 0;
-        return _sortOrder == 'asc'
-            ? aBid.compareTo(bBid)
-            : bBid.compareTo(aBid);
-      });
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchAuctions();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.blue[700],
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'Listed Auctions',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
         ),
         actions: [
-          // Sort Button
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              setState(() {
-                _sortOrder = value;
-                _applyFilters();
-              });
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white, size: 24),
+            onPressed: () {
+              // Add search functionality here if needed
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'asc',
-                child: Text('Bid: Low to High'),
-              ),
-              const PopupMenuItem(
-                value: 'desc',
-                child: Text('Bid: High to Low'),
-              ),
-            ],
-            icon: const Icon(Icons.sort, color: Colors.white),
           ),
         ],
       ),
-      body: Container(
-        color: Colors.lightBlue[50],
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Search Bar
-            TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.trim();
-                  _applyFilters();
-                });
-              },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.blue),
-                hintText: 'Search auctions...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: const BorderSide(color: Colors.blue),
+      body: SafeArea(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('auctions')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.blue,
+                  strokeWidth: 3,
                 ),
-                filled: true,
-                fillColor: Colors.blue[50],
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Auction Grid
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filteredAuctions.isEmpty
-                      ? const Center(child: Text('No auctions found.'))
-                      : GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                          ),
-                          itemCount: _filteredAuctions.length,
-                          itemBuilder: (context, index) {
-                            final auction = _filteredAuctions[index];
-                            return GestureDetector(
-                              onTap: () {
-                                _showAuctionDetails(context, auction);
-                              },
-                              child: AuctionCard(
-                                imagePath: auction['imagePath'] ?? '',
-                                title: auction['title'] ?? 'Untitled',
-                                currentBid:
-                                    'Rs. ${(auction['currentBid'] as num? ?? 0).toStringAsFixed(2)}',
-                                endTime: auction['endTime'] != null
-                                    ? DateFormat('yyyy-MM-dd HH:mm')
-                                        .format(DateTime.parse(auction['endTime']))
-                                    : 'N/A',
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              );
+            }
 
-  // Show auction details in a dialog
-  void _showAuctionDetails(BuildContext context, Map<String, dynamic> auction) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(auction['title'] ?? 'Untitled'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (auction['imagePath'] != null && auction['imagePath'].isNotEmpty)
-                Image.network(
-                  auction['imagePath'],
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.error),
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              const SizedBox(height: 10),
-              Text(
-                  'Current Bid: Rs. ${(auction['currentBid'] as num? ?? 0).toStringAsFixed(2)}'),
-              Text(
-                  'Minimum Increment: Rs. ${(auction['minimumIncrement'] as num? ?? 0).toStringAsFixed(2)}'),
-              Text(
-                  'End Time: ${auction['endTime'] != null ? DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(auction['endTime'])) : 'N/A'}'),
-              const SizedBox(height: 10),
-              Text(
-                  'Payment Status: ${auction['paymentStatus'] ?? 'Pending'}'),
-              Text('Winning User: ${auction['winningUserId'] ?? 'None'}'),
-            ],
-          ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.gavel_outlined,
+                        color: Colors.white70, size: 60),
+                    SizedBox(height: 16),
+                    Text(
+                      'No auctions listed yet',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                var auction = snapshot.data!.docs[index];
+                return AuctionCard(
+                  title: auction['title'],
+                  currentBid: auction['currentBid'].toString(),
+                  endTime: DateTime.parse(auction['endTime']),
+                  imageUrl: auction['imagePath'],
+                  minimumIncrement: auction['minimumIncrement'].toString(),
+                  onTap: () {
+                    // Add navigation to detail screen if needed
+                  },
+                );
+              },
+            );
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
 }
 
-// AuctionCard widget (you can customize this further)
 class AuctionCard extends StatelessWidget {
-  final String imagePath;
   final String title;
   final String currentBid;
-  final String endTime;
+  final DateTime endTime;
+  final String imageUrl;
+  final String minimumIncrement;
+  final VoidCallback onTap;
 
   const AuctionCard({
     super.key,
-    required this.imagePath,
     required this.title,
     required this.currentBid,
     required this.endTime,
+    required this.imageUrl,
+    required this.minimumIncrement,
+    required this.onTap,
   });
+
+  String _formatEndTime(DateTime endTime) {
+    return DateFormat('MMM d, yyyy - HH:mm').format(endTime.toLocal());
+  }
+
+  String _getTimeRemaining() {
+    final now = DateTime.now();
+    final difference = endTime.difference(now);
+    if (difference.isNegative) {
+      return 'Ended';
+    }
+    final days = difference.inDays;
+    final hours = difference.inHours % 24;
+    final minutes = difference.inMinutes % 60;
+    if (days > 0) {
+      return '$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+    }
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: imagePath.isNotEmpty
-                ? Image.network(
-                    imagePath,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.error),
-                  )
-                : Container(
-                    height: 120,
-                    color: Colors.grey,
-                    child: const Icon(Icons.image_not_supported),
-                  ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey[850]!, Colors.grey[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  currentBid,
-                  style: const TextStyle(color: Colors.green, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Ends: $endTime',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
+          ],
+          border: Border.all(
+            color: Colors.blue.withOpacity(0.3),
+            width: 1,
           ),
-        ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Hero(
+              tag: imageUrl,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    imageUrl,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.white54,
+                        size: 40,
+                      ),
+                    ),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.blue,
+                            strokeWidth: 2,
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Min Inc: Rs. $minimumIncrement',
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ends: ${_formatEndTime(endTime)}',
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Rs. $currentBid',
+                        style: const TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _getTimeRemaining(),
+                          style: TextStyle(
+                            color: endTime.isBefore(DateTime.now())
+                                ? Colors.redAccent
+                                : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
