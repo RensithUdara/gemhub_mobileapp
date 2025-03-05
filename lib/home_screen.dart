@@ -3,8 +3,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import 'package:gemhub/providers/banner_provider.dart';
 import 'package:gemhub/screens/auction_screen/auction_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
@@ -12,6 +10,7 @@ import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/category_screen/category_card.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 import 'package:gemhub/screens/profile_screen/profile_screen.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CartScreen(cartItems: [])),
+          MaterialPageRoute(
+              builder: (context) => const CartScreen(cartItems: [])),
         );
         break;
       case 3:
@@ -81,19 +81,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Row(
               children: [
                 Icon(Icons.logout, color: Colors.redAccent),
                 SizedBox(width: 10),
-                Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Confirm Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             content: const Text('Are you sure you want to logout?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                child:
+                    const Text('Cancel', style: TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -102,7 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (mounted) {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
                         (route) => false,
                       );
                     }
@@ -112,9 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                child:
+                    const Text('Logout', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -227,9 +233,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => Scaffold(
-                              appBar: AppBar(title: const Text('All Categories')),
+                              appBar:
+                                  AppBar(title: const Text('All Categories')),
                               body: const Center(
-                                child: Text('All categories will be displayed here.'),
+                                child: Text(
+                                    'All categories will be displayed here.'),
                               ),
                             ),
                           ),
@@ -285,32 +293,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   children: const [
                     ProductCard(
-                      imagePath: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '4.37ct Natural Blue Sapphire',
                       price: 'Rs 4,038,500.00',
                     ),
                     ProductCard(
-                      imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.appspot.com/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '1.17ct Natural Pink Sapphire',
                       price: 'Rs.549,000.00',
                     ),
                     ProductCard(
-                      imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.appspot.com/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '4.37ct Natural Blue Sapphire',
                       price: 'Rs 4,038,500.00',
                     ),
                     ProductCard(
-                      imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.appspot.com/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '1.17ct Natural Pink Sapphire',
                       price: 'Rs.549,000.00',
                     ),
                     ProductCard(
-                      imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.appspot.com/o/1.51ct-Blue-Sapphire.jpg?alt=media&token=3419a0ce-76a0-4b0a-add0-5e11644cd394',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '4.37ct Natural Blue Sapphire',
                       price: 'Rs 4,038,500.00',
                     ),
                     ProductCard(
-                      imagePath: 'https://firebasestorage.googleapis.com/v0/b/gemhub-mobile-app.appspot.com/o/gem01.jpg?alt=media&token=475d79c8-0694-4493-b112-85061cbf2980',
+                      imagePath:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
                       title: '1.17ct Natural Pink Sapphire',
                       price: 'Rs.549,000.00',
                     ),
@@ -327,11 +341,13 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             backgroundColor: const Color.fromARGB(255, 173, 216, 230),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             elevation: 8,
             child: const Icon(Icons.gavel),
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: AnimatedBottomNavigationBar(
             icons: iconList,
             activeIndex: _selectedIndex,
