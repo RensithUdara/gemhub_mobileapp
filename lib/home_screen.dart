@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.logout, color: Colors.red),
+                icon: const Icon(Icons.logout, color: Color.fromARGB(255, 255, 255, 255)),
                 onPressed: _onWillPop,
               ),
             ],
