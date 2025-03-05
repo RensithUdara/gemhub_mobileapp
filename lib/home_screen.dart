@@ -198,18 +198,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     return CarouselSlider(
                       options: CarouselOptions(
-                        height: 150.0,
+                        height: 180.0,
                         autoPlay: true,
                         enlargeCenterPage: true,
+                        viewportFraction: 0.9,
+                        aspectRatio: 16/9,
                       ),
                       items: bannerProvider.bannerList.map((imageUrl) {
                         return Container(
+                          margin: EdgeInsets.symmetric(horizontal: 5),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(20),
                             image: DecorationImage(
                               image: NetworkImage(imageUrl),
                               fit: BoxFit.cover,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
