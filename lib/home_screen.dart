@@ -8,6 +8,7 @@ import 'package:gemhub/screens/auction_screen/auction_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 import 'package:gemhub/screens/cart_screen/cart_screen.dart';
 import 'package:gemhub/screens/category_screen/category_card.dart';
+import 'package:gemhub/screens/order_history_screen/oreder_history_screen.dart';
 import 'package:gemhub/screens/product_screen/product_card.dart';
 import 'package:gemhub/screens/profile_screen/profile_screen.dart';
 import 'package:provider/provider.dart';
@@ -64,7 +65,17 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CartScreen()), // Removed cartItems parameter
+          MaterialPageRoute(
+              builder: (context) =>
+                  const CartScreen()), // Removed cartItems parameter
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  const OrderHistoryScreen()), // Removed cartItems parameter
         );
         break;
       case 3:
@@ -133,37 +144,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Map<String, dynamic>> popularProducts = [
       {
         'id': '1',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'imageUrl':
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
         'title': '4.37ct Natural Blue Sapphire',
         'pricing': 4038500.00,
       },
       {
         'id': '2',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '1.17ct Natural Pink Sapphire',
-        'pricing': 549000.00,
-      },
-      {
-        'id': '3',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '4.37ct Natural Blue Sapphire',
-        'pricing': 4038500.00,
-      },
-      {
-        'id': '4',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '1.17ct Natural Pink Sapphire',
-        'pricing': 549000.00,
-      },
-      {
-        'id': '5',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '4.37ct Natural Blue Sapphire',
-        'pricing': 4038500.00,
-      },
-      {
-        'id': '6',
-        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'imageUrl':
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
         'title': '1.17ct Natural Pink Sapphire',
         'pricing': 549000.00,
       },
