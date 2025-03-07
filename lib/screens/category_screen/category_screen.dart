@@ -304,86 +304,86 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         const SizedBox(height: 16),
 
                         // Updated Add to Cart Section
-                        cartQuantity == 0
-                            ? SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      cartQuantity =
-                                          1; // Start with 1 when clicked
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            '${product['title']} added to cart!'),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue[700],
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12, horizontal: 24),
-                                    minimumSize: const Size(0, 40),
-                                  ),
-                                  child: const Text(
-                                    'Add to Cart',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove,
-                                          color: Colors.blue),
-                                      onPressed: () {
-                                        setState(() {
-                                          cartQuantity--;
-                                        });
-                                        if (cartQuantity == 0) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  '${product['title']} removed from cart!'),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      '$cartQuantity',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add,
-                                          color: Colors.blue),
-                                      onPressed: () {
-                                        setState(() {
-                                          cartQuantity++;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
+                        // cartQuantity == 0
+                        //     ? SizedBox(
+                        //         width: MediaQuery.of(context).size.width * 0.9,
+                        //         child: ElevatedButton(
+                        //           onPressed: () {
+                        //             setState(() {
+                        //               cartQuantity =
+                        //                   1; // Start with 1 when clicked
+                        //             });
+                        //             ScaffoldMessenger.of(context).showSnackBar(
+                        //               SnackBar(
+                        //                 content: Text(
+                        //                     '${product['title']} added to cart!'),
+                        //               ),
+                        //             );
+                        //           },
+                        //           style: ElevatedButton.styleFrom(
+                        //             backgroundColor: Colors.blue[700],
+                        //             foregroundColor: Colors.white,
+                        //             shape: RoundedRectangleBorder(
+                        //               borderRadius: BorderRadius.circular(12),
+                        //             ),
+                        //             padding: const EdgeInsets.symmetric(
+                        //                 vertical: 12, horizontal: 24),
+                        //             minimumSize: const Size(0, 40),
+                        //           ),
+                        //           child: const Text(
+                        //             'Add to Cart',
+                        //             style: TextStyle(
+                        //               fontSize: 18,
+                        //               fontWeight: FontWeight.bold,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       )
+                        //     : Container(
+                        //         decoration: BoxDecoration(
+                        //           color: Colors.grey[200],
+                        //           borderRadius: BorderRadius.circular(10),
+                        //         ),
+                        //         child: Row(
+                        //           mainAxisAlignment: MainAxisAlignment.center,
+                        //           children: [
+                        //             IconButton(
+                        //               icon: const Icon(Icons.remove,
+                        //                   color: Colors.blue),
+                        //               onPressed: () {
+                        //                 setState(() {
+                        //                   cartQuantity--;
+                        //                 });
+                        //                 if (cartQuantity == 0) {
+                        //                   ScaffoldMessenger.of(context)
+                        //                       .showSnackBar(
+                        //                     SnackBar(
+                        //                       content: Text(
+                        //                           '${product['title']} removed from cart!'),
+                        //                     ),
+                        //                   );
+                        //                 }
+                        //               },
+                        //             ),
+                        //             Text(
+                        //               '$cartQuantity',
+                        //               style: const TextStyle(
+                        //                 fontSize: 18,
+                        //                 fontWeight: FontWeight.bold,
+                        //               ),
+                        //             ),
+                        //             IconButton(
+                        //               icon: const Icon(Icons.add,
+                        //                   color: Colors.blue),
+                        //               onPressed: () {
+                        //                 setState(() {
+                        //                   cartQuantity++;
+                        //                 });
+                        //               },
+                        //             ),
+                        //           ],
+                        //         ),
+                        //       ),
                         const SizedBox(height: 16), // Extra space at the bottom
                       ],
                     ),
