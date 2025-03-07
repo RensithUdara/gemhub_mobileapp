@@ -19,7 +19,7 @@ class CartItem {
 }
 
 class CartProvider with ChangeNotifier {
-  List<CartItem> _cartItems = [];
+  final List<CartItem> _cartItems = [];
 
   List<CartItem> get cartItems => _cartItems;
 
@@ -59,6 +59,7 @@ class CartProvider with ChangeNotifier {
     _cartItems.removeWhere((item) => item.id == id);
     notifyListeners();
   }
+
 
   double get totalAmount {
     return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
