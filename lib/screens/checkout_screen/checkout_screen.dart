@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:gemhub/screens/cart_screen/cart_provider.dart';
 import 'package:gemhub/screens/payment_screen/payment_screen.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -30,30 +30,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.lightBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            elevation: 4,
-            shadowColor: Colors.black26,
-            title: const Text(
-              'Checkout',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.indigo],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+        title: const Text('Checkout', style: TextStyle(color: Colors.white)),
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -68,7 +56,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order Summary Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -108,15 +95,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w600)),
                                       Text('Qty: ${item.quantity}',
-                                          style: TextStyle(
-                                              color: Colors.grey[600])),
+                                          style:
+                                              TextStyle(color: Colors.grey[600])),
                                     ],
                                   ),
                                 ),
-                                Text(
-                                    'Rs. ${item.totalPrice.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
+                                Text('Rs. ${item.totalPrice.toStringAsFixed(2)}',
+                                    style:
+                                        const TextStyle(fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -125,10 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Price Details Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -141,16 +124,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 8),
                         _buildPriceRow('Delivery Charge', deliveryCharge),
                         const Divider(height: 20),
-                        _buildPriceRow('Total', totalWithDelivery,
-                            isTotal: true),
+                        _buildPriceRow('Total', totalWithDelivery, isTotal: true),
                       ],
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Address Card
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -195,10 +174,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // Proceed Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
