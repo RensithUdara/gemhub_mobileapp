@@ -4,7 +4,6 @@ import 'package:gemhub/screens/cart_screen/cart_provider.dart';
 import 'package:gemhub/screens/payment_screen/payment_screen.dart';
 import 'package:provider/provider.dart';
 
-
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
 
@@ -33,14 +32,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.indigo],
+              colors: [Colors.blueAccent, Colors.lightBlue],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
-        title: const Text('Checkout', style: TextStyle(color: Colors.white)),
-        elevation: 0,
+        elevation: 4,
+        shadowColor: Colors.black26,
+        title: const Text(
+          'Checkout',
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -95,14 +104,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w600)),
                                       Text('Qty: ${item.quantity}',
-                                          style:
-                                              TextStyle(color: Colors.grey[600])),
+                                          style: TextStyle(
+                                              color: Colors.grey[600])),
                                     ],
                                   ),
                                 ),
-                                Text('Rs. ${item.totalPrice.toStringAsFixed(2)}',
-                                    style:
-                                        const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                    'Rs. ${item.totalPrice.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -124,7 +134,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 8),
                         _buildPriceRow('Delivery Charge', deliveryCharge),
                         const Divider(height: 20),
-                        _buildPriceRow('Total', totalWithDelivery, isTotal: true),
+                        _buildPriceRow('Total', totalWithDelivery,
+                            isTotal: true),
                       ],
                     ),
                   ),
