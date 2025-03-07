@@ -309,6 +309,20 @@ class _SellerHomePageState extends State<SellerHomePage>
                                 );
                               },
                             ),
+                            const SizedBox(height: 24),
+                            _buildButton(
+                              context: context,
+                              title: 'ORDER HISTORY',
+                              icon: Icons.timeline,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ListedAuctionScreen()),
+                                );
+                              },
+                            ),
                             const SizedBox(height: 40),
                           ],
                         ),
