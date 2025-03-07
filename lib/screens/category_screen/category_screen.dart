@@ -143,7 +143,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredProducts.isEmpty
                       ? const Center(child: Text('No products found.'))
-                      : GridView.builder(
+                      : // category_screen.dart (update only the GridView.builder part)
+                      GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -159,10 +160,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                 _showProductDetails(context, product);
                               },
                               child: ProductCard(
+                                id: product['id'],
                                 imagePath: product['imageUrl'] ?? '',
                                 title: product['title'] ?? 'Untitled',
                                 price:
                                     'Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}',
+                                product: product, // Pass the entire product map
                               ),
                             );
                           },
@@ -199,7 +202,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
               Text('Quantity: ${product['quantity']?.toString() ?? 'N/A'}'),
               Text('Unit: ${product['unit'] ?? 'N/A'}'),
               const SizedBox(height: 10),
-              Text('Description: ${product['description'] ?? 'No description'}'),
+              Text(
+                  'Description: ${product['description'] ?? 'No description'}'),
               Text('Category: ${product['category'] ?? 'N/A'}'),
               Text('Listed by: ${product['userId'] ?? 'Unknown'}'),
             ],
