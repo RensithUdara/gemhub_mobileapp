@@ -13,10 +13,10 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _searchQuery = '';
-  String _sortOrder = 'asc'; // Default sorting order
+  String _sortOrder = 'asc'; // Default sorting order, will persist via setState
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
-  bool _isLoading = true; // Add loading state
+  bool _isLoading = true;
 
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
@@ -34,7 +34,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   ...doc.data() as Map<String, dynamic>,
                 })
             .toList();
-        _applyFilters();
+        _applyFilters(); // Apply filters with the current sort order
         _isLoading = false;
       });
     }, onError: (error) {
@@ -50,15 +50,20 @@ class _CategoryScreenState extends State<CategoryScreen> {
   // Apply sorting and search filtering
   void _applyFilters() {
     setState(() {
-      _filteredProducts = _products
-          .where((product) => product['title']
-              .toString()
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()))
-          .toList();
+      _filteredProducts = List.from(_products); // Create a copy of products
 
+      // Apply search filter
+      if (_searchQuery.isNotEmpty) {
+        _filteredProducts = _filteredProducts
+            .where((product) => product['title']
+                .toString()
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()))
+            .toList();
+      }
+
+      // Apply sorting
       _filteredProducts.sort((a, b) {
-        // Handle null pricing with a default value (e.g., 0)
         final aPrice = a['pricing'] as num? ?? 0;
         final bPrice = b['pricing'] as num? ?? 0;
         return _sortOrder == 'asc'
@@ -85,8 +90,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
           PopupMenuButton<String>(
             onSelected: (value) {
               setState(() {
-                _sortOrder = value;
-                _applyFilters();
+                _sortOrder = value; // Update sort order
+                _applyFilters(); // Reapply filters with new sort order
               });
             },
             itemBuilder: (context) => [
