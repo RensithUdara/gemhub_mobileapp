@@ -1,5 +1,6 @@
 // cart_screen.dart
 import 'package:flutter/material.dart';
+import 'package:gemhub/screens/checkout_screen/checkout_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'cart_provider.dart';
@@ -214,8 +215,14 @@ class CartScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
+                              // In CartScreen.dart, update the ElevatedButton onPressed:
                               onPressed: () {
-                                // Implement checkout logic here
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CheckoutScreen()),
+                                );
                               },
                               child: const Text(
                                 'Proceed to Checkout',
