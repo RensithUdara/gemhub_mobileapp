@@ -21,7 +21,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final iconList = const <IconData>[
+  final iconList = const [
     Icons.home,
     Icons.shopping_cart,
     Icons.receipt,
@@ -64,8 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => const CartScreen(cartItems: [])),
+          MaterialPageRoute(builder: (context) => const CartScreen()), // Removed cartItems parameter
         );
         break;
       case 3:
@@ -130,7 +129,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<BannerProvider>(
+    // Sample product data for Popular Gems section
+    final List<Map<String, dynamic>> popularProducts = [
+      {
+        'id': '1',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '4.37ct Natural Blue Sapphire',
+        'pricing': 4038500.00,
+      },
+      {
+        'id': '2',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '1.17ct Natural Pink Sapphire',
+        'pricing': 549000.00,
+      },
+      {
+        'id': '3',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '4.37ct Natural Blue Sapphire',
+        'pricing': 4038500.00,
+      },
+      {
+        'id': '4',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '1.17ct Natural Pink Sapphire',
+        'pricing': 549000.00,
+      },
+      {
+        'id': '5',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '4.37ct Natural Blue Sapphire',
+        'pricing': 4038500.00,
+      },
+      {
+        'id': '6',
+        'imageUrl': 'https://encrypted-tbn0.gstatic.com/images?q=tbn9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
+        'title': '1.17ct Natural Pink Sapphire',
+        'pricing': 549000.00,
+      },
+    ];
+
+    return ChangeNotifierProvider(
       create: (context) => BannerProvider()..fetchBannerImages(),
       child: WillPopScope(
         onWillPop: _onWillPop,
@@ -165,178 +204,164 @@ class _HomeScreenState extends State<HomeScreen> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.logout, color: Color.fromARGB(255, 255, 255, 255)),
+                icon: const Icon(Icons.logout, color: Colors.white),
                 onPressed: _onWillPop,
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          body: RefreshIndicator(
+            onRefresh: () async {
+              final bannerProvider =
+                  Provider.of<BannerProvider>(context, listen: false);
+              await bannerProvider.fetchBannerImages();
+            },
+            child: ListView(
+              padding: const EdgeInsets.all(16.0),
               children: [
-                Text(
-                  'Welcome $userName,',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Consumer<BannerProvider>(
-                  builder: (context, bannerProvider, child) {
-                    if (bannerProvider.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (bannerProvider.error != null) {
-                      return Center(
-                        child: Text(
-                          'Error loading banners',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      );
-                    }
-                    return CarouselSlider(
-                      options: CarouselOptions(
-                        height: 180.0,
-                        autoPlay: true,
-                        enlargeCenterPage: true,
-                        viewportFraction: 0.9,
-                        aspectRatio: 16/9,
-                      ),
-                      items: bannerProvider.bannerList.map((imageUrl) {
-                        return Container(
-                          margin: EdgeInsets.symmetric(horizontal: 5),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(
-                              image: NetworkImage(imageUrl),
-                              fit: BoxFit.cover,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      'Welcome $userName,',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Consumer<BannerProvider>(
+                      builder: (context, bannerProvider, child) {
+                        if (bannerProvider.isLoading) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (bannerProvider.error != null) {
+                          return Center(
+                            child: Text(
+                              'Error loading banners',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          );
+                        }
+                        return CarouselSlider(
+                          options: CarouselOptions(
+                            height: 180.0,
+                            autoPlay: true,
+                            enlargeCenterPage: true,
+                            viewportFraction: 0.9,
+                            aspectRatio: 16 / 9,
+                          ),
+                          items: bannerProvider.bannerList.map((imageUrl) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                image: DecorationImage(
+                                  image: NetworkImage(imageUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Categories',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Scaffold(
+                                  appBar: AppBar(
+                                      title: const Text('All Categories')),
+                                  body: const Center(
+                                    child: Text(
+                                        'All categories will be displayed here.'),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'See All',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 3,
+                      childAspectRatio: 0.85,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      padding: const EdgeInsets.all(8),
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: const [
+                        CategoryCard(
+                          imagePath: 'assets/images/category1.jpg',
+                          title: 'Blue Sapphires',
+                        ),
+                        CategoryCard(
+                          imagePath: 'assets/images/category2.jpg',
+                          title: 'White Sapphires',
+                        ),
+                        CategoryCard(
+                          imagePath: 'assets/images/category3.jpg',
+                          title: 'Yellow Sapphires',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
                     const Text(
-                      'Categories',
+                      'Popular Gems',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Scaffold(
-                              appBar:
-                                  AppBar(title: const Text('All Categories')),
-                              body: const Center(
-                                child: Text(
-                                    'All categories will be displayed here.'),
-                              ),
-                            ),
-                          ),
+                    const SizedBox(height: 5),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                      ),
+                      itemCount: popularProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = popularProducts[index];
+                        return ProductCard(
+                          id: product['id'] as String,
+                          imagePath: product['imageUrl'] as String,
+                          title: product['title'] as String,
+                          price:
+                              'Rs. ${(product['pricing'] as num).toStringAsFixed(2)}',
+                          product: product,
                         );
                       },
-                      child: const Text(
-                        'See All',
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                GridView.count(
-                  shrinkWrap: true,
-                  crossAxisCount: 3,
-                  childAspectRatio: 0.85,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  padding: const EdgeInsets.all(8),
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    CategoryCard(
-                      imagePath: 'assets/images/category1.jpg',
-                      title: 'Blue Sapphires',
-                    ),
-                    CategoryCard(
-                      imagePath: 'assets/images/category2.jpg',
-                      title: 'White Sapphires',
-                    ),
-                    CategoryCard(
-                      imagePath: 'assets/images/category3.jpg',
-                      title: 'Yellow Sapphires',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                const Text(
-                  'Popular Gems',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                GridView.count(
-                  shrinkWrap: true,
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  padding: const EdgeInsets.all(8),
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '4.37ct Natural Blue Sapphire',
-                      price: 'Rs 4,038,500.00',
-                    ),
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '1.17ct Natural Pink Sapphire',
-                      price: 'Rs.549,000.00',
-                    ),
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '4.37ct Natural Blue Sapphire',
-                      price: 'Rs 4,038,500.00',
-                    ),
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '1.17ct Natural Pink Sapphire',
-                      price: 'Rs.549,000.00',
-                    ),
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '4.37ct Natural Blue Sapphire',
-                      price: 'Rs 4,038,500.00',
-                    ),
-                    ProductCard(
-                      imagePath:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-                      title: '1.17ct Natural Pink Sapphire',
-                      price: 'Rs.549,000.00',
                     ),
                   ],
                 ),
