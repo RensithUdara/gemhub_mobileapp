@@ -1,171 +1,235 @@
+// cart_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class CartScreen extends StatefulWidget {
-  final List<CartItem> cartItems;
+import 'cart_provider.dart';
 
-  const CartScreen({super.key, required this.cartItems});
-
-  @override
-  _CartScreenState createState() => _CartScreenState();
-}
-
-class CartItem {
-  final String imagePath;
-  final String title;
-  final double price;
-  int quantity;
-
-  CartItem({
-    required this.imagePath,
-    required this.title,
-    required this.price,
-    required this.quantity,
-  });
-
-  double get totalPrice => price * quantity;
-}
-
-class _CartScreenState extends State<CartScreen> {
-  void _removeItem(int index) {
-    setState(() {
-      widget.cartItems.removeAt(index);
-    });
-  }
-
-  void _incrementQuantity(int index) {
-    setState(() {
-      widget.cartItems[index].quantity++;
-    });
-  }
-
-  void _decrementQuantity(int index) {
-    setState(() {
-      if (widget.cartItems[index].quantity > 1) {
-        widget.cartItems[index].quantity--;
-      } else {
-        widget.cartItems.removeAt(index);
-      }
-    });
-  }
-
-  double _calculateTotal() {
-    return widget.cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-  }
+class CartScreen extends StatelessWidget {
+  const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shopping Cart'),
-        backgroundColor: Colors.blue,
-      ),
-      body: widget.cartItems.isEmpty
-          ? const Center(
-              child: Text(
-                'Your cart is empty',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+    return Consumer<CartProvider>(
+      builder: (context, cartProvider, child) {
+        final cartItems = cartProvider.cartItems;
+
+        return Scaffold(
+          appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.lightBlue],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: widget.cartItems.length,
-                    itemBuilder: (context, index) {
-                      final item = widget.cartItems[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        child: ListTile(
-                          leading: Image.asset(
-                            item.imagePath,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
+            ),
+            elevation: 4,
+            shadowColor: Colors.black26,
+            title: const Text(
+              'Shopping Cart',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
+            ),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: cartItems.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.shopping_cart_outlined,
+                          size: 80, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Your cart is empty',
+                        style: TextStyle(fontSize: 20, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: cartItems.length,
+                        itemBuilder: (context, index) {
+                          final item = cartItems[index];
+                          return Dismissible(
+                            key: Key(item.id),
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (_) =>
+                                cartProvider.removeItem(item.id),
+                            child: Card(
+                              elevation: 2,
+                              margin: const EdgeInsets.only(bottom: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.network(
+                                        item.imagePath,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(Icons.error),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.title,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Rs. ${item.price.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue[50],
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.remove,
+                                                    size: 20),
+                                                onPressed: () => cartProvider
+                                                    .decrementQuantity(item.id),
+                                              ),
+                                              Text(
+                                                '${item.quantity}',
+                                                style: const TextStyle(
+                                                    fontSize: 16),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.add,
+                                                    size: 20),
+                                                onPressed: () => cartProvider
+                                                    .incrementQuantity(item.id),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Text(
+                                          'Rs. ${item.totalPrice.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 5,
                           ),
-                          title: Text(item.title),
-                          subtitle: Text(
-                            '${item.price} x ${item.quantity} = \$${item.totalPrice.toStringAsFixed(2)}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove),
-                                onPressed: () => _decrementQuantity(index),
+                              const Text(
+                                'Total Amount',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              Text('${item.quantity}'),
-                              IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () => _incrementQuantity(index),
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _removeItem(index),
+                              Text(
+                                'Rs. ${cartProvider.totalAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total:',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '\$${_calculateTotal().toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      onPressed: () {
-                        // Handle checkout process
-                      },
-                      child: const Text(
-                        'Checkout',
-                        style: TextStyle(fontSize: 18),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[700],
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () {
+                                // Implement checkout logic here
+                              },
+                              child: const Text(
+                                'Proceed to Checkout',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+        );
+      },
     );
   }
 }
