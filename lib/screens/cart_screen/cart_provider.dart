@@ -1,41 +1,56 @@
+// cart_provider.dart
 import 'package:flutter/material.dart';
 
 class CartItem {
   final String id;
-  final String imagePath;
   final String title;
   final double price;
   int quantity;
+  final String imagePath;
 
   CartItem({
     required this.id,
-    required this.imagePath,
     required this.title,
     required this.price,
-    this.quantity = 1, // Default to 1, but allow override
+    this.quantity = 1,
+    required this.imagePath,
   });
 
   double get totalPrice => price * quantity;
 }
 
 class CartProvider with ChangeNotifier {
-  final List<CartItem> _cartItems = [];
+  List<CartItem> _cartItems = [];
 
   List<CartItem> get cartItems => _cartItems;
 
-  void addToCart(Map<String, dynamic> product) {
+  double get totalAmount =>
+      _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+
+  void addItem(CartItem item) {
     final existingItemIndex =
-        _cartItems.indexWhere((item) => item.id == product['id']);
-    if (existingItemIndex != -1) {
-      _cartItems[existingItemIndex].quantity++;
+        _cartItems.indexWhere((cartItem) => cartItem.id == item.id);
+    if (existingItemIndex >= 0) {
+      _cartItems[existingItemIndex].quantity += 1;
     } else {
-      _cartItems.add(CartItem(
-        id: product['id'],
-        imagePath: product['imageUrl'] ?? '',
-        title: product['title'] ?? 'Untitled',
-        price: (product['pricing'] as num? ?? 0).toDouble(),
-      ));
+      _cartItems.add(item);
     }
+    notifyListeners();
+  }
+
+  // New method to add a product from a Map
+  void addToCart(Map<String, dynamic> product) {
+    final cartItem = CartItem(
+      id: product['id'] as String,
+      title: product['title'] as String,
+      price: double.parse(product['price'].toString()),
+      imagePath: product['imagePath'] as String,
+    );
+    addItem(cartItem);
+  }
+
+  void removeItem(String id) {
+    _cartItems.removeWhere((item) => item.id == id);
     notifyListeners();
   }
 
@@ -50,18 +65,13 @@ class CartProvider with ChangeNotifier {
     if (item.quantity > 1) {
       item.quantity--;
     } else {
-      _cartItems.removeWhere((item) => item.id == id);
+      removeItem(id);
     }
     notifyListeners();
   }
 
-  void removeItem(String id) {
-    _cartItems.removeWhere((item) => item.id == id);
+  void clearCart() {
+    _cartItems.clear();
     notifyListeners();
-  }
-
-
-  double get totalAmount {
-    return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
   }
 }
