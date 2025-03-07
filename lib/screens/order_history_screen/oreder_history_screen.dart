@@ -1,7 +1,6 @@
 // order_history_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:gemhub/home_screen.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
   const OrderHistoryScreen({super.key});
@@ -10,33 +9,18 @@ class OrderHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.lightBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            elevation: 4,
-            shadowColor: Colors.black26,
-            title: const Text(
-              'Order History',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.indigo],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+        title: const Text('Order History'),
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -59,10 +43,11 @@ class OrderHistoryScreen extends StatelessWidget {
               itemCount: orders.length,
               itemBuilder: (context, index) {
                 final order = orders[index].data() as Map<String, dynamic>;
-                
+
                 return Card(
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -73,7 +58,8 @@ class OrderHistoryScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Order #${orders[index].id.substring(0, 8)}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16)),
                             Chip(
                               label: Text(order['status']),
                               backgroundColor: order['status'] == 'Pending'
@@ -83,16 +69,21 @@ class OrderHistoryScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildInfoRow(Icons.calendar_today, 'Order Date:', order['orderDate']),
-                        _buildInfoRow(Icons.local_shipping, 'Delivery Date:', order['deliveryDate']),
-                        _buildInfoRow(Icons.location_on, 'Address:', order['address']),
-                        _buildInfoRow(Icons.payment, 'Payment:', order['paymentMethod']),
+                        _buildInfoRow(
+                            Icons.calendar_today, 'Order Date:', order['orderDate']),
+                        _buildInfoRow(Icons.local_shipping, 'Delivery Date:',
+                            order['deliveryDate']),
+                        _buildInfoRow(
+                            Icons.location_on, 'Address:', order['address']),
+                        _buildInfoRow(
+                            Icons.payment, 'Payment:', order['paymentMethod']),
                         const Divider(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Total',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16)),
                             Text('Rs. ${order['totalAmount'].toStringAsFixed(2)}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -122,8 +113,7 @@ class OrderHistoryScreen extends StatelessWidget {
           Text('$label ',
               style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 14)),
+            child: Text(value, style: const TextStyle(fontSize: 14)),
           ),
         ],
       ),
