@@ -1,7 +1,6 @@
-// product_card.dart
 import 'package:flutter/material.dart';
+import 'package:gemhub/screens/cart_screen/cart_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:gemhub/screens/cart_screen/cart_provider.dart'; // Adjust path as needed
 
 class ProductCard extends StatelessWidget {
   final String imagePath;
@@ -23,7 +22,6 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
-        // Check if the item exists in the cart
         final cartItem = cartProvider.cartItems.firstWhere(
           (item) => item.id == id,
           orElse: () => CartItem(
@@ -31,10 +29,9 @@ class ProductCard extends StatelessWidget {
             imagePath: '',
             title: '',
             price: 0,
-            quantity: 0, // Default to 0 if not in cart
+            quantity: 0, // Explicitly set to 0 for non-existent items
           ),
         );
-        final bool isInCart = cartProvider.cartItems.any((item) => item.id == id);
         final int quantity = cartItem.quantity;
 
         return InkWell(
@@ -91,7 +88,7 @@ class ProductCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          !isInCart
+                          quantity == 0
                               ? SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
