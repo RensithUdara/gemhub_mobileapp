@@ -13,7 +13,7 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   String _searchQuery = '';
-  String _sortOrder = 'asc'; // Default sorting order, will persist via setState
+  String _sortOrder = 'asc';
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
   bool _isLoading = true;
@@ -21,7 +21,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
   final CollectionReference _productsCollection =
       FirebaseFirestore.instance.collection('products');
 
-  // Fetch products filtered by category
   void _fetchProducts() {
     _productsCollection
         .where('category', isEqualTo: widget.categoryTitle)
@@ -34,7 +33,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   ...doc.data() as Map<String, dynamic>,
                 })
             .toList();
-        _applyFilters(); // Apply filters with the current sort order
+        _applyFilters();
         _isLoading = false;
       });
     }, onError: (error) {
@@ -47,12 +46,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
     });
   }
 
-  // Apply sorting and search filtering
   void _applyFilters() {
     setState(() {
-      _filteredProducts = List.from(_products); // Create a copy of products
+      _filteredProducts = List.from(_products);
 
-      // Apply search filter
       if (_searchQuery.isNotEmpty) {
         _filteredProducts = _filteredProducts
             .where((product) => product['title']
@@ -62,7 +59,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
             .toList();
       }
 
-      // Apply sorting
       _filteredProducts.sort((a, b) {
         final aPrice = a['pricing'] as num? ?? 0;
         final bPrice = b['pricing'] as num? ?? 0;
@@ -90,8 +86,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
           PopupMenuButton<String>(
             onSelected: (value) {
               setState(() {
-                _sortOrder = value; // Update sort order
-                _applyFilters(); // Reapply filters with new sort order
+                _sortOrder = value;
+                _applyFilters();
               });
             },
             itemBuilder: (context) => [
@@ -115,7 +111,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            // Search Bar
             TextField(
               onChanged: (value) {
                 setState(() {
@@ -137,14 +132,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // Product Grid
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredProducts.isEmpty
                       ? const Center(child: Text('No products found.'))
-                      : // category_screen.dart (update only the GridView.builder part)
-                      GridView.builder(
+                      : GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -165,7 +158,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                 title: product['title'] ?? 'Untitled',
                                 price:
                                     'Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}',
-                                product: product, // Pass the entire product map
+                                product: product,
                               ),
                             );
                           },
@@ -177,42 +170,292 @@ class _CategoryScreenState extends State<CategoryScreen> {
     );
   }
 
-  // Show product details in a dialog
+  // Updated product details dialog with modern design
   void _showProductDetails(BuildContext context, Map<String, dynamic> product) {
+    int cartQuantity = 0; // Local state to track quantity in the dialog
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(product['title'] ?? 'Untitled'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (product['imageUrl'] != null && product['imageUrl'].isNotEmpty)
-                Image.network(
-                  product['imageUrl'],
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.error),
-                ),
-              const SizedBox(height: 10),
-              Text(
-                  'Price: Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}'),
-              Text('Quantity: ${product['quantity']?.toString() ?? 'N/A'}'),
-              Text('Unit: ${product['unit'] ?? 'N/A'}'),
-              const SizedBox(height: 10),
-              Text(
-                  'Description: ${product['description'] ?? 'No description'}'),
-              Text('Category: ${product['category'] ?? 'N/A'}'),
-              Text('Listed by: ${product['userId'] ?? 'Unknown'}'),
-            ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Product Image (unchanged)
+                        if (product['imageUrl'] != null &&
+                            product['imageUrl'].isNotEmpty)
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.network(
+                                product['imageUrl'],
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 200,
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.broken_image,
+                                        size: 50, color: Colors.grey),
+                                  );
+                                },
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            height: 200,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: const Icon(Icons.image_not_supported,
+                                size: 50, color: Colors.grey),
+                          ),
+                        const SizedBox(height: 16),
+
+                        // Product Title (unchanged)
+                        Text(
+                          product['title'] ?? 'Untitled',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Price (unchanged)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.green[100],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Price: Rs. ${(product['pricing'] as num? ?? 0).toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Product Details (unchanged)
+                        _buildDetailRow(
+                          icon: Icons.inventory,
+                          label: 'Quantity',
+                          value: product['quantity']?.toString() ?? 'N/A',
+                        ),
+                        _buildDetailRow(
+                          icon: Icons.straighten,
+                          label: 'Unit',
+                          value: product['unit'] ?? 'N/A',
+                        ),
+                        _buildDetailRow(
+                          icon: Icons.description,
+                          label: 'Description',
+                          value: product['description'] ?? 'No description',
+                          isMultiLine: true,
+                        ),
+                        _buildDetailRow(
+                          icon: Icons.category,
+                          label: 'Category',
+                          value: product['category'] ?? 'N/A',
+                        ),
+                        _buildDetailRow(
+                          icon: Icons.person,
+                          label: 'Listed by',
+                          value: product['userId'] ?? 'Unknown',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Updated Add to Cart Section
+                        cartQuantity == 0
+                            ? SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      cartQuantity =
+                                          1; // Start with 1 when clicked
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            '${product['title']} added to cart!'),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[700],
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 24),
+                                    minimumSize: const Size(0, 40),
+                                  ),
+                                  child: const Text(
+                                    'Add to Cart',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove,
+                                          color: Colors.blue),
+                                      onPressed: () {
+                                        setState(() {
+                                          cartQuantity--;
+                                        });
+                                        if (cartQuantity == 0) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  '${product['title']} removed from cart!'),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      '$cartQuantity',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add,
+                                          color: Colors.blue),
+                                      onPressed: () {
+                                        setState(() {
+                                          cartQuantity++;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        const SizedBox(height: 16), // Extra space at the bottom
+                      ],
+                    ),
+                  ),
+                  // Close Icon in Top-Right Corner (unchanged)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      ),
+    );
+  }
+
+  // Helper method to build detail rows
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isMultiLine = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment:
+            isMultiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: Colors.blue[700]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$label:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  maxLines: isMultiLine ? 3 : 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
