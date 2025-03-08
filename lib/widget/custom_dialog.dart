@@ -69,11 +69,13 @@ class CustomDialog extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 12),
                   ),
                   child: Text(
                     confirmText,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
