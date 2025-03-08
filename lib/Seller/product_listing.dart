@@ -70,30 +70,33 @@ class _ProductListingState extends State<ProductListing>
       return null;
     }
 
-    File? firstImage = _images.firstWhere((image) => image != null, orElse: () => null);
-    
+    File? firstImage =
+        _images.firstWhere((image) => image != null, orElse: () => null);
+
     if (firstImage == null) {
       _showErrorDialog('Please select at least one image.');
       return null;
     }
 
-    String fileName = 
+    String fileName =
         'product_images/${DateTime.now().millisecondsSinceEpoch}_${firstImage.path.split('/').last}';
-    
+
     try {
       SettableMetadata metadata = SettableMetadata(
         cacheControl: 'public,max-age=31536000',
         contentType: 'image/jpeg',
       );
-      
-      UploadTask uploadTask = _storage.ref(fileName).putFile(firstImage, metadata);
+
+      UploadTask uploadTask =
+          _storage.ref(fileName).putFile(firstImage, metadata);
       TaskSnapshot snapshot = await uploadTask;
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } on FirebaseException catch (e) {
       String errorMessage = 'Error uploading image: ${e.message}';
       if (e.code == 'permission-denied') {
-        errorMessage = 'Permission denied. Check your authentication status or storage rules.';
+        errorMessage =
+            'Permission denied. Check your authentication status or storage rules.';
       }
       _showErrorDialog(errorMessage);
       return null;
@@ -108,7 +111,7 @@ class _ProductListingState extends State<ProductListing>
       _showErrorDialog('Image upload failed. Please try again.');
       return;
     }
-    
+
     try {
       await _firestore.collection('products').add({
         'title': _titleController.text,
@@ -127,13 +130,14 @@ class _ProductListingState extends State<ProductListing>
   }
 
   void _showConfirmationDialog() {
-    if (_formKey.currentState!.validate() && 
+    if (_formKey.currentState!.validate() &&
         _images.any((image) => image != null)) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Listing',
             style: TextStyle(
@@ -200,7 +204,8 @@ class _ProductListingState extends State<ProductListing>
                 {
                   'title': _titleController.text,
                   'quantity': int.tryParse(_quantityController.text) ?? 0,
-                  'imagePath': _images.firstWhere((image) => image != null)?.path,
+                  'imagePath':
+                      _images.firstWhere((image) => image != null)?.path,
                   'type': 'product',
                 },
               );
@@ -254,30 +259,28 @@ class _ProductListingState extends State<ProductListing>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.lightBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            elevation: 4,
-            shadowColor: Colors.black26,
-            title: const Text(
-              'Product Listing',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.lightBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        title: const Text(
+          'Product Listing',
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: FadeTransition(
           opacity: _animation,
