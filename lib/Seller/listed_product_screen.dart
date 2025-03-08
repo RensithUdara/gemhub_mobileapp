@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class ListedProductScreen extends StatelessWidget {
   const ListedProductScreen({super.key});
@@ -9,30 +9,28 @@ class ListedProductScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.lightBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            elevation: 4,
-            shadowColor: Colors.black26,
-            title: const Text(
-              'Listed Products',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.lightBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        title: const Text(
+          'Listed Products',
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -135,7 +133,8 @@ class _ProductCardState extends State<ProductCard> {
     final titleController = TextEditingController(text: widget.title);
     final pricingController = TextEditingController(text: widget.pricing);
     final quantityController = TextEditingController(text: widget.quantity);
-    final descriptionController = TextEditingController(text: widget.description);
+    final descriptionController =
+        TextEditingController(text: widget.description);
     String? selectedCategory = widget.category;
 
     showDialog(
@@ -161,9 +160,11 @@ class _ProductCardState extends State<ProductCard> {
                 selectedCategory = value;
               }),
               const SizedBox(height: 12),
-              _buildTextField('Pricing', pricingController, TextInputType.number),
+              _buildTextField(
+                  'Pricing', pricingController, TextInputType.number),
               const SizedBox(height: 12),
-              _buildTextField('Quantity', quantityController, TextInputType.number),
+              _buildTextField(
+                  'Quantity', quantityController, TextInputType.number),
               const SizedBox(height: 12),
               _buildTextField('Description', descriptionController, null, 3),
             ],
@@ -265,9 +266,12 @@ class _ProductCardState extends State<ProductCard> {
       dropdownColor: Colors.grey[900],
       style: const TextStyle(color: Colors.white),
       items: const [
-        DropdownMenuItem(value: 'Blue Sapphires', child: Text('Blue Sapphires')),
-        DropdownMenuItem(value: 'White Sapphires', child: Text('White Sapphires')),
-        DropdownMenuItem(value: 'Yellow Sapphires', child: Text('Yellow Sapphires')),
+        DropdownMenuItem(
+            value: 'Blue Sapphires', child: Text('Blue Sapphires')),
+        DropdownMenuItem(
+            value: 'White Sapphires', child: Text('White Sapphires')),
+        DropdownMenuItem(
+            value: 'Yellow Sapphires', child: Text('Yellow Sapphires')),
       ],
       onChanged: onChanged,
     );
@@ -367,7 +371,8 @@ class _ProductCardState extends State<ProductCard> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -407,7 +412,8 @@ class _ProductCardState extends State<ProductCard> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.grey[800],
                             borderRadius: BorderRadius.circular(12),
