@@ -1,13 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart'; // Added Firebase Auth
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gemhub/Seller/listed_auction_screen.dart';
 import 'package:gemhub/Seller/listed_product_screen.dart';
-import 'package:gemhub/Seller/order_details_screen.dart';
 import 'package:gemhub/Seller/order_history_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Added Firebase Auth
+
 import 'auction_product.dart' as auction;
 import 'notifications_page.dart';
 import 'product_listing.dart' as product;
@@ -19,7 +18,8 @@ class SellerHomePage extends StatefulWidget {
   State<SellerHomePage> createState() => _SellerHomePageState();
 }
 
-class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProviderStateMixin {
+class _SellerHomePageState extends State<SellerHomePage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -35,13 +35,14 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _fadeAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     _controller.forward();
-    
+
     // Get current user ID
     currentUserId = FirebaseAuth.instance.currentUser?.uid;
   }
@@ -52,7 +53,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
     super.dispose();
   }
 
-  void _showNotification(String title, int quantity, String? imagePath, String type) {
+  void _showNotification(
+      String title, int quantity, String? imagePath, String type) {
     setState(() {
       _notifications.add({
         'title': title,
@@ -67,20 +69,25 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
     return (await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.black87,
             title: const Row(
               children: [
                 Icon(Icons.logout, color: Colors.redAccent),
                 SizedBox(width: 10),
-                Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                Text('Confirm Logout',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.white)),
               ],
             ),
-            content: const Text('Are you sure you want to logout?', style: TextStyle(fontSize: 16, color: Colors.white70)),
+            content: const Text('Are you sure you want to logout?',
+                style: TextStyle(fontSize: 16, color: Colors.white70)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                child: const Text('Cancel',
+                    style: TextStyle(color: Colors.grey, fontSize: 16)),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -88,15 +95,18 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                   Navigator.of(context).pop(true);
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: const Text('Logout',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ],
           ),
@@ -113,8 +123,10 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
         Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => NotificationsPage(notifications: _notifications),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                NotificationsPage(notifications: _notifications),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
             transitionDuration: const Duration(milliseconds: 400),
@@ -175,7 +187,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.blue, width: 2),
+                                border:
+                                    Border.all(color: Colors.blue, width: 2),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: _isHovered
                                     ? [
@@ -212,15 +225,25 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                               final result = await Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => const product.ProductListing(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    return FadeTransition(opacity: animation, child: child);
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const product.ProductListing(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return FadeTransition(
+                                        opacity: animation, child: child);
                                   },
-                                  transitionDuration: const Duration(milliseconds: 400),
+                                  transitionDuration:
+                                      const Duration(milliseconds: 400),
                                 ),
                               );
-                              if (result != null && result is Map<String, dynamic>) {
-                                _showNotification(result['title'], result['quantity'], result['imagePath'], 'product');
+                              if (result != null &&
+                                  result is Map<String, dynamic>) {
+                                _showNotification(
+                                    result['title'],
+                                    result['quantity'],
+                                    result['imagePath'],
+                                    'product');
                               }
                             },
                           ),
@@ -232,15 +255,25 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                               final result = await Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => const auction.AuctionProduct(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    return FadeTransition(opacity: animation, child: child);
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const auction.AuctionProduct(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return FadeTransition(
+                                        opacity: animation, child: child);
                                   },
-                                  transitionDuration: const Duration(milliseconds: 400),
+                                  transitionDuration:
+                                      const Duration(milliseconds: 400),
                                 ),
                               );
-                              if (result != null && result is Map<String, dynamic>) {
-                                _showNotification(result['title'], result['quantity'], result['imagePath'], 'auction');
+                              if (result != null &&
+                                  result is Map<String, dynamic>) {
+                                _showNotification(
+                                    result['title'],
+                                    result['quantity'],
+                                    result['imagePath'],
+                                    'auction');
                               }
                             },
                           ),
@@ -251,7 +284,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const ListedProductScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ListedProductScreen()),
                               );
                             },
                           ),
@@ -277,7 +312,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => SellerOrderHistoryScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        SellerOrderHistoryScreen()),
                               );
                             },
                           ),
@@ -322,7 +359,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _selectedIndex == 0 ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent,
+                      color: _selectedIndex == 0
+                          ? Colors.blueAccent.withOpacity(0.2)
+                          : Colors.transparent,
                     ),
                     child: const Icon(Icons.home, size: 28),
                   ),
@@ -336,7 +375,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _selectedIndex == 1 ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent,
+                          color: _selectedIndex == 1
+                              ? Colors.blueAccent.withOpacity(0.2)
+                              : Colors.transparent,
                         ),
                         child: const Icon(Icons.notifications, size: 28),
                       ),
@@ -352,7 +393,10 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                             ),
                             child: Text(
                               _notifications.length.toString(),
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -366,7 +410,9 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _selectedIndex == 2 ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent,
+                      color: _selectedIndex == 2
+                          ? Colors.blueAccent.withOpacity(0.2)
+                          : Colors.transparent,
                     ),
                     child: const Icon(Icons.person, size: 28),
                   ),
@@ -378,18 +424,23 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _selectedIndex == 3 ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent,
+                      color: _selectedIndex == 3
+                          ? Colors.blueAccent.withOpacity(0.2)
+                          : Colors.transparent,
                     ),
                     child: const Icon(Icons.logout, size: 28),
                   ),
                   label: 'Logout',
                 ),
               ],
-              selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              selectedLabelStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               unselectedLabelStyle: const TextStyle(fontSize: 10),
               showUnselectedLabels: true,
-              selectedIconTheme: const IconThemeData(size: 32, color: Colors.blueAccent),
-              unselectedIconTheme: const IconThemeData(size: 28, color: Colors.grey),
+              selectedIconTheme:
+                  const IconThemeData(size: 32, color: Colors.blueAccent),
+              unselectedIconTheme:
+                  const IconThemeData(size: 28, color: Colors.grey),
             ),
           ),
         ),
@@ -414,7 +465,8 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
               elevation: _isHovered ? 12 : 8,
               shadowColor: Colors.blueAccent.withOpacity(0.6),
             ),
@@ -425,10 +477,12 @@ class _SellerHomePageState extends State<SellerHomePage> with SingleTickerProvid
                 const SizedBox(width: 16),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.white),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 20, color: Colors.white),
               ],
             ),
           ).animate().scale(duration: 250.ms, curve: Curves.easeInOut),
