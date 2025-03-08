@@ -31,9 +31,8 @@ class ProductProvider with ChangeNotifier {
   Future<void> fetchProducts() async {
     try {
       QuerySnapshot snapshot = await _db.collection('products').get();
-      _products = snapshot.docs
-          .map((doc) => Product.fromFirestore(doc))
-          .toList();
+      _products =
+          snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
       notifyListeners();
     } catch (e) {
       print("Error fetching products: $e");
