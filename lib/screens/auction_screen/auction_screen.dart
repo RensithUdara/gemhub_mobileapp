@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuctionScreen extends StatelessWidget {
@@ -91,19 +92,24 @@ class AuctionScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 ...auctions.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
-                  print('endTime type for ${doc.id}: ${data['endTime'].runtimeType}');
+                  print(
+                      'endTime type for ${doc.id}: ${data['endTime'].runtimeType}');
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0), // Fix: should be 'bottom'
+                    padding: const EdgeInsets.only(
+                        bottom: 20.0), // Fix: should be 'bottom'
                     child: AuctionItemCard(
                       auctionId: doc.id,
                       imagePath: data['imagePath'] ?? '',
                       title: data['title'] ?? 'Untitled',
-                      currentBid: (data['currentBid'] as num?)?.toDouble() ?? 0.0, // Changed to double
+                      currentBid: (data['currentBid'] as num?)?.toDouble() ??
+                          0.0, // Changed to double
                       endTime: _parseEndTime(data['endTime']),
-                      minimumIncrement: (data['minimumIncrement'] as num?)?.toDouble() ?? 0.0, // Changed to double
+                      minimumIncrement:
+                          (data['minimumIncrement'] as num?)?.toDouble() ??
+                              0.0, // Changed to double
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           );
@@ -174,7 +180,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
       if (snapshot.exists) {
         final data = snapshot.data() as Map<String, dynamic>;
         setState(() {
-          _currentBid = (data['currentBid'] as num?)?.toDouble() ?? widget.currentBid;
+          _currentBid =
+              (data['currentBid'] as num?)?.toDouble() ?? widget.currentBid;
           _winningUserId = data['winningUserId'];
         });
         if (data['currentBid'] > widget.currentBid) {
@@ -198,7 +205,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   Future<void> _placeBid() async {
-    final enteredBid = double.tryParse(_bidController.text.trim()); // Changed to double
+    final enteredBid =
+        double.tryParse(_bidController.text.trim()); // Changed to double
     final currentUser = FirebaseAuth.instance.currentUser;
 
     print("Current user UID: ${currentUser?.uid ?? 'Not authenticated'}");
@@ -226,7 +234,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     }
 
     if ((enteredBid - _currentBid) < widget.minimumIncrement) {
-      _showSnackBar('Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
+      _showSnackBar(
+          'Minimum increment: ${_formatCurrency(widget.minimumIncrement)}');
       return;
     }
 
@@ -305,7 +314,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       backgroundColor: Colors.grey[200],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -323,7 +333,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       backgroundColor: Colors.blue[700],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -350,7 +361,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     if (confirm ?? false) {
       setState(() => _isLoading = true);
       try {
-        print("Updating Firestore with: {currentBid: $enteredBid, winningUserId: ${currentUser.uid}}");
+        print(
+            "Updating Firestore with: {currentBid: $enteredBid, winningUserId: ${currentUser.uid}}");
         await FirebaseFirestore.instance
             .collection('auctions')
             .doc(widget.auctionId)
@@ -439,18 +451,19 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     if (duration.inSeconds <= 0) {
       return '00d : 00h : 00m : 00s';
     }
-    
+
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    
+
     final days = duration.inDays;
     final hours = twoDigits(duration.inHours.remainder(24));
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
-    
+
     return '${days}d : ${hours}h : ${minutes}m : ${seconds}s';
   }
 
-  String _formatCurrency(double amount) { // Changed to double
+  String _formatCurrency(double amount) {
+    // Changed to double
     return 'Rs.${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
@@ -466,7 +479,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   @override
   Widget build(BuildContext context) {
     bool isAuctionActive = _remainingTime.inSeconds > 0;
-    bool isCurrentUserWinner = _winningUserId == FirebaseAuth.instance.currentUser?.uid;
+    bool isCurrentUserWinner =
+        _winningUserId == FirebaseAuth.instance.currentUser?.uid;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -497,7 +511,9 @@ class _AuctionItemCardState extends State<AuctionItemCard>
             child: Stack(
               children: [
                 Image.network(
-                  widget.imagePath.isNotEmpty ? widget.imagePath : 'assets/placeholder.jpg',
+                  widget.imagePath.isNotEmpty
+                      ? widget.imagePath
+                      : 'assets/placeholder.jpg',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: 220,
@@ -513,7 +529,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isAuctionActive
@@ -554,7 +571,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.blue[100],
                         borderRadius: BorderRadius.circular(8),
@@ -678,7 +696,8 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       fillColor: Colors.grey[50],
                       hintText: 'Enter your bid',
                       hintStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.monetization_on, color: Colors.blue[600]),
+                      prefixIcon:
+                          Icon(Icons.monetization_on, color: Colors.blue[600]),
                       suffixIcon: IconButton(
                         icon: Icon(Icons.clear, color: Colors.grey[400]),
                         onPressed: () => _bidController.clear(),
@@ -689,11 +708,13 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blue[200]!, width: 1.5),
+                        borderSide:
+                            BorderSide(color: Colors.blue[200]!, width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+                        borderSide:
+                            BorderSide(color: Colors.blue[700]!, width: 2),
                       ),
                     ),
                   ),
