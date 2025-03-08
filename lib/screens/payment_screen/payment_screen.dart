@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:gemhub/screens/cart_screen/cart_provider.dart';
 import 'package:gemhub/screens/order_history_screen/oreder_history_screen.dart';
 import 'package:intl/intl.dart';
@@ -40,12 +40,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     DateTime deliveryDate = now.add(const Duration(days: 3));
 
     final order = {
-      'items': widget.cartItems.map((item) => {
-            'title': item.title,
-            'quantity': item.quantity,
-            'price': item.price,
-            'totalPrice': item.totalPrice,
-          }).toList(),
+      'items': widget.cartItems
+          .map((item) => {
+                'title': item.title,
+                'quantity': item.quantity,
+                'price': item.price,
+                'totalPrice': item.totalPrice,
+              })
+          .toList(),
       'totalAmount': widget.totalAmount,
       'address': widget.address,
       'paymentMethod': paymentMethod,
@@ -56,10 +58,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     await firestore.collection('orders').add(order);
 
-    if (saveCard && paymentMethod == 'Card Payment' && selectedSavedCard == null) {
+    if (saveCard &&
+        paymentMethod == 'Card Payment' &&
+        selectedSavedCard == null) {
       setState(() {
         savedCards.add({
-          'number': '**** **** **** ${_cardNumberController.text.substring(_cardNumberController.text.length - 4)}',
+          'number':
+              '**** **** **** ${_cardNumberController.text.substring(_cardNumberController.text.length - 4)}',
           'expiry': _expiryController.text,
           'type': _getCardType(_cardNumberController.text),
         });
@@ -121,7 +126,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,7 +158,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            _buildRadioTile('Cash on Delivery', Icons.money, 'Cash on Delivery'),
+            _buildRadioTile(
+                'Cash on Delivery', Icons.money, 'Cash on Delivery'),
             const Divider(height: 24),
             _buildRadioTile('Card Payment', Icons.credit_card, 'Card Payment'),
           ],
@@ -252,7 +259,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildTextField(_cvvController, 'CVV', Icons.lock, maxLength: 3),
+                  child: _buildTextField(_cvvController, 'CVV', Icons.lock,
+                      maxLength: 3),
                 ),
               ],
             ),
@@ -314,19 +322,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[600],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 4,
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        onPressed: (paymentMethod == 'Cash on Delivery' || isCardDetailsComplete)
-            ? () {
-                _saveOrderToFirebase();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
-                );
-              }
-            : null,
+        onPressed:
+            (paymentMethod == 'Cash on Delivery' || isCardDetailsComplete)
+                ? () {
+                    _saveOrderToFirebase();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const OrderHistoryScreen()),
+                    );
+                  }
+                : null,
         child: const Text(
           'Complete Order',
           style: TextStyle(
@@ -379,7 +390,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         counterText: '', // Hides character counter
       ),
       keyboardType: TextInputType.number,
