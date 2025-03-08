@@ -6,7 +6,7 @@ import 'login_screen.dart';
 import 'reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -15,10 +15,9 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final List<TextEditingController> otpControllers = 
+  final List<TextEditingController> otpControllers =
       List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> otpFocusNodes = 
-      List.generate(6, (_) => FocusNode());
+  final List<FocusNode> otpFocusNodes = List.generate(6, (_) => FocusNode());
 
   bool isEmailSelected = true;
   bool isOTPSent = false;
@@ -59,7 +58,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         borderRadius: BorderRadius.circular(12.0),
         borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
     );
   }
@@ -70,7 +70,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           elevation: 8,
           contentPadding: const EdgeInsets.all(20),
@@ -111,7 +112,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 child: const Text(
                   'OK',
@@ -160,7 +162,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         "Password reset email sent successfully!",
         isSuccess: true,
       );
-      
+
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
@@ -268,7 +270,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -292,7 +295,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Title
                     const Text(
                       'Forgot Password',
@@ -323,15 +326,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           GestureDetector(
                             onTap: () => toggleOption(true),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 24),
                               decoration: BoxDecoration(
-                                color: isEmailSelected ? Colors.blueAccent : Colors.white,
-                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                                color: isEmailSelected
+                                    ? Colors.blueAccent
+                                    : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(
+                                    left: Radius.circular(12)),
                               ),
                               child: Text(
                                 'Email',
                                 style: TextStyle(
-                                  color: isEmailSelected ? Colors.white : Colors.black87,
+                                  color: isEmailSelected
+                                      ? Colors.white
+                                      : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -340,15 +349,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           GestureDetector(
                             onTap: () => toggleOption(false),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 24),
                               decoration: BoxDecoration(
-                                color: !isEmailSelected ? Colors.blueAccent : Colors.white,
-                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
+                                color: !isEmailSelected
+                                    ? Colors.blueAccent
+                                    : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(
+                                    right: Radius.circular(12)),
                               ),
                               child: Text(
                                 'Phone',
                                 style: TextStyle(
-                                  color: !isEmailSelected ? Colors.white : Colors.black87,
+                                  color: !isEmailSelected
+                                      ? Colors.white
+                                      : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -367,17 +382,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
                               onChanged: checkEmail,
-                              decoration: customInputDecoration('Enter your Email'),
+                              decoration:
+                                  customInputDecoration('Enter your Email'),
                             )
                           : !isOTPSent
                               ? TextField(
                                   controller: phoneNumberController,
                                   keyboardType: TextInputType.phone,
                                   onChanged: checkPhoneNumber,
-                                  decoration: customInputDecoration('Enter your Phone Number'),
+                                  decoration: customInputDecoration(
+                                      'Enter your Phone Number'),
                                 )
                               : Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: List.generate(6, (index) {
                                     return SizedBox(
                                       width: 50,
@@ -392,31 +410,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                           filled: true,
                                           fillColor: Colors.white,
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: const BorderSide(color: Colors.grey),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                                color: Colors.grey),
                                           ),
                                           enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: const BorderSide(color: Colors.grey),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                                color: Colors.grey),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: const BorderSide(color: Colors.blueAccent),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                                color: Colors.blueAccent),
                                           ),
                                         ),
                                         inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
                                         ],
                                         onChanged: (value) {
                                           if (value.length == 1 && index < 5) {
                                             otpFocusNodes[index].unfocus();
-                                            FocusScope.of(context)
-                                                .requestFocus(otpFocusNodes[index + 1]);
+                                            FocusScope.of(context).requestFocus(
+                                                otpFocusNodes[index + 1]);
                                           }
                                           if (value.isEmpty && index > 0) {
                                             otpFocusNodes[index].unfocus();
-                                            FocusScope.of(context)
-                                                .requestFocus(otpFocusNodes[index - 1]);
+                                            FocusScope.of(context).requestFocus(
+                                                otpFocusNodes[index - 1]);
                                           }
                                         },
                                       ),
@@ -442,10 +467,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: ElevatedButton(
                         onPressed: isEmailSelected
                             ? (isEmailValid ? sendResetEmail : null)
-                            : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
+                            : (isOTPSent
+                                ? verifyOTP
+                                : (isPhoneNumberValid ? sendOTP : null)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 40.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
