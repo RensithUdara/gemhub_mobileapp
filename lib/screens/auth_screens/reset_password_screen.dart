@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gemhub/Database/db_helper.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String phoneNumber;
-  const ResetPasswordScreen({Key? key, required this.phoneNumber})
-      : super(key: key);
+  const ResetPasswordScreen({super.key, required this.phoneNumber});
 
   @override
   _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
@@ -47,13 +45,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         borderRadius: BorderRadius.circular(12.0),
         borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
       suffixIcon: IconButton(
         icon: Icon(
           isPasswordField
               ? (isPasswordVisible ? Icons.visibility : Icons.visibility_off)
-              : (isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+              : (isConfirmPasswordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off),
           color: Colors.grey,
         ),
         onPressed: () {
@@ -75,7 +76,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           elevation: 8,
           contentPadding: const EdgeInsets.all(20),
@@ -116,7 +118,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 child: const Text(
                   'OK',
@@ -156,7 +159,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       await _databaseHelper.updateUserPassword(widget.phoneNumber, newPassword);
-      showAlertDialog("Success", "Password reset successfully!", isSuccess: true);
+      showAlertDialog("Success", "Password reset successfully!",
+          isSuccess: true);
 
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushAndRemoveUntil(
@@ -177,7 +181,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -185,23 +190,23 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     // Logo (unchanged design)
                     Container(
                       decoration: BoxDecoration(
-                        // shape: BoxShape.circle,
-                        // boxShadow: [
-                        //   BoxShadow(
-                        //     color: Colors.grey.withOpacity(0.3),
-                        //     spreadRadius: 2,
-                        //     blurRadius: 8,
-                        //     offset: const Offset(0, 3),
-                        //   ),
-                        // ],
-                      ),
+                          // shape: BoxShape.circle,
+                          // boxShadow: [
+                          //   BoxShadow(
+                          //     color: Colors.grey.withOpacity(0.3),
+                          //     spreadRadius: 2,
+                          //     blurRadius: 8,
+                          //     offset: const Offset(0, 3),
+                          //   ),
+                          // ],
+                          ),
                       child: Image.asset(
                         "assets/images/logo_new.png",
                         height: 120,
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Title
                     const Text(
                       'Reset Password',
@@ -217,18 +222,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Column(
-                        key: ValueKey(isPasswordVisible), // To trigger animation
+                        key:
+                            ValueKey(isPasswordVisible), // To trigger animation
                         children: [
                           TextField(
                             controller: newPasswordController,
                             obscureText: !isPasswordVisible,
-                            decoration: customInputDecoration('New Password', isPasswordField: true),
+                            decoration: customInputDecoration('New Password',
+                                isPasswordField: true),
                           ),
                           const SizedBox(height: 20),
                           TextField(
                             controller: confirmPasswordController,
                             obscureText: !isConfirmPasswordVisible,
-                            decoration: customInputDecoration('Confirm Password', isPasswordField: false),
+                            decoration: customInputDecoration(
+                                'Confirm Password',
+                                isPasswordField: false),
                           ),
                         ],
                       ),
@@ -252,7 +261,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         onPressed: resetPassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 40.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
