@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ListedAuctionScreen extends StatelessWidget {
   final String sellerId;
@@ -77,8 +77,7 @@ class ListedAuctionScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.gavel_outlined,
-                        color: Colors.white70, size: 60),
+                    Icon(Icons.gavel_outlined, color: Colors.white70, size: 60),
                     SizedBox(height: 16),
                     Text(
                       'No auctions listed yet',
@@ -98,7 +97,8 @@ class ListedAuctionScreen extends StatelessWidget {
               itemCount: snapshot.data!.docs.length,
               itemBuilder: (context, index) {
                 var auction = snapshot.data!.docs[index];
-                Map<String, dynamic> auctionData = auction.data() as Map<String, dynamic>;
+                Map<String, dynamic> auctionData =
+                    auction.data() as Map<String, dynamic>;
 
                 // Enhanced debugging
                 print('Auction ID: ${auction.id}');
@@ -109,15 +109,18 @@ class ListedAuctionScreen extends StatelessWidget {
                   print('Auction sellerId: ${auctionData['sellerId']}');
                 }
 
-                bool isSeller = hasSellerId && auctionData['sellerId'] == sellerId;
+                bool isSeller =
+                    hasSellerId && auctionData['sellerId'] == sellerId;
                 print('isSeller for ${auction.id}: $isSeller');
 
                 return AuctionCard(
                   title: auctionData['title'] ?? 'Untitled',
                   currentBid: auctionData['currentBid']?.toString() ?? '0',
-                  endTime: DateTime.parse(auctionData['endTime'] ?? DateTime.now().toIso8601String()),
+                  endTime: DateTime.parse(auctionData['endTime'] ??
+                      DateTime.now().toIso8601String()),
                   imageUrl: auctionData['imagePath'] ?? '',
-                  minimumIncrement: auctionData['minimumIncrement']?.toString() ?? '0',
+                  minimumIncrement:
+                      auctionData['minimumIncrement']?.toString() ?? '0',
                   auctionId: auction.id,
                   isSeller: isSeller,
                   onTap: () {
@@ -427,7 +430,8 @@ class _EditEndTimeDialogState extends State<EditEndTimeDialog> {
 
   Future<void> _updateEndTime() async {
     try {
-      print('Updating auction ${widget.auctionId} with new end time: $selectedDateTime');
+      print(
+          'Updating auction ${widget.auctionId} with new end time: $selectedDateTime');
       await FirebaseFirestore.instance
           .collection('auctions')
           .doc(widget.auctionId)
