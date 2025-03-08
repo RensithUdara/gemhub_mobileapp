@@ -19,7 +19,7 @@ class CartItem {
 }
 
 class CartProvider with ChangeNotifier {
-  List<CartItem> _cartItems = [];
+  final List<CartItem> _cartItems = [];
 
   List<CartItem> get cartItems => _cartItems;
 
