@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:gemhub/screens/checkout_screen/checkout_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'cart_provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -15,28 +16,30 @@ class CartScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.lightBlue],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.lightBlue],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            elevation: 4,
+            shadowColor: Colors.black26,
+            title: const Text(
+              'Shopping Cart',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
+            ),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-        ),
-        elevation: 4,
-        shadowColor: Colors.black26,
-        title: const Text(
-          'Shopping Cart',
-          style: TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
