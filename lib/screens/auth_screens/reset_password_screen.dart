@@ -4,7 +4,7 @@ import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String phoneNumber;
-  const ResetPasswordScreen({super.key, required this.phoneNumber});
+  const ResetPasswordScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
   _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
@@ -12,8 +12,7 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   bool isPasswordVisible = false;
@@ -26,58 +25,75 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
-  // Custom Input Decoration (matching ForgotPasswordScreen)
-  InputDecoration customInputDecoration(String labelText,
-      {bool isPasswordField = false}) {
+  InputDecoration customInputDecoration(String labelText, {bool isPasswordField = false}) {
     return InputDecoration(
       labelText: labelText,
       filled: true,
-      fillColor: Colors.grey[100],
+      fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.grey, width: 1),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.grey, width: 1),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: const BorderSide(color: Colors.blue, width: 2.0),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-      suffixIcon: IconButton(
-        icon: Icon(
-          isPasswordField
-              ? (isPasswordVisible ? Icons.visibility : Icons.visibility_off)
-              : (isConfirmPasswordVisible
-                  ? Icons.visibility
-                  : Icons.visibility_off),
-          color: Colors.grey,
-        ),
-        onPressed: () {
-          setState(() {
-            if (isPasswordField) {
-              isPasswordVisible = !isPasswordVisible;
-            } else {
-              isConfirmPasswordVisible = !isConfirmPasswordVisible;
-            }
-          });
-        },
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      labelStyle: TextStyle(color: Colors.grey[700]),
+      hintStyle: TextStyle(color: Colors.grey[400]),
+      suffixIcon: isPasswordField
+          ? IconButton(
+              icon: Icon(
+                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+              onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+            )
+          : IconButton(
+              icon: Icon(
+                isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+              onPressed: () => setState(() => isConfirmPasswordVisible = !isConfirmPasswordVisible),
+            ),
+    );
+  }
+
+  Widget customTextField(
+    String labelText,
+    TextEditingController controller, {
+    bool obscureText = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10.0),
+      decoration: BoxDecoration(
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6.0,
+            offset: Offset(0, 3),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: customInputDecoration(labelText, isPasswordField: obscureText),
       ),
     );
   }
 
-  // Enhanced Alert Dialog (matching ForgotPasswordScreen)
   void showAlertDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           elevation: 8,
           contentPadding: const EdgeInsets.all(20),
@@ -102,10 +118,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
             ],
           ),
@@ -115,19 +128,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isSuccess ? Colors.green : Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -159,9 +165,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       await _databaseHelper.updateUserPassword(widget.phoneNumber, newPassword);
-      showAlertDialog("Success", "Password reset successfully!",
-          isSuccess: true);
-
+      showAlertDialog("Success", "Password reset successfully!", isSuccess: true);
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushAndRemoveUntil(
         context,
@@ -181,70 +185,43 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Stack(
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 60), // Space for back button
-                    // Logo (unchanged design)
+                    const SizedBox(height: 60),
                     Container(
-                      decoration: BoxDecoration(
-                          // shape: BoxShape.circle,
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Colors.grey.withOpacity(0.3),
-                          //     spreadRadius: 2,
-                          //     blurRadius: 8,
-                          //     offset: const Offset(0, 3),
-                          //   ),
-                          // ],
-                          ),
-                      child: Image.asset(
-                        "assets/images/logo_new.png",
-                        height: 120,
-                      ),
+                      // decoration: BoxDecoration(
+                      //   shape: BoxShape.circle,
+                      //   boxShadow: [
+                      //     BoxShadow(
+                      //       color: Colors.grey.withOpacity(0.3),
+                      //       spreadRadius: 2,
+                      //       blurRadius: 8,
+                      //       offset: const Offset(0, 3),
+                      //     ),
+                      //   ],
+                      // ),
+                      child: Image.asset("assets/images/logo_new.png", height: 120),
                     ),
                     const SizedBox(height: 32),
-
-                    // Title
                     const Text(
                       'Reset Password',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     const SizedBox(height: 32),
-
-                    // Input Fields
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Column(
-                        key:
-                            ValueKey(isPasswordVisible), // To trigger animation
+                        key: ValueKey(isPasswordVisible),
                         children: [
-                          TextField(
-                            controller: newPasswordController,
-                            obscureText: !isPasswordVisible,
-                            decoration: customInputDecoration('New Password',
-                                isPasswordField: true),
-                          ),
+                          customTextField('New Password', newPasswordController, obscureText: !isPasswordVisible),
                           const SizedBox(height: 20),
-                          TextField(
-                            controller: confirmPasswordController,
-                            obscureText: !isConfirmPasswordVisible,
-                            decoration: customInputDecoration(
-                                'Confirm Password',
-                                isPasswordField: false),
-                          ),
+                          customTextField('Confirm Password', confirmPasswordController, obscureText: !isConfirmPasswordVisible),
                         ],
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Reset Button
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
@@ -261,19 +238,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         onPressed: resetPassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 40.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                         ),
                         child: const Text(
                           'Reset Password',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -281,14 +251,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
               ),
             ),
-            // Back Button
             Positioned(
               top: 16,
               left: 16,
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -303,11 +270,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.black87,
-                    size: 24,
-                  ),
+                  child: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
                 ),
               ),
             ),
