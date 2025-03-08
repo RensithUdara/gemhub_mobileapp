@@ -57,7 +57,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _validateLogin() async {
-    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty) {
       _showCustomDialog(
         title: 'Error',
         message: 'Please fill in all fields',
@@ -77,19 +78,23 @@ class _LoginScreenState extends State<LoginScreen> {
       String? userId = userCredential.user?.uid;
 
       if (userId != null) {
-        DocumentSnapshot buyerSnapshot = await _firestore.collection('buyers').doc(userId).get();
-        DocumentSnapshot sellerSnapshot = await _firestore.collection('sellers').doc(userId).get();
+        DocumentSnapshot buyerSnapshot =
+            await _firestore.collection('buyers').doc(userId).get();
+        DocumentSnapshot sellerSnapshot =
+            await _firestore.collection('sellers').doc(userId).get();
 
         if (buyerSnapshot.exists) {
           await _saveCredentials();
           _navigateTo(const HomeScreen());
         } else if (sellerSnapshot.exists) {
-          Map<String, dynamic> sellerData = sellerSnapshot.data() as Map<String, dynamic>;
+          Map<String, dynamic> sellerData =
+              sellerSnapshot.data() as Map<String, dynamic>;
           if (!sellerData['isActive']) {
             await _auth.signOut();
             _showCustomDialog(
               title: 'Account Disabled',
-              message: 'Your seller account is disabled. Please wait for Admin approval.',
+              message:
+                  'Your seller account is disabled. Please wait for Admin approval.',
               isError: true,
             );
           } else {
@@ -143,7 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration customInputDecoration(String labelText, {bool isPasswordField = false}) {
+  InputDecoration customInputDecoration(String labelText,
+      {bool isPasswordField = false}) {
     return InputDecoration(
       labelText: labelText,
       filled: true,
@@ -160,7 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(16.0),
         borderSide: const BorderSide(color: Colors.blue, width: 2.0),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       labelStyle: TextStyle(color: Colors.grey[700]),
       hintStyle: TextStyle(color: Colors.grey[400]),
       suffixIcon: isPasswordField
@@ -169,7 +176,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                 color: Colors.grey,
               ),
-              onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+              onPressed: () =>
+                  setState(() => isPasswordVisible = !isPasswordVisible),
             )
           : null,
     );
@@ -197,7 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        decoration: customInputDecoration(labelText, isPasswordField: obscureText),
+        decoration:
+            customInputDecoration(labelText, isPasswordField: obscureText),
       ),
     );
   }
@@ -256,10 +265,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Checkbox(
                             value: rememberMe,
-                            onChanged: (value) => setState(() => rememberMe = value ?? false),
+                            onChanged: (value) =>
+                                setState(() => rememberMe = value ?? false),
                             activeColor: Colors.blue,
                           ),
-                          const Text('Remember me', style: TextStyle(color: Colors.black54)),
+                          const Text('Remember me',
+                              style: TextStyle(color: Colors.black54)),
                         ],
                       ),
                       TextButton(
@@ -276,7 +287,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: isLoading ? null : _validateLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16.0, horizontal: 50.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
@@ -300,12 +312,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?", style: TextStyle(color: Colors.black54)),
+                      const Text("Don't have an account?",
+                          style: TextStyle(color: Colors.black54)),
                       TextButton(
                         onPressed: () => _navigateTo(const SignUpScreen()),
                         child: const Text(
                           'Register',
-                          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.blue, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
