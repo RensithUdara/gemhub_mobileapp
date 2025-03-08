@@ -1,8 +1,8 @@
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart'; // Add this for date formatting
 
@@ -13,14 +13,16 @@ class AuctionProduct extends StatefulWidget {
   State<AuctionProduct> createState() => _AuctionProductState();
 }
 
-class _AuctionProductState extends State<AuctionProduct> with SingleTickerProviderStateMixin {
+class _AuctionProductState extends State<AuctionProduct>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   File? _image;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _currentBidController = TextEditingController();
-  final TextEditingController _minimumIncrementController = TextEditingController();
+  final TextEditingController _minimumIncrementController =
+      TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -60,7 +62,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
 
   Future<String?> _uploadImage() async {
     if (_image != null) {
-      String fileName = 'auction_images/${DateTime.now().millisecondsSinceEpoch}_${_image!.path.split('/').last}';
+      String fileName =
+          'auction_images/${DateTime.now().millisecondsSinceEpoch}_${_image!.path.split('/').last}';
       UploadTask uploadTask = _storage.ref(fileName).putFile(_image!);
       TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
@@ -92,7 +95,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
             pickedTime.minute,
           );
           // Format for display
-          _endTimeController.text = DateFormat('yyyy-MM-dd HH:mm').format(_selectedEndTime!);
+          _endTimeController.text =
+              DateFormat('yyyy-MM-dd HH:mm').format(_selectedEndTime!);
         });
       }
     }
@@ -101,8 +105,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
   Future<void> _saveAuctionToFirestore(String? imageUrl) async {
     try {
       // Convert to ISO 8601 format for Firebase
-      String endTimeIso = _selectedEndTime != null 
-          ? _selectedEndTime!.toUtc().toIso8601String() 
+      String endTimeIso = _selectedEndTime != null
+          ? _selectedEndTime!.toUtc().toIso8601String()
           : DateTime.now().toUtc().toIso8601String();
 
       await _firestore.collection('auctions').add({
@@ -111,7 +115,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         'endTime': endTimeIso,
         'imagePath': imageUrl,
         'lastBidTime': FieldValue.serverTimestamp(),
-        'minimumIncrement': double.tryParse(_minimumIncrementController.text) ?? 0.0,
+        'minimumIncrement':
+            double.tryParse(_minimumIncrementController.text) ?? 0.0,
         'paymentInitiatedAt': null,
         'paymentStatus': 'pending',
         'winningUserId': null,
@@ -123,15 +128,19 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
   }
 
   void _showConfirmationDialog() {
-    if (_formKey.currentState!.validate() && _image != null && _selectedEndTime != null) {
+    if (_formKey.currentState!.validate() &&
+        _image != null &&
+        _selectedEndTime != null) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Confirm Auction',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           content: const Text(
             'Are you sure you want to start this auction?',
@@ -152,7 +161,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Confirm'),
             ),
@@ -160,7 +170,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         ),
       );
     } else {
-      _showErrorDialog('Please fill all fields, upload an image, and select an end time.');
+      _showErrorDialog(
+          'Please fill all fields, upload an image, and select an end time.');
     }
   }
 
@@ -172,7 +183,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Success!',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: const Text(
           'Your auction has been created successfully!',
@@ -191,7 +203,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -208,7 +221,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Error',
-          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: Text(
           message,
@@ -220,7 +234,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('OK'),
           ),
@@ -234,30 +249,28 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.lightBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            elevation: 4,
-            shadowColor: Colors.black26,
-            title: const Text(
-              'Auction Product',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.lightBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        title: const Text(
+          'Auction Product',
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: FadeTransition(
           opacity: _animation,
@@ -300,7 +313,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                               child: Image.file(_image!, fit: BoxFit.cover),
                             )
                           : const Center(
-                              child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
+                              child: Icon(Icons.camera_alt,
+                                  color: Colors.white, size: 40),
                             ),
                     ),
                   ),
@@ -309,14 +323,16 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                     label: 'Title',
                     hint: 'Enter auction title',
                     controller: _titleController,
-                    validator: (value) => value!.isEmpty ? 'Title is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Title is required' : null,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Current Bid',
                     hint: 'Enter current bid',
                     controller: _currentBidController,
-                    validator: (value) => value!.isEmpty ? 'Current bid is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Current bid is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
@@ -324,7 +340,8 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                     label: 'Minimum Increment',
                     hint: 'Enter minimum increment',
                     controller: _minimumIncrementController,
-                    validator: (value) => value!.isEmpty ? 'Minimum increment is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Minimum increment is required' : null,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
@@ -345,20 +362,26 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                               filled: true,
                               fillColor: Colors.grey[900],
                               hintText: 'Select date and time',
-                              hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
+                              hintStyle: const TextStyle(
+                                  color: Colors.white54, fontSize: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                                 borderSide: BorderSide.none,
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: Colors.blue, width: 2),
+                                borderSide: const BorderSide(
+                                    color: Colors.blue, width: 2),
                               ),
-                              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-                              suffixIcon: const Icon(Icons.calendar_today, color: Colors.blue),
+                              errorStyle: const TextStyle(
+                                  color: Colors.red, fontSize: 12),
+                              suffixIcon: const Icon(Icons.calendar_today,
+                                  color: Colors.blue),
                             ),
-                            style: const TextStyle(color: Colors.white, fontSize: 16),
-                            validator: (value) => value!.isEmpty ? 'End time is required' : null,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 16),
+                            validator: (value) =>
+                                value!.isEmpty ? 'End time is required' : null,
                           ),
                         ),
                       ),
@@ -385,10 +408,12 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                           children: [
                             Text(
                               'ALL DONE',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.check_circle, size: 20, color: Colors.white),
+                            Icon(Icons.check_circle,
+                                size: 20, color: Colors.white),
                           ],
                         ),
                       ),
