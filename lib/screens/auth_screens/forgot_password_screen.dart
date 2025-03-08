@@ -278,17 +278,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const SizedBox(height: 60), // Space for back button
                     // Logo with shadow
                     Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
+                      // decoration: BoxDecoration(
+                      //   shape: BoxShape.circle,
+                      //   boxShadow: [
+                      //     BoxShadow(
+                      //       color: Colors.grey.withOpacity(0.3),
+                      //       spreadRadius: 2,
+                      //       blurRadius: 8,
+                      //       offset: const Offset(0, 3),
+                      //     ),
+                      //   ],
+                      // ),
                       child: Image.asset(
                         "assets/images/logo_new.png",
                         height: 120,
