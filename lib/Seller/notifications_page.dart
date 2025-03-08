@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // Add this package for animations
@@ -33,7 +34,8 @@ class _NotificationsPageState extends State<NotificationsPage>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _fadeAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.forward();
   }
 
@@ -134,7 +136,9 @@ class _NotificationsPageState extends State<NotificationsPage>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: isRead ? Colors.teal.withOpacity(0.3) : Colors.blue,
+                            color: isRead
+                                ? Colors.teal.withOpacity(0.3)
+                                : Colors.blue,
                             width: 1.5,
                           ),
                         ),
@@ -161,7 +165,9 @@ class _NotificationsPageState extends State<NotificationsPage>
                                 style: TextStyle(
                                   color: isRead ? Colors.white70 : Colors.white,
                                   fontSize: 18,
-                                  fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                  fontWeight: isRead
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
                                   fontFamily: 'Roboto',
                                 ),
                               ),
@@ -185,22 +191,26 @@ class _NotificationsPageState extends State<NotificationsPage>
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  isRead ? Icons.mark_chat_read : Icons.mark_chat_unread,
+                                  isRead
+                                      ? Icons.mark_chat_read
+                                      : Icons.mark_chat_unread,
                                   color: Colors.blue,
                                   size: 24,
                                 ),
                                 onPressed: () => _markAsRead(index),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red, size: 24),
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.red, size: 24),
                                 onPressed: () => _deleteNotification(index),
                               ),
                             ],
                           ),
                         ),
-                      ).animate()
-                          .fadeIn(duration: 300.ms)
-                          .scale(begin: Offset(0.95, 0.95), end: Offset(1.0, 1.0), duration: 300.ms);
+                      ).animate().fadeIn(duration: 300.ms).scale(
+                          begin: Offset(0.95, 0.95),
+                          end: Offset(1.0, 1.0),
+                          duration: 300.ms);
                     },
                   ),
           ),
