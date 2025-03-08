@@ -86,6 +86,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         controller: controller,
         keyboardType: keyboardType,
         decoration: customInputDecoration(labelText),
+        onChanged: (value) {
+          if (labelText == 'Enter your Email') {
+            checkEmail(value);
+          } else if (labelText == 'Enter your Phone Number') {
+            checkPhoneNumber(value);
+          }
+        },
       ),
     );
   }
@@ -120,10 +127,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
             ],
           ),
@@ -133,18 +137,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isSuccess ? Colors.green : Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -402,9 +400,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                         ),
-                        child: const Text(
-                          'Send Email',
-                          style: TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
+                        child: Text(
+                          isEmailSelected
+                              ? 'Send Email'
+                              : (isOTPSent ? 'Verify OTP' : 'Send OTP'),
+                          style: const TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
