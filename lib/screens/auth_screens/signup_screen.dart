@@ -2,10 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
-import 'package:gemhub/widget/custom_dialog.dart'; // Import the new dialog
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  const SignUpScreen({Key? key}) : super(key: key);
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -24,7 +23,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController nicController = TextEditingController();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -34,17 +32,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (passwordController.text != confirmPasswordController.text) {
-      _showCustomDialog(
-        title: 'Error',
-        message: 'Passwords do not match!',
-        isError: true,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match!")),
       );
       return;
     }
 
     try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
+      // Create user with Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -54,87 +50,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
         throw Exception("Failed to retrieve user ID after sign-up");
       }
 
+      // Prepare user data for Firestore
       Map<String, dynamic> userData = {
         'firebaseUid': userId,
         'username': usernameController.text.trim(),
         'email': emailController.text.trim(),
         'phoneNumber': phoneNumberController.text.trim(),
         'role': isBuyer ? 'buyer' : 'seller',
-        'isActive': isBuyer ? true : false,
       };
 
       if (!isBuyer) {
         userData.addAll({
           'displayName': displayNameController.text.trim(),
           'address': addressController.text.trim(),
-          'nicNumber': nicController.text.trim(),
         });
       }
 
+      // Write to the appropriate Firestore collection
       final String collectionName = isBuyer ? 'buyers' : 'sellers';
       await _firestore.collection(collectionName).doc(userId).set(userData);
 
-      if (!isBuyer) {
-        _showActivationDialog();
-      } else {
-        _showCustomDialog(
-          title: 'Success',
-          message: 'User registered successfully!',
-          onConfirm: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          ),
-        );
-      }
+      // Show success message and navigate to login screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User registered successfully!")),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Authentication Error: ${e.message}")),
+      );
+    } on FirebaseException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Firestore Error: ${e.message}")),
+      );
     } catch (e) {
-      _showCustomDialog(
-        title: 'Error',
-        message: 'Error: $e',
-        isError: true,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Unexpected Error: $e")),
       );
     }
   }
 
-  void _showActivationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return CustomDialog(
-          title: 'Account Created',
-          message:
-              'Your seller account has been created but is currently disabled. Please send your NIC photo and business registration to:\n\nWhatsApp: +94761155638\nEmail: gemhubmobile@gmail.com\n\nThe Admin will review and enable your account.',
-          onConfirm: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showCustomDialog({
-    required String title,
-    required String message,
-    VoidCallback? onConfirm,
-    bool isError = false,
-  }) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CustomDialog(
-          title: title,
-          message: message,
-          onConfirm: onConfirm,
-          isError: isError,
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // ... (Rest of the build method remains unchanged)
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: Center(
@@ -160,7 +120,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 _roleSelector(),
                 if (!isBuyer) _customTextField('Name', displayNameController),
                 if (!isBuyer) _customTextField('Address', addressController),
-                if (!isBuyer) _customTextField('NIC Number', nicController),
                 _customTextField('Username', usernameController),
                 _customTextField('Email', emailController),
                 _customTextField('Phone Number', phoneNumberController,
@@ -237,11 +196,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon((label == 'Password'
-                          ? isPasswordVisible
-                          : isConfirmPasswordVisible)
-                      ? Icons.visibility
-                      : Icons.visibility_off),
+                  icon: Icon(
+                      (label == 'Password' ? isPasswordVisible : isConfirmPasswordVisible)
+                          ? Icons.visibility
+                          : Icons.visibility_off),
                   onPressed: () => setState(() {
                     if (label == 'Password') {
                       isPasswordVisible = !isPasswordVisible;
@@ -267,7 +225,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     confirmPasswordController.dispose();
     emailController.dispose();
     phoneNumberController.dispose();
-    nicController.dispose();
     super.dispose();
   }
 }
