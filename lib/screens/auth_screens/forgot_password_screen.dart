@@ -64,7 +64,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // Enhanced Alert Dialog without gradients
+  // Enhanced Alert Dialog
   void showAlertDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
@@ -265,203 +265,238 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Logo with shadow
-                Container(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60), // Space for back button
+                    // Logo with shadow
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        "assets/images/logo_new.png",
+                        height: 120,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    // Title
+                    const Text(
+                      'Forgot Password',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Toggle Buttons
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => toggleOption(true),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                              decoration: BoxDecoration(
+                                color: isEmailSelected ? Colors.blueAccent : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                              ),
+                              child: Text(
+                                'Email',
+                                style: TextStyle(
+                                  color: isEmailSelected ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => toggleOption(false),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                              decoration: BoxDecoration(
+                                color: !isEmailSelected ? Colors.blueAccent : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
+                              ),
+                              child: Text(
+                                'Phone',
+                                style: TextStyle(
+                                  color: !isEmailSelected ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Input Fields
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: isEmailSelected
+                          ? TextField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              onChanged: checkEmail,
+                              decoration: customInputDecoration('Enter your Email'),
+                            )
+                          : !isOTPSent
+                              ? TextField(
+                                  controller: phoneNumberController,
+                                  keyboardType: TextInputType.phone,
+                                  onChanged: checkPhoneNumber,
+                                  decoration: customInputDecoration('Enter your Phone Number'),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: List.generate(6, (index) {
+                                    return SizedBox(
+                                      width: 50,
+                                      child: TextField(
+                                        controller: otpControllers[index],
+                                        focusNode: otpFocusNodes[index],
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        maxLength: 1,
+                                        decoration: InputDecoration(
+                                          counterText: '',
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.grey),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.grey),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.blueAccent),
+                                          ),
+                                        ),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                        ],
+                                        onChanged: (value) {
+                                          if (value.length == 1 && index < 5) {
+                                            otpFocusNodes[index].unfocus();
+                                            FocusScope.of(context)
+                                                .requestFocus(otpFocusNodes[index + 1]);
+                                          }
+                                          if (value.isEmpty && index > 0) {
+                                            otpFocusNodes[index].unfocus();
+                                            FocusScope.of(context)
+                                                .requestFocus(otpFocusNodes[index - 1]);
+                                          }
+                                        },
+                                      ),
+                                    );
+                                  }),
+                                ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Action Button
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: isEmailSelected
+                            ? (isEmailValid ? sendResetEmail : null)
+                            : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: Text(
+                          isEmailSelected
+                              ? 'Send Email'
+                              : (isOTPSent ? 'Verify OTP' : 'Send OTP'),
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Back Button
+            Positioned(
+              top: 16,
+              left: 16,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
+                    color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    "assets/images/logo_new.png",
-                    height: 120,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Title without gradient
-                const Text(
-                  'Forgot Password',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Toggle Buttons with solid colors
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
                         spreadRadius: 1,
                         blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () => toggleOption(true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                          decoration: BoxDecoration(
-                            color: isEmailSelected ? Colors.blueAccent : Colors.white,
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                          ),
-                          child: Text(
-                            'Email',
-                            style: TextStyle(
-                              color: isEmailSelected ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => toggleOption(false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                          decoration: BoxDecoration(
-                            color: !isEmailSelected ? Colors.blueAccent : Colors.white,
-                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
-                          ),
-                          child: Text(
-                            'Phone',
-                            style: TextStyle(
-                              color: !isEmailSelected ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.black87,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(height: 32),
-
-                // Input Fields
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: isEmailSelected
-                      ? TextField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          onChanged: checkEmail,
-                          decoration: customInputDecoration('Enter your Email'),
-                        )
-                      : !isOTPSent
-                          ? TextField(
-                              controller: phoneNumberController,
-                              keyboardType: TextInputType.phone,
-                              onChanged: checkPhoneNumber,
-                              decoration: customInputDecoration('Enter your Phone Number'),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(6, (index) {
-                                return SizedBox(
-                                  width: 50,
-                                  child: TextField(
-                                    controller: otpControllers[index],
-                                    focusNode: otpFocusNodes[index],
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    maxLength: 1,
-                                    decoration: InputDecoration(
-                                      counterText: '',
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Colors.grey),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Colors.grey),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Colors.blueAccent),
-                                      ),
-                                    ),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    onChanged: (value) {
-                                      if (value.length == 1 && index < 5) {
-                                        otpFocusNodes[index].unfocus();
-                                        FocusScope.of(context)
-                                            .requestFocus(otpFocusNodes[index + 1]);
-                                      }
-                                      if (value.isEmpty && index > 0) {
-                                        otpFocusNodes[index].unfocus();
-                                        FocusScope.of(context)
-                                            .requestFocus(otpFocusNodes[index - 1]);
-                                      }
-                                    },
-                                  ),
-                                );
-                              }),
-                            ),
-                ),
-                const SizedBox(height: 32),
-
-                // Action Button with solid color
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: isEmailSelected
-                        ? (isEmailValid ? sendResetEmail : null)
-                        : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                    ),
-                    child: Text(
-                      isEmailSelected
-                          ? 'Send Email'
-                          : (isOTPSent ? 'Verify OTP' : 'Send OTP'),
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
