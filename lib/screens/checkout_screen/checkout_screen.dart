@@ -63,7 +63,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0), // Consistent padding
+            padding: const EdgeInsets.symmetric(
+                horizontal: 20.0, vertical: 24.0), // Consistent padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -170,7 +171,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPriceDetails(double totalWithDelivery, CartProvider cartProvider) {
+  Widget _buildPriceDetails(
+      double totalWithDelivery, CartProvider cartProvider) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -240,8 +242,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildProceedButton(
-      BuildContext context, double totalWithDelivery, CartProvider cartProvider) {
+  Widget _buildProceedButton(BuildContext context, double totalWithDelivery,
+      CartProvider cartProvider) {
     return SizedBox(
       width: double.infinity,
       height: 56, // Slightly taller for better touch target
