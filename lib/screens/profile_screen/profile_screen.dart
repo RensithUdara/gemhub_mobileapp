@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -56,7 +57,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
       if (userDoc.exists) {
         final data = userDoc.data();
         setState(() {
@@ -68,7 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Failed to load profile: $e'),
+            backgroundColor: Colors.red),
       );
     } finally {
       setState(() => isLoading = false);
@@ -88,15 +94,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Choose Profile Picture', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Choose Profile Picture',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
-              _buildBottomSheetTile(Icons.camera_alt, 'Take a Photo', Colors.blueAccent, () async {
-                Navigator.of(context).pop(await picker.pickImage(source: ImageSource.camera));
+              _buildBottomSheetTile(
+                  Icons.camera_alt, 'Take a Photo', Colors.blueAccent,
+                  () async {
+                Navigator.of(context)
+                    .pop(await picker.pickImage(source: ImageSource.camera));
               }),
-              _buildBottomSheetTile(Icons.photo_library, 'Choose from Gallery', Colors.green, () async {
-                Navigator.of(context).pop(await picker.pickImage(source: ImageSource.gallery));
+              _buildBottomSheetTile(
+                  Icons.photo_library, 'Choose from Gallery', Colors.green,
+                  () async {
+                Navigator.of(context)
+                    .pop(await picker.pickImage(source: ImageSource.gallery));
               }),
-              _buildBottomSheetTile(Icons.cancel, 'Cancel', Colors.redAccent, () {
+              _buildBottomSheetTile(Icons.cancel, 'Cancel', Colors.redAccent,
+                  () {
                 Navigator.of(context).pop();
               }),
             ],
@@ -112,7 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _buildBottomSheetTile(IconData icon, String title, Color color, VoidCallback onTap) {
+  Widget _buildBottomSheetTile(
+      IconData icon, String title, Color color, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: color),
       title: Text(title, style: const TextStyle(fontSize: 16)),
@@ -121,7 +136,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<String?> _uploadProfileImage(File? imageFile) async {
-    if (imageFile == null) return imageUrl; // Return existing URL if no new image
+    if (imageFile == null)
+      return imageUrl; // Return existing URL if no new image
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -134,19 +150,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      final ref = FirebaseStorage.instance.ref().child('profile_images').child('$userId.jpg');
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('$userId.jpg');
       await ref.putFile(imageFile);
       final newImageUrl = await ref.getDownloadURL();
       return newImageUrl;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Failed to upload image: $e'),
+            backgroundColor: Colors.red),
       );
       return null;
     }
   }
 
-  Future<void> _saveUserDetails(String name, String email, String phone, String? newImageUrl) async {
+  Future<void> _saveUserDetails(
+      String name, String email, String phone, String? newImageUrl) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,7 +195,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save profile: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Failed to save profile: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -183,19 +207,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.logout, color: Colors.redAccent),
               SizedBox(width: 10),
-              Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Confirm Logout',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
-          content: const Text('Are you sure you want to logout?', style: TextStyle(fontSize: 16)),
+          content: const Text('Are you sure you want to logout?',
+              style: TextStyle(fontSize: 16)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Colors.grey, fontSize: 16)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -206,9 +234,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16)),
+              child: const Text('Logout',
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ],
         );
@@ -265,7 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Profile',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -304,7 +335,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.blueAccent, width: 2),
+                            border:
+                                Border.all(color: Colors.blueAccent, width: 2),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
@@ -317,10 +349,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             radius: 70,
                             backgroundImage: _profileImage != null
                                 ? FileImage(_profileImage!)
-                                : (imageUrl != null ? NetworkImage(imageUrl!) as ImageProvider<Object>? : null),
+                                : (imageUrl != null
+                                    ? NetworkImage(imageUrl!)
+                                        as ImageProvider<Object>?
+                                    : null),
                             backgroundColor: Colors.grey[200],
                             child: _profileImage == null && imageUrl == null
-                                ? const Icon(Icons.camera_alt, color: Colors.blueAccent, size: 40)
+                                ? const Icon(Icons.camera_alt,
+                                    color: Colors.blueAccent, size: 40)
                                 : null,
                           ),
                         ),
@@ -328,7 +364,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
                       Card(
                         elevation: 5,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -355,8 +392,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15)),
                           backgroundColor: Colors.blueAccent,
                           elevation: 5,
                           shadowColor: Colors.black26,
@@ -364,8 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: _isEditing
                             ? () async {
                                 setState(() => isLoading = true);
-                                final newImageUrl = await _uploadProfileImage(_profileImage);
-                                if (_profileImage != null && newImageUrl == null) {
+                                final newImageUrl =
+                                    await _uploadProfileImage(_profileImage);
+                                if (_profileImage != null &&
+                                    newImageUrl == null) {
                                   // If a new image was selected but upload failed, stop the save process
                                   setState(() => isLoading = false);
                                   return;
@@ -378,7 +419,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 );
                                 setState(() {
                                   _isEditing = false;
-                                  imageUrl = newImageUrl; // Update local imageUrl
+                                  imageUrl =
+                                      newImageUrl; // Update local imageUrl
                                   isLoading = false;
                                 });
                               }
@@ -395,8 +437,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15)),
                           backgroundColor: Colors.redAccent,
                           elevation: 5,
                           shadowColor: Colors.black26,
