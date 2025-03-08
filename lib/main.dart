@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:gemhub/screens/firebase_options/firebase_options.dart';
 import 'package:gemhub/screens/cart_screen/cart_provider.dart'; // Import CartProvider
+import 'package:gemhub/screens/firebase_options/firebase_options.dart';
 import 'package:gemhub/splash_screen.dart';
 import 'package:provider/provider.dart';
 
