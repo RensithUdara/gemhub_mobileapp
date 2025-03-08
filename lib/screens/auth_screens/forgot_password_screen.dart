@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'login_screen.dart';
-import 'reset_password_screen.dart';
+import 'package:gemhub/screens/auth_screens/login_screen.dart';
+import 'package:gemhub/screens/auth_screens/reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  const ForgotPasswordScreen({Key? key}) : super(key: key);
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -15,9 +14,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final List<TextEditingController> otpControllers =
+  final List<TextEditingController> otpControllers = 
       List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> otpFocusNodes = List.generate(6, (_) => FocusNode());
+  final List<FocusNode> otpFocusNodes = 
+      List.generate(6, (_) => FocusNode());
 
   bool isEmailSelected = true;
   bool isOTPSent = false;
@@ -40,38 +40,62 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  // Custom Input Decoration
+  // Matching LoginScreen's Input Decoration
   InputDecoration customInputDecoration(String labelText) {
     return InputDecoration(
       labelText: labelText,
       filled: true,
-      fillColor: Colors.grey[100],
+      fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.grey, width: 1),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.grey, width: 1),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: const BorderSide(color: Colors.blue, width: 2.0),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      labelStyle: TextStyle(color: Colors.grey[700]),
+      hintStyle: TextStyle(color: Colors.grey[400]),
     );
   }
 
-  // Enhanced Alert Dialog
+  // Matching LoginScreen's TextField
+  Widget customTextField(
+    String labelText,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10.0),
+      decoration: BoxDecoration(
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6.0,
+            offset: Offset(0, 3),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: customInputDecoration(labelText),
+      ),
+    );
+  }
+
   void showAlertDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: Colors.white,
           elevation: 8,
           contentPadding: const EdgeInsets.all(20),
@@ -112,8 +136,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 child: const Text(
                   'OK',
@@ -157,74 +180,42 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> sendResetEmail() async {
     try {
       await _auth.sendPasswordResetEmail(email: emailController.text.trim());
-      showAlertDialog(
-        "Success",
-        "Password reset email sent successfully!",
-        isSuccess: true,
-      );
-
+      showAlertDialog("Success", "Password reset email sent successfully!", isSuccess: true);
       await Future.delayed(const Duration(seconds: 2));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
     } on FirebaseAuthException catch (e) {
-      showAlertDialog(
-        "Error",
-        e.message ?? "An error occurred",
-      );
+      showAlertDialog("Error", e.message ?? "An error occurred");
     }
   }
 
   Future<void> sendOTP() async {
     try {
       if (!isPhoneNumberValid) {
-        showAlertDialog(
-          "Error",
-          "Please enter a valid phone number",
-        );
+        showAlertDialog("Error", "Please enter a valid phone number");
         return;
       }
-
       await _auth.verifyPhoneNumber(
         phoneNumber: "+94${phoneNumberController.text.trim()}",
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ResetPasswordScreen(
-                phoneNumber: phoneNumberController.text.trim(),
-              ),
-            ),
-          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ResetPasswordScreen(phoneNumber: phoneNumberController.text.trim())));
         },
         verificationFailed: (FirebaseAuthException e) {
-          showAlertDialog(
-            "Error",
-            e.message ?? "Verification failed",
-          );
+          showAlertDialog("Error", e.message ?? "Verification failed");
         },
         codeSent: (String verificationId, int? resendToken) {
           setState(() {
             this.verificationId = verificationId;
             isOTPSent = true;
           });
-          showAlertDialog(
-            "Success",
-            "OTP sent to your phone",
-            isSuccess: true,
-          );
+          showAlertDialog("Success", "OTP sent to your phone", isSuccess: true);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           this.verificationId = verificationId;
         },
       );
     } catch (e) {
-      showAlertDialog(
-        "Error",
-        "An error occurred: ${e.toString()}",
-      );
+      showAlertDialog("Error", "An error occurred: ${e.toString()}");
     }
   }
 
@@ -232,33 +223,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String otp = otpControllers.map((controller) => controller.text).join();
       if (otp.length != 6) {
-        showAlertDialog(
-          "Error",
-          "Please enter a valid 6-digit OTP",
-        );
+        showAlertDialog("Error", "Please enter a valid 6-digit OTP");
         return;
       }
-
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
         smsCode: otp,
       );
-
       await _auth.signInWithCredential(credential);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ResetPasswordScreen(
-            phoneNumber: phoneNumberController.text.trim(),
-          ),
-        ),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ResetPasswordScreen(phoneNumber: phoneNumberController.text.trim())));
     } on FirebaseAuthException catch (e) {
-      showAlertDialog(
-        "Error",
-        e.message ?? "Invalid OTP",
-      );
+      showAlertDialog("Error", e.message ?? "Invalid OTP");
     }
   }
 
@@ -270,13 +245,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Stack(
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 60), // Space for back button
-                    // Logo with shadow
+                    const SizedBox(height: 60),
                     Container(
                       // decoration: BoxDecoration(
                       //   shape: BoxShape.circle,
@@ -295,8 +268,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Title
                     const Text(
                       'Forgot Password',
                       style: TextStyle(
@@ -306,8 +277,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Toggle Buttons
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
@@ -326,21 +295,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           GestureDetector(
                             onTap: () => toggleOption(true),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 24),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                               decoration: BoxDecoration(
-                                color: isEmailSelected
-                                    ? Colors.blueAccent
-                                    : Colors.white,
-                                borderRadius: const BorderRadius.horizontal(
-                                    left: Radius.circular(12)),
+                                color: isEmailSelected ? Colors.blueAccent : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
                               ),
                               child: Text(
                                 'Email',
                                 style: TextStyle(
-                                  color: isEmailSelected
-                                      ? Colors.white
-                                      : Colors.black87,
+                                  color: isEmailSelected ? Colors.white : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -349,21 +312,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           GestureDetector(
                             onTap: () => toggleOption(false),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 24),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                               decoration: BoxDecoration(
-                                color: !isEmailSelected
-                                    ? Colors.blueAccent
-                                    : Colors.white,
-                                borderRadius: const BorderRadius.horizontal(
-                                    right: Radius.circular(12)),
+                                color: !isEmailSelected ? Colors.blueAccent : Colors.white,
+                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
                               ),
                               child: Text(
                                 'Phone',
                                 style: TextStyle(
-                                  color: !isEmailSelected
-                                      ? Colors.white
-                                      : Colors.black87,
+                                  color: !isEmailSelected ? Colors.white : Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -373,29 +330,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Input Fields
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: isEmailSelected
-                          ? TextField(
-                              controller: emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              onChanged: checkEmail,
-                              decoration:
-                                  customInputDecoration('Enter your Email'),
-                            )
+                          ? customTextField('Enter your Email', emailController, keyboardType: TextInputType.emailAddress)
                           : !isOTPSent
-                              ? TextField(
-                                  controller: phoneNumberController,
-                                  keyboardType: TextInputType.phone,
-                                  onChanged: checkPhoneNumber,
-                                  decoration: customInputDecoration(
-                                      'Enter your Phone Number'),
-                                )
+                              ? customTextField('Enter your Phone Number', phoneNumberController, keyboardType: TextInputType.phone)
                               : Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: List.generate(6, (index) {
                                     return SizedBox(
                                       width: 50,
@@ -410,38 +352,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                           filled: true,
                                           fillColor: Colors.white,
                                           border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: const BorderSide(
-                                                color: Colors.grey),
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.grey),
                                           ),
                                           enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: const BorderSide(
-                                                color: Colors.grey),
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.grey),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: const BorderSide(
-                                                color: Colors.blueAccent),
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(color: Colors.blueAccent),
                                           ),
                                         ),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                        ],
+                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                         onChanged: (value) {
                                           if (value.length == 1 && index < 5) {
                                             otpFocusNodes[index].unfocus();
-                                            FocusScope.of(context).requestFocus(
-                                                otpFocusNodes[index + 1]);
+                                            FocusScope.of(context).requestFocus(otpFocusNodes[index + 1]);
                                           }
                                           if (value.isEmpty && index > 0) {
                                             otpFocusNodes[index].unfocus();
-                                            FocusScope.of(context).requestFocus(
-                                                otpFocusNodes[index - 1]);
+                                            FocusScope.of(context).requestFocus(otpFocusNodes[index - 1]);
                                           }
                                         },
                                       ),
@@ -450,8 +381,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Action Button
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
@@ -467,26 +396,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: ElevatedButton(
                         onPressed: isEmailSelected
                             ? (isEmailValid ? sendResetEmail : null)
-                            : (isOTPSent
-                                ? verifyOTP
-                                : (isPhoneNumberValid ? sendOTP : null)),
+                            : (isOTPSent ? verifyOTP : (isPhoneNumberValid ? sendOTP : null)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 40.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 40.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
                         ),
-                        child: Text(
-                          isEmailSelected
-                              ? 'Send Email'
-                              : (isOTPSent ? 'Verify OTP' : 'Send OTP'),
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: const Text(
+                          'Send Email',
+                          style: TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -494,14 +412,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
             ),
-            // Back Button
             Positioned(
               top: 16,
               left: 16,
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -516,11 +431,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.black87,
-                    size: 24,
-                  ),
+                  child: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
                 ),
               ),
             ),
