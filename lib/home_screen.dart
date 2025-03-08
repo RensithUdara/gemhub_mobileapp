@@ -29,13 +29,16 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.person,
   ];
   String userName = 'Guest';
+  List<Map<String, dynamic>> popularProducts = [];
 
   @override
   void initState() {
     super.initState();
     _fetchUserName();
+    _fetchRandomGems();
   }
 
+  // Fetch user name from Firebase
   Future<void> _fetchUserName() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -44,7 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
             .collection('users')
             .doc(user.uid)
             .get();
-
         if (userDoc.exists) {
           setState(() {
             userName = userDoc['name'] as String? ?? 'Guest';
@@ -56,26 +58,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Fetch random gems from Firestore
+  Future<void> _fetchRandomGems() async {
+    try {
+      final productsSnapshot =
+          await FirebaseFirestore.instance.collection('products').get();
+
+      final List<Map<String, dynamic>> products = [];
+      for (var doc in productsSnapshot.docs) {
+        products.add({
+          'id': doc.id,
+          'imageUrl': doc['imageUrl'],
+          'title': doc['title'],
+          'pricing': doc['pricing'],
+        });
+      }
+
+      // Shuffle and pick two random items
+      products.shuffle();
+      final randomProducts = products.take(2).toList();
+
+      setState(() {
+        popularProducts = randomProducts;
+      });
+    } catch (e) {
+      debugPrint('Error fetching products: $e');
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-
     switch (index) {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  const CartScreen()), // Removed cartItems parameter
+          MaterialPageRoute(builder: (context) => const CartScreen()),
         );
         break;
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  const OrderHistoryScreen()), // Removed cartItems parameter
+          MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
         );
         break;
       case 3:
@@ -92,15 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
           context: context,
           builder: (context) => AlertDialog(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
-              children: [
-                Icon(Icons.logout, color: Colors.redAccent),
-                SizedBox(width: 10),
-                Text('Confirm Logout',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            title: const Text('Logout',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             content: const Text('Are you sure you want to logout?'),
             actions: [
               TextButton(
@@ -127,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child:
                     const Text('Logout', style: TextStyle(color: Colors.white)),
@@ -140,24 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Sample product data for Popular Gems section
-    final List<Map<String, dynamic>> popularProducts = [
-      {
-        'id': '1',
-        'imageUrl':
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '4.37ct Natural Blue Sapphire',
-        'pricing': 4038500.00,
-      },
-      {
-        'id': '2',
-        'imageUrl':
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZJUXhT8gkiHYQywVLTOdkuyGE31eo45l2LA&s',
-        'title': '1.17ct Natural Pink Sapphire',
-        'pricing': 549000.00,
-      },
-    ];
-
     return ChangeNotifierProvider(
       create: (context) => BannerProvider()..fetchBannerImages(),
       child: WillPopScope(
@@ -173,18 +174,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            elevation: 10,
-            shadowColor: Colors.black.withOpacity(0.3),
+            elevation: 4,
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/images/logo_new.png', height: 50),
-                const SizedBox(width: 10),
+                Image.asset('assets/images/logo_new.png', height: 35),
+                const SizedBox(width: 8),
                 const Text(
                   'GemHub',
                   style: TextStyle(
                     color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 24,
                   ),
                 ),
@@ -193,88 +193,79 @@ class _HomeScreenState extends State<HomeScreen> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white),
+                icon: const Icon(Icons.logout, color: Colors.white, size: 24),
                 onPressed: _onWillPop,
               ),
             ],
           ),
           body: RefreshIndicator(
-            onRefresh: () async {
-              final bannerProvider =
-                  Provider.of<BannerProvider>(context, listen: false);
-              await bannerProvider.fetchBannerImages();
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+            onRefresh: _fetchRandomGems,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
                       'Welcome $userName,',
                       style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Consumer<BannerProvider>(
-                      builder: (context, bannerProvider, child) {
-                        if (bannerProvider.isLoading) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (bannerProvider.error != null) {
-                          return Center(
-                            child: Text(
-                              'Error loading banners',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          );
-                        }
-                        return CarouselSlider(
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Consumer<BannerProvider>(
+                    builder: (context, bannerProvider, child) {
+                      if (bannerProvider.isLoading) {
+                        return const SizedBox(
+                          height: 150,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      if (bannerProvider.error != null) {
+                        return const SizedBox(
+                          height: 150,
+                          child: Center(
+                              child: Text('Error loading banners',
+                                  style: TextStyle(color: Colors.red))),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: CarouselSlider(
                           options: CarouselOptions(
-                            height: 180.0,
+                            height: 150,
                             autoPlay: true,
-                            enlargeCenterPage: true,
-                            viewportFraction: 0.9,
+                            enlargeCenterPage: false,
+                            viewportFraction: 1.0,
                             aspectRatio: 16 / 9,
                           ),
                           items: bannerProvider.bannerList.map((imageUrl) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                image: DecorationImage(
-                                  image: NetworkImage(imageUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(imageUrl,
+                                  fit: BoxFit.cover, width: double.infinity),
                             );
                           }).toList(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Categories',
                           style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 24, fontWeight: FontWeight.bold),
                         ),
-                        TextButton(
-                          onPressed: () {
+                        GestureDetector(
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -282,78 +273,87 @@ class _HomeScreenState extends State<HomeScreen> {
                                   appBar: AppBar(
                                       title: const Text('All Categories')),
                                   body: const Center(
-                                    child: Text(
-                                        'All categories will be displayed here.'),
-                                  ),
+                                      child: Text(
+                                          'All categories will be displayed here.')),
                                 ),
                               ),
                             );
                           },
                           child: const Text(
                             'See All',
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(fontSize: 14, color: Colors.blue),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5),
-                    GridView.count(
-                      shrinkWrap: true,
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
-                      childAspectRatio: 0.85,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      padding: const EdgeInsets.all(8),
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: const [
+                      childAspectRatio: 1.0,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
+                    delegate: SliverChildListDelegate(
+                      const [
                         CategoryCard(
-                          imagePath: 'assets/images/category1.jpg',
-                          title: 'Blue Sapphires',
-                        ),
+                            imagePath: 'assets/images/category1.jpg',
+                            title: 'Blue Sapphires'),
                         CategoryCard(
-                          imagePath: 'assets/images/category2.jpg',
-                          title: 'White Sapphires',
-                        ),
+                            imagePath: 'assets/images/category2.jpg',
+                            title: 'White Sapphires'),
                         CategoryCard(
-                          imagePath: 'assets/images/category3.jpg',
-                          title: 'Yellow Sapphires',
-                        ),
+                            imagePath: 'assets/images/category3.jpg',
+                            title: 'Yellow Sapphires'),
                       ],
                     ),
-                    const SizedBox(height: 15),
-                    const Text(
-                      'Popular Gems',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                      ),
-                      itemCount: popularProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = popularProducts[index];
-                        return ProductCard(
-                          id: product['id'] as String,
-                          imagePath: product['imageUrl'] as String,
-                          title: product['title'] as String,
-                          price:
-                              'Rs. ${(product['pricing'] as num).toStringAsFixed(2)}',
-                          product: product,
-                        );
-                      },
-                    ),
-                  ],
+                  ),
                 ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: const Text(
+                      'Popular Gems',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.7,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (popularProducts.isNotEmpty) {
+                          final product = popularProducts[index];
+                          return ProductCard(
+                            id: product['id'] as String,
+                            imagePath: product['imageUrl'] as String,
+                            title: product['title'] as String,
+                            price:
+                                'Rs. ${(product['pricing'] as num).toStringAsFixed(2)}',
+                            product: product,
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      childCount: popularProducts.length,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: 30)), // Space for FAB
               ],
             ),
           ),

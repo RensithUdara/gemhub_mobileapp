@@ -1,38 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ListedAuctionScreen extends StatelessWidget {
-  const ListedAuctionScreen({super.key});
+  final String sellerId;
+
+  const ListedAuctionScreen({super.key, required this.sellerId});
 
   @override
   Widget build(BuildContext context) {
+    // Get current user ID for additional verification
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    print('Passed sellerId: $sellerId');
+    print('Current Firebase user ID: $currentUserId');
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.lightBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
+        elevation: 4,
+        shadowColor: Colors.black26,
         title: const Text(
           'Listed Auctions',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white, size: 24),
-            onPressed: () {
-              // Add search functionality here if needed
-            },
-          ),
-        ],
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
@@ -89,12 +98,28 @@ class ListedAuctionScreen extends StatelessWidget {
               itemCount: snapshot.data!.docs.length,
               itemBuilder: (context, index) {
                 var auction = snapshot.data!.docs[index];
+                Map<String, dynamic> auctionData = auction.data() as Map<String, dynamic>;
+
+                // Enhanced debugging
+                print('Auction ID: ${auction.id}');
+                print('Auction data: $auctionData');
+                bool hasSellerId = auctionData.containsKey('sellerId');
+                print('Has sellerId field: $hasSellerId');
+                if (hasSellerId) {
+                  print('Auction sellerId: ${auctionData['sellerId']}');
+                }
+
+                bool isSeller = hasSellerId && auctionData['sellerId'] == sellerId;
+                print('isSeller for ${auction.id}: $isSeller');
+
                 return AuctionCard(
-                  title: auction['title'],
-                  currentBid: auction['currentBid'].toString(),
-                  endTime: DateTime.parse(auction['endTime']),
-                  imageUrl: auction['imagePath'],
-                  minimumIncrement: auction['minimumIncrement'].toString(),
+                  title: auctionData['title'] ?? 'Untitled',
+                  currentBid: auctionData['currentBid']?.toString() ?? '0',
+                  endTime: DateTime.parse(auctionData['endTime'] ?? DateTime.now().toIso8601String()),
+                  imageUrl: auctionData['imagePath'] ?? '',
+                  minimumIncrement: auctionData['minimumIncrement']?.toString() ?? '0',
+                  auctionId: auction.id,
+                  isSeller: isSeller,
                   onTap: () {
                     // Add navigation to detail screen if needed
                   },
@@ -115,6 +140,8 @@ class AuctionCard extends StatelessWidget {
   final String imageUrl;
   final String minimumIncrement;
   final VoidCallback onTap;
+  final String auctionId;
+  final bool isSeller;
 
   const AuctionCard({
     super.key,
@@ -124,6 +151,8 @@ class AuctionCard extends StatelessWidget {
     required this.imageUrl,
     required this.minimumIncrement,
     required this.onTap,
+    required this.auctionId,
+    required this.isSeller,
   });
 
   String _formatEndTime(DateTime endTime) {
@@ -143,6 +172,17 @@ class AuctionCard extends StatelessWidget {
       return '$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
     }
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+  }
+
+  void _showEditDialog(BuildContext context) {
+    print('Edit button pressed for auction: $auctionId');
+    showDialog(
+      context: context,
+      builder: (context) => EditEndTimeDialog(
+        auctionId: auctionId,
+        currentEndTime: endTime,
+      ),
+    );
   }
 
   @override
@@ -269,15 +309,26 @@ class AuctionCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Ends: ${_formatEndTime(endTime)}',
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Ends: ${_formatEndTime(endTime)}',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (isSeller)
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              color: Colors.blueAccent, size: 20),
+                          onPressed: () => _showEditDialog(context),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -319,6 +370,114 @@ class AuctionCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class EditEndTimeDialog extends StatefulWidget {
+  final String auctionId;
+  final DateTime currentEndTime;
+
+  const EditEndTimeDialog({
+    super.key,
+    required this.auctionId,
+    required this.currentEndTime,
+  });
+
+  @override
+  State<EditEndTimeDialog> createState() => _EditEndTimeDialogState();
+}
+
+class _EditEndTimeDialogState extends State<EditEndTimeDialog> {
+  late DateTime selectedDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDateTime = widget.currentEndTime;
+  }
+
+  Future<void> _selectDateTime(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDateTime,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          selectedDateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
+    }
+  }
+
+  Future<void> _updateEndTime() async {
+    try {
+      print('Updating auction ${widget.auctionId} with new end time: $selectedDateTime');
+      await FirebaseFirestore.instance
+          .collection('auctions')
+          .doc(widget.auctionId)
+          .update({
+        'endTime': selectedDateTime.toIso8601String(),
+      });
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End time updated successfully')),
+      );
+    } catch (e) {
+      print('Error updating end time: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating end time: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.grey[900],
+      title: const Text('Edit End Time', style: TextStyle(color: Colors.white)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Current: ${DateFormat('MMM d, yyyy - HH:mm').format(selectedDateTime)}',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _selectDateTime(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+            ),
+            child: const Text('Select New Date & Time'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+        ),
+        TextButton(
+          onPressed: _updateEndTime,
+          child: const Text('Save', style: TextStyle(color: Colors.blueAccent)),
+        ),
+      ],
     );
   }
 }

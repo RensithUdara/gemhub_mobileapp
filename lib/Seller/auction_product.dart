@@ -234,17 +234,30 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Auction Product',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-      ),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.lightBlue],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            elevation: 4,
+            shadowColor: Colors.black26,
+            title: const Text(
+              'Auction Product',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
+            ),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
       body: SafeArea(
         child: FadeTransition(
           opacity: _animation,
@@ -294,14 +307,14 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                   const SizedBox(height: 32),
                   _buildInputField(
                     label: 'Title',
-                    hint: 'Enter auction title (e.g., Keeri Samba - 1000kg)',
+                    hint: 'Enter auction title',
                     controller: _titleController,
                     validator: (value) => value!.isEmpty ? 'Title is required' : null,
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Current Bid',
-                    hint: 'Enter current bid (e.g., 160000)',
+                    hint: 'Enter current bid',
                     controller: _currentBidController,
                     validator: (value) => value!.isEmpty ? 'Current bid is required' : null,
                     keyboardType: TextInputType.number,
@@ -309,7 +322,7 @@ class _AuctionProductState extends State<AuctionProduct> with SingleTickerProvid
                   const SizedBox(height: 20),
                   _buildInputField(
                     label: 'Minimum Increment',
-                    hint: 'Enter minimum increment (e.g., 500)',
+                    hint: 'Enter minimum increment',
                     controller: _minimumIncrementController,
                     validator: (value) => value!.isEmpty ? 'Minimum increment is required' : null,
                     keyboardType: TextInputType.number,

@@ -173,6 +173,26 @@ class _CategoryScreenState extends State<CategoryScreen> {
   // Updated product details dialog with modern design
   void _showProductDetails(BuildContext context, Map<String, dynamic> product) {
     int cartQuantity = 0; // Local state to track quantity in the dialog
+    String? sellerName; // Variable to hold the seller's name
+    bool isLoadingSeller = true; // To show a loading indicator while fetching
+
+    // Fetch seller name from Firestore (sellers collection)
+    Future<void> fetchSellerName() async {
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('sellers')
+            .doc(product['userId'])
+            .get();
+        if (userDoc.exists) {
+          sellerName = userDoc.data()?['displayName'] ?? 'Unknown';
+        } else {
+          sellerName = 'Unknown';
+        }
+      } catch (e) {
+        sellerName = 'Error fetching seller';
+      }
+      isLoadingSeller = false;
+    }
 
     showDialog(
       context: context,
@@ -190,6 +210,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
           ),
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
+              // Fetch seller name when the dialog is built
+              fetchSellerName().then((_) {
+                setState(() {
+                  // Trigger rebuild after fetching seller name
+                });
+              });
+
               return Stack(
                 children: [
                   SingleChildScrollView(
@@ -274,7 +301,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Product Details (unchanged)
+                        // Product Details
                         _buildDetailRow(
                           icon: Icons.inventory,
                           label: 'Quantity',
@@ -299,91 +326,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         _buildDetailRow(
                           icon: Icons.person,
                           label: 'Listed by',
-                          value: product['userId'] ?? 'Unknown',
+                          value: isLoadingSeller
+                              ? 'Loading...' // Show loading while fetching
+                              : sellerName ?? 'Unknown',
                         ),
-                        const SizedBox(height: 16),
-
-                        // Updated Add to Cart Section
-                        // cartQuantity == 0
-                        //     ? SizedBox(
-                        //         width: MediaQuery.of(context).size.width * 0.9,
-                        //         child: ElevatedButton(
-                        //           onPressed: () {
-                        //             setState(() {
-                        //               cartQuantity =
-                        //                   1; // Start with 1 when clicked
-                        //             });
-                        //             ScaffoldMessenger.of(context).showSnackBar(
-                        //               SnackBar(
-                        //                 content: Text(
-                        //                     '${product['title']} added to cart!'),
-                        //               ),
-                        //             );
-                        //           },
-                        //           style: ElevatedButton.styleFrom(
-                        //             backgroundColor: Colors.blue[700],
-                        //             foregroundColor: Colors.white,
-                        //             shape: RoundedRectangleBorder(
-                        //               borderRadius: BorderRadius.circular(12),
-                        //             ),
-                        //             padding: const EdgeInsets.symmetric(
-                        //                 vertical: 12, horizontal: 24),
-                        //             minimumSize: const Size(0, 40),
-                        //           ),
-                        //           child: const Text(
-                        //             'Add to Cart',
-                        //             style: TextStyle(
-                        //               fontSize: 18,
-                        //               fontWeight: FontWeight.bold,
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       )
-                        //     : Container(
-                        //         decoration: BoxDecoration(
-                        //           color: Colors.grey[200],
-                        //           borderRadius: BorderRadius.circular(10),
-                        //         ),
-                        //         child: Row(
-                        //           mainAxisAlignment: MainAxisAlignment.center,
-                        //           children: [
-                        //             IconButton(
-                        //               icon: const Icon(Icons.remove,
-                        //                   color: Colors.blue),
-                        //               onPressed: () {
-                        //                 setState(() {
-                        //                   cartQuantity--;
-                        //                 });
-                        //                 if (cartQuantity == 0) {
-                        //                   ScaffoldMessenger.of(context)
-                        //                       .showSnackBar(
-                        //                     SnackBar(
-                        //                       content: Text(
-                        //                           '${product['title']} removed from cart!'),
-                        //                     ),
-                        //                   );
-                        //                 }
-                        //               },
-                        //             ),
-                        //             Text(
-                        //               '$cartQuantity',
-                        //               style: const TextStyle(
-                        //                 fontSize: 18,
-                        //                 fontWeight: FontWeight.bold,
-                        //               ),
-                        //             ),
-                        //             IconButton(
-                        //               icon: const Icon(Icons.add,
-                        //                   color: Colors.blue),
-                        //               onPressed: () {
-                        //                 setState(() {
-                        //                   cartQuantity++;
-                        //                 });
-                        //               },
-                        //             ),
-                        //           ],
-                        //         ),
-                        //       ),
                         const SizedBox(height: 16), // Extra space at the bottom
                       ],
                     ),

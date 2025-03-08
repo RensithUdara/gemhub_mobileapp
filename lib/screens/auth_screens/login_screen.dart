@@ -5,6 +5,7 @@ import 'package:gemhub/Seller/seller_home_page.dart';
 import 'package:gemhub/home_screen.dart';
 import 'package:gemhub/screens/auth_screens/forgot_password_screen.dart';
 import 'package:gemhub/screens/auth_screens/signup_screen.dart';
+import 'package:gemhub/widget/custom_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
   bool rememberMe = false;
-  bool isLoading = false; // Added for loading state
+  bool isLoading = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -57,7 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _validateLogin() async {
     if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
-      _showSnackBar('Please fill in all fields');
+      _showCustomDialog(
+        title: 'Error',
+        message: 'Please fill in all fields',
+        isError: true,
+      );
       return;
     }
 
@@ -69,8 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordController.text.trim(),
       );
 
-      await _saveCredentials();
-
       String? userId = userCredential.user?.uid;
 
       if (userId != null) {
@@ -78,17 +81,37 @@ class _LoginScreenState extends State<LoginScreen> {
         DocumentSnapshot sellerSnapshot = await _firestore.collection('sellers').doc(userId).get();
 
         if (buyerSnapshot.exists) {
+          await _saveCredentials();
           _navigateTo(const HomeScreen());
         } else if (sellerSnapshot.exists) {
-          _navigateTo(const SellerHomePage());
+          Map<String, dynamic> sellerData = sellerSnapshot.data() as Map<String, dynamic>;
+          if (!sellerData['isActive']) {
+            await _auth.signOut();
+            _showCustomDialog(
+              title: 'Account Disabled',
+              message: 'Your seller account is disabled. Please wait for Admin approval.',
+              isError: true,
+            );
+          } else {
+            await _saveCredentials();
+            _navigateTo(const SellerHomePage());
+          }
         } else {
           throw Exception('User role not found.');
         }
       }
     } on FirebaseAuthException catch (e) {
-      _showSnackBar(e.message ?? 'Login failed. Please try again.');
+      _showCustomDialog(
+        title: 'Login Failed',
+        message: e.message ?? 'Login failed. Please try again.',
+        isError: true,
+      );
     } catch (e) {
-      _showSnackBar('Error: $e');
+      _showCustomDialog(
+        title: 'Error',
+        message: 'Error: $e',
+        isError: true,
+      );
     } finally {
       setState(() => isLoading = false);
     }
@@ -97,7 +120,26 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleForgotPassword(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()), // Should this be a ForgotPasswordScreen?
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+    );
+  }
+
+  void _showCustomDialog({
+    required String title,
+    required String message,
+    VoidCallback? onConfirm,
+    bool isError = false,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CustomDialog(
+          title: title,
+          message: message,
+          onConfirm: onConfirm,
+          isError: isError,
+        );
+      },
     );
   }
 
@@ -140,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10.0),
+      margin: const EdgeInsets.only(bottom: 10.0), // Fixed earlier
       decoration: BoxDecoration(
         boxShadow: const [
           BoxShadow(
@@ -167,18 +209,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(10.0),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // ... (Rest of the build method remains unchanged)
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
