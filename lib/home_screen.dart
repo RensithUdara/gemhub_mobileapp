@@ -162,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onWillPop: _onWillPop,
         child: Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false, // Removes the back button
             flexibleSpace: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
