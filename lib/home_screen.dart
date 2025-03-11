@@ -38,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchRandomGems();
   }
 
-  // Fetch user name from Firebase
   Future<void> _fetchUserName() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -58,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Fetch random gems from Firestore
   Future<void> _fetchRandomGems() async {
     try {
       final productsSnapshot =
@@ -74,7 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
 
-      // Shuffle and pick two random items
       products.shuffle();
       final randomProducts = products.take(2).toList();
 
@@ -224,11 +221,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       }
                       if (bannerProvider.error != null) {
+                        return SizedBox(
+                          height: 150,
+                          child: Center(
+                            child: Text(
+                              bannerProvider.error!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        );
+                      }
+                      if (bannerProvider.bannerList.isEmpty) {
                         return const SizedBox(
                           height: 150,
                           child: Center(
-                              child: Text('Error loading banners',
-                                  style: TextStyle(color: Colors.red))),
+                            child: Text(
+                              'No banners available',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
                         );
                       }
                       return Padding(
@@ -244,8 +255,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           items: bannerProvider.bannerList.map((imageUrl) {
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.network(imageUrl,
-                                  fit: BoxFit.cover, width: double.infinity),
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Text(
+                                      'Failed to load image',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  );
+                                },
+                              ),
                             );
                           }).toList(),
                         ),
@@ -352,8 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
-                    child: SizedBox(height: 30)), // Space for FAB
+                const SliverToBoxAdapter(child: SizedBox(height: 30)),
               ],
             ),
           ),
