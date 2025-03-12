@@ -3,23 +3,23 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gemhub/screens/auction_screen/auction_payment_screen.dart';
 
 class AuctionScreen extends StatelessWidget {
   const AuctionScreen({super.key});
 
-  // Helper function to parse endTime based on its type
   DateTime _parseEndTime(dynamic endTime) {
     if (endTime is Timestamp) {
       return endTime.toDate();
     } else if (endTime is String) {
       try {
-        return DateTime.parse(endTime); // Parse ISO 8601 string
+        return DateTime.parse(endTime);
       } catch (e) {
         print('Error parsing endTime string: $e');
-        return DateTime.now(); // Fallback to current time
+        return DateTime.now();
       }
     }
-    return DateTime.now(); // Fallback if type is unexpected
+    return DateTime.now();
   }
 
   @override
@@ -76,40 +76,131 @@ class AuctionScreen extends StatelessWidget {
           }
 
           final auctions = snapshot.data!.docs;
+          final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+          // Separate auctions into won, ongoing, and ended
+          final now = DateTime.now();
+          final wonAuctions = auctions.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final endTime = _parseEndTime(data['endTime']);
+            return endTime.isBefore(now) &&
+                data['winningUserId'] == currentUserId;
+          }).toList();
+
+          final ongoingAuctions = auctions.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final endTime = _parseEndTime(data['endTime']);
+            return endTime.isAfter(now);
+          }).toList();
+
+          final endedAuctions = auctions.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final endTime = _parseEndTime(data['endTime']);
+            return endTime.isBefore(now) &&
+                data['winningUserId'] != currentUserId;
+          }).toList();
 
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
             child: ListView(
               children: [
-                const Text(
-                  'Live Bidding',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blueGrey,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...auctions.map((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  print(
-                      'endTime type for ${doc.id}: ${data['endTime'].runtimeType}');
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 20.0), // Fix: should be 'bottom'
-                    child: AuctionItemCard(
-                      auctionId: doc.id,
-                      imagePath: data['imagePath'] ?? '',
-                      title: data['title'] ?? 'Untitled',
-                      currentBid: (data['currentBid'] as num?)?.toDouble() ??
-                          0.0, // Changed to double
-                      endTime: _parseEndTime(data['endTime']),
-                      minimumIncrement:
-                          (data['minimumIncrement'] as num?)?.toDouble() ??
-                              0.0, // Changed to double
+                // Won Auctions Section
+                if (wonAuctions.isNotEmpty) ...[
+                  const Text(
+                    'Your Won Auctions',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blueGrey,
                     ),
-                  );
-                }),
+                  ),
+                  const SizedBox(height: 16),
+                  ...wonAuctions.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: AuctionItemCard(
+                        auctionId: doc.id,
+                        imagePath: data['imagePath'] ?? '',
+                        title: data['title'] ?? 'Untitled',
+                        currentBid:
+                            (data['currentBid'] as num?)?.toDouble() ?? 0.0,
+                        endTime: _parseEndTime(data['endTime']),
+                        minimumIncrement:
+                            (data['minimumIncrement'] as num?)?.toDouble() ??
+                                0.0,
+                        paymentStatus: data['paymentStatus'] ??
+                            'pending', // Pass payment status
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 24),
+                ],
+
+                // Ongoing Auctions Section
+                if (ongoingAuctions.isNotEmpty) ...[
+                  const Text(
+                    'Live Bidding',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...ongoingAuctions.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: AuctionItemCard(
+                        auctionId: doc.id,
+                        imagePath: data['imagePath'] ?? '',
+                        title: data['title'] ?? 'Untitled',
+                        currentBid:
+                            (data['currentBid'] as num?)?.toDouble() ?? 0.0,
+                        endTime: _parseEndTime(data['endTime']),
+                        minimumIncrement:
+                            (data['minimumIncrement'] as num?)?.toDouble() ??
+                                0.0,
+                        paymentStatus: data['paymentStatus'] ??
+                            'pending', // Pass payment status
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 24),
+                ],
+
+                // Ended Auctions Section
+                if (endedAuctions.isNotEmpty) ...[
+                  const Text(
+                    'Ended Auctions',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...endedAuctions.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: AuctionItemCard(
+                        auctionId: doc.id,
+                        imagePath: data['imagePath'] ?? '',
+                        title: data['title'] ?? 'Untitled',
+                        currentBid:
+                            (data['currentBid'] as num?)?.toDouble() ?? 0.0,
+                        endTime: _parseEndTime(data['endTime']),
+                        minimumIncrement:
+                            (data['minimumIncrement'] as num?)?.toDouble() ??
+                                0.0,
+                        paymentStatus: data['paymentStatus'] ??
+                            'pending', // Pass payment status
+                      ),
+                    );
+                  }),
+                ],
               ],
             ),
           );
@@ -123,9 +214,10 @@ class AuctionItemCard extends StatefulWidget {
   final String auctionId;
   final String imagePath;
   final String title;
-  final double currentBid; // Changed to double
+  final double currentBid;
   final DateTime endTime;
-  final double minimumIncrement; // Changed to double
+  final double minimumIncrement;
+  final String paymentStatus; // Add paymentStatus field
 
   const AuctionItemCard({
     super.key,
@@ -135,6 +227,7 @@ class AuctionItemCard extends StatefulWidget {
     required this.currentBid,
     required this.endTime,
     required this.minimumIncrement,
+    required this.paymentStatus,
   });
 
   @override
@@ -143,7 +236,7 @@ class AuctionItemCard extends StatefulWidget {
 
 class _AuctionItemCardState extends State<AuctionItemCard>
     with SingleTickerProviderStateMixin {
-  late double _currentBid; // Changed to double
+  late double _currentBid;
   late Duration _remainingTime;
   late Timer _timer;
   final TextEditingController _bidController = TextEditingController();
@@ -205,8 +298,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   Future<void> _placeBid() async {
-    final enteredBid =
-        double.tryParse(_bidController.text.trim()); // Changed to double
+    final enteredBid = double.tryParse(_bidController.text.trim());
     final currentUser = FirebaseAuth.instance.currentUser;
 
     print("Current user UID: ${currentUser?.uid ?? 'Not authenticated'}");
@@ -300,7 +392,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
               ),
               const SizedBox(height: 8),
               Text(
-                _formatCurrency(enteredBid), // Updated to handle double
+                _formatCurrency(enteredBid),
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -408,24 +500,22 @@ class _AuctionItemCardState extends State<AuctionItemCard>
       return;
     }
 
-    setState(() => _isLoading = true);
-    try {
-      print("Updating payment status for auction: ${widget.auctionId}");
-      await FirebaseFirestore.instance
-          .collection('auctions')
-          .doc(widget.auctionId)
-          .update({
-        'paymentStatus': 'pending',
-        'paymentInitiatedAt': FieldValue.serverTimestamp(),
-      });
-      print("Payment update successful");
-      setState(() => _isLoading = false);
-      _showSnackBar('Payment processing initiated!');
-    } catch (e) {
-      print("Payment error: $e");
-      setState(() => _isLoading = false);
-      _showSnackBar('Payment error: $e');
+    if (widget.paymentStatus == 'completed') {
+      _showSnackBar('Payment already completed');
+      return;
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AuctionPaymentScreen(
+          auctionId: widget.auctionId,
+          itemPrice: _currentBid,
+          title: widget.title,
+          imagePath: widget.imagePath,
+        ),
+      ),
+    );
   }
 
   void _showSnackBar(String message) {
@@ -463,7 +553,6 @@ class _AuctionItemCardState extends State<AuctionItemCard>
   }
 
   String _formatCurrency(double amount) {
-    // Changed to double
     return 'Rs.${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
@@ -481,6 +570,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     bool isAuctionActive = _remainingTime.inSeconds > 0;
     bool isCurrentUserWinner =
         _winningUserId == FirebaseAuth.instance.currentUser?.uid;
+    bool isPaymentCompleted = widget.paymentStatus == 'completed';
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -736,10 +826,7 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                     onPressed: _getButtonAction(),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      backgroundColor: isAuctionActive ||
-                              (isCurrentUserWinner && !isAuctionActive)
-                          ? Colors.blue[700]
-                          : Colors.grey[600],
+                      backgroundColor: _getButtonColor(),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -757,9 +844,21 @@ class _AuctionItemCardState extends State<AuctionItemCard>
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (!isAuctionActive && isCurrentUserWinner)
+                              if (!isAuctionActive &&
+                                  isCurrentUserWinner &&
+                                  !isPaymentCompleted)
                                 const Icon(Icons.payment, size: 20),
-                              if (!isAuctionActive && isCurrentUserWinner)
+                              if (!isAuctionActive &&
+                                  isCurrentUserWinner &&
+                                  !isPaymentCompleted)
+                                const SizedBox(width: 8),
+                              if (!isAuctionActive &&
+                                  isCurrentUserWinner &&
+                                  isPaymentCompleted)
+                                const Icon(Icons.check_circle, size: 20),
+                              if (!isAuctionActive &&
+                                  isCurrentUserWinner &&
+                                  isPaymentCompleted)
                                 const SizedBox(width: 8),
                               Text(
                                 _getButtonText(),
@@ -785,9 +884,21 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     if (_remainingTime.inSeconds > 0) {
       return 'Place Bid';
     } else if (_winningUserId == FirebaseAuth.instance.currentUser?.uid) {
-      return 'Pay Now';
+      return widget.paymentStatus == 'completed' ? 'Paid' : 'Pay Now';
     } else {
       return 'Auction Ended';
+    }
+  }
+
+  Color _getButtonColor() {
+    if (_remainingTime.inSeconds > 0) {
+      return Colors.blue[700]!; // Active auction - blue for bidding
+    } else if (_winningUserId == FirebaseAuth.instance.currentUser?.uid) {
+      return widget.paymentStatus == 'completed'
+          ? Colors.green[600]!
+          : Colors.blue[700]!; // Paid - green, Pay Now - blue
+    } else {
+      return Colors.grey[600]!; // Ended auction - grey
     }
   }
 
@@ -795,10 +906,11 @@ class _AuctionItemCardState extends State<AuctionItemCard>
     if (_remainingTime.inSeconds > 0 && !_isLoading) {
       return _placeBid;
     } else if (_winningUserId == FirebaseAuth.instance.currentUser?.uid &&
-        !_isLoading) {
+        !_isLoading &&
+        widget.paymentStatus != 'completed') {
       return _handlePayment;
     } else {
-      return null;
+      return null; // Disable button if payment is completed or user is not the winner
     }
   }
 }
