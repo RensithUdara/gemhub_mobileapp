@@ -21,9 +21,15 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
-  // Seller data
+  // Seller data and form controllers
   Map<String, dynamic>? sellerData;
   bool _isLoading = true;
+  bool _isEditing = false;
+
+  final TextEditingController _displayNameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
   @override
   void initState() {
@@ -43,6 +49,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         if (doc.exists) {
           setState(() {
             sellerData = doc.data() as Map<String, dynamic>;
+            _displayNameController.text = sellerData!['displayName'] ?? '';
+            _addressController.text = sellerData!['address'] ?? '';
+            _emailController.text = sellerData!['email'] ?? '';
+            _usernameController.text = sellerData!['username'] ?? '';
             _isLoading = false;
           });
         } else {
@@ -117,6 +127,39 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         }
       }
     }
+  }
+
+  Future<void> _saveProfile() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null) {
+      try {
+        await _firestore.collection('sellers').doc(userId).update({
+          'displayName': _displayNameController.text,
+          'address': _addressController.text,
+          'email': _emailController.text,
+          'username': _usernameController.text,
+        });
+        setState(() {
+          _isEditing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating profile: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _addressController.dispose();
+    _emailController.dispose();
+    _usernameController.dispose();
+    super.dispose();
   }
 
   @override
@@ -204,22 +247,46 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 16),
-                                      Text(
-                                        sellerData!['displayName'] ?? 'N/A',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      _isEditing
+                                          ? TextFormField(
+                                              controller: _displayNameController,
+                                              style: const TextStyle(color: Colors.white),
+                                              decoration: InputDecoration(
+                                                labelText: 'Display Name',
+                                                labelStyle: const TextStyle(color: Colors.grey),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            )
+                                          : Text(
+                                              sellerData!['displayName'] ?? 'N/A',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                       const SizedBox(height: 8),
-                                      Text(
-                                        sellerData!['email'] ?? 'N/A',
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      _isEditing
+                                          ? TextFormField(
+                                              controller: _emailController,
+                                              style: const TextStyle(color: Colors.white),
+                                              decoration: InputDecoration(
+                                                labelText: 'Email',
+                                                labelStyle: const TextStyle(color: Colors.grey),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            )
+                                          : Text(
+                                              sellerData!['email'] ?? 'N/A',
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 16,
+                                              ),
+                                            ),
                                     ],
                                   ),
                                 ),
@@ -251,11 +318,66 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 16),
-                                      _buildProfileField('Address', sellerData!['address'] ?? 'N/A'),
-                                      _buildProfileField('NIC Number', sellerData!['nicNumber'] ?? 'N/A'),
-                                      _buildProfileField('Phone Number', sellerData!['phoneNumber'] ?? 'N/A'),
-                                      _buildProfileField('Username', sellerData!['user_name'] ?? 'N/A'),
-                                      _buildProfileField('Role', sellerData!['role'] ?? 'N/A'),
+                                      _isEditing
+                                          ? TextFormField(
+                                              controller: _addressController,
+                                              style: const TextStyle(color: Colors.white),
+                                              decoration: InputDecoration(
+                                                labelText: 'Address',
+                                                labelStyle: const TextStyle(color: Colors.grey),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            )
+                                          : _buildProfileField('Address', sellerData!['address'] ?? 'N/A'),
+                                      _buildProfileField('NIC Number', sellerData!['nicNumber'] ?? 'N/A', readOnly: true),
+                                      _buildProfileField('Phone Number', sellerData!['phoneNumber'] ?? 'N/A', readOnly: true),
+                                      _isEditing
+                                          ? TextFormField(
+                                              controller: _usernameController,
+                                              style: const TextStyle(color: Colors.white),
+                                              decoration: InputDecoration(
+                                                labelText: 'Username',
+                                                labelStyle: const TextStyle(color: Colors.grey),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            )
+                                          : _buildProfileField('Username', sellerData!['username'] ?? 'N/A'),
+                                      _buildProfileField('Role', sellerData!['role'] ?? 'N/A', readOnly: true),
+                                      const SizedBox(height: 20),
+                                      if (_isEditing)
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  _isEditing = false;
+                                                });
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.grey,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: _saveProfile,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.blueAccent,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                              child: const Text('Save'),
+                                            ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -324,7 +446,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     );
   }
 
-  Widget _buildProfileField(String label, String value) {
+  Widget _buildProfileField(String label, String value, {bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
