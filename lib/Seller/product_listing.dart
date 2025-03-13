@@ -588,7 +588,6 @@ class _ProductListingState extends State<ProductListing>
                     maxLines: 5,
                   ),
                   const SizedBox(height: 32),
-                  // Submit Product Button (First)
                   Center(
                     child: SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
@@ -597,7 +596,7 @@ class _ProductListingState extends State<ProductListing>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -608,19 +607,19 @@ class _ProductListingState extends State<ProductListing>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Submit Product',
+                              'ALL DONE, SELL IT',
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.send, size: 20, color: Colors.white),
+                            Icon(Icons.check_circle,
+                                size: 20, color: Colors.white),
                           ],
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Upload Bulk Products Button (Second)
                   Center(
                     child: SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
@@ -629,7 +628,7 @@ class _ProductListingState extends State<ProductListing>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -641,8 +640,8 @@ class _ProductListingState extends State<ProductListing>
                           children: [
                             Text(
                               _isBulkUploading
-                                  ? 'Uploading...'
-                                  : 'Upload Bulk Products',
+                                  ? 'UPLOADING...'
+                                  : 'BULK PRODUCT LISTING',
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
@@ -664,7 +663,6 @@ class _ProductListingState extends State<ProductListing>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Download Product Template Button (Third)
                   Center(
                     child: SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
@@ -673,7 +671,7 @@ class _ProductListingState extends State<ProductListing>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -685,8 +683,8 @@ class _ProductListingState extends State<ProductListing>
                           children: [
                             Text(
                               _isDownloadingTemplate
-                                  ? 'Downloading...'
-                                  : 'Download Product Template',
+                                  ? 'DOWNLOADING...'
+                                  : 'DOWNLOAD CSV TEMPLATE',
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
