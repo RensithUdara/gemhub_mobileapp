@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gemhub/Seller/listed_auction_screen.dart';
 import 'package:gemhub/Seller/listed_product_screen.dart';
 import 'package:gemhub/Seller/order_history_screen.dart';
+import 'package:gemhub/Seller/seller_profile_screen.dart';
 import 'package:gemhub/screens/auth_screens/login_screen.dart';
 
 import 'auction_product.dart' as auction;
@@ -114,30 +115,44 @@ class _SellerHomePageState extends State<SellerHomePage>
         false;
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    switch (index) {
-      case 1: // Notifications
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                NotificationsPage(notifications: _notifications),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-        break;
-      case 3: // Logout
-        _onWillPop();
-        break;
-    }
+void _onItemTapped(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
+  switch (index) {
+    case 1: // Notifications
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              NotificationsPage(notifications: _notifications),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+      break;
+    case 2: // Profile
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const SellerProfileScreen(),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+      break;
+    case 3: // Logout
+      _onWillPop();
+      break;
   }
+}
 
   @override
   Widget build(BuildContext context) {
