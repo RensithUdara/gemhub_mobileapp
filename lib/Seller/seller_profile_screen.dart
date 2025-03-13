@@ -141,6 +141,13 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         });
         setState(() {
           _isEditing = false;
+          sellerData = {
+            ...sellerData!,
+            'displayName': _displayNameController.text,
+            'address': _addressController.text,
+            'email': _emailController.text,
+            'username': _usernameController.text,
+          };
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -356,6 +363,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                               onPressed: () {
                                                 setState(() {
                                                   _isEditing = false;
+                                                  _displayNameController.text = sellerData!['displayName'] ?? '';
+                                                  _addressController.text = sellerData!['address'] ?? '';
+                                                  _emailController.text = sellerData!['email'] ?? '';
+                                                  _usernameController.text = sellerData!['username'] ?? '';
                                                 });
                                               },
                                               style: ElevatedButton.styleFrom(
@@ -377,6 +388,23 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                               child: const Text('Save'),
                                             ),
                                           ],
+                                        ),
+                                      if (!_isEditing)
+                                        Center(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _isEditing = true;
+                                              });
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blueAccent,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            child: const Text('Edit Profile'),
+                                          ),
                                         ),
                                     ],
                                   ),
