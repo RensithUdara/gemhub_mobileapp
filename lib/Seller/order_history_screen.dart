@@ -6,6 +6,23 @@ import 'package:gemhub/Seller/order_details_screen.dart';
 class SellerOrderHistoryScreen extends StatelessWidget {
   const SellerOrderHistoryScreen({super.key});
 
+  // Helper method to check if order is overdue
+  bool isOrderOverdue(Map<String, dynamic> order) {
+    final deliveryDateStr = order['deliveryDate'] as String;
+    final status = order['status'] as String;
+    
+    try {
+      final deliveryDate = DateTime.parse(deliveryDateStr);
+      final currentDate = DateTime.now();
+      
+      // Check if current date is past delivery date and status isn't delivered
+      return currentDate.isAfter(deliveryDate) && status.toLowerCase() != 'delivered';
+    } catch (e) {
+      // In case of parsing error, return false to avoid breaking the UI
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,6 +96,7 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final order = orders[index].data() as Map<String, dynamic>;
                   final orderId = orders[index].id;
+                  final isOverdue = isOrderOverdue(order);
 
                   return Card(
                     elevation: 4,
@@ -89,13 +107,19 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.grey[850]!, Colors.grey[900]!],
+                          colors: isOverdue
+                              ? [Colors.red[800]!, Colors.red[900]!]
+                              : [Colors.grey[850]!, Colors.grey[900]!],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: Colors.blue.withOpacity(0.3), width: 1),
+                          color: isOverdue
+                              ? Colors.red.withOpacity(0.5)
+                              : Colors.blue.withOpacity(0.3),
+                          width: 1,
+                        ),
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
@@ -117,8 +141,10 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                                 style: const TextStyle(color: Colors.white60)),
                           ],
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios,
-                            color: Colors.blueAccent),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: isOverdue ? Colors.white : Colors.blueAccent,
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,
