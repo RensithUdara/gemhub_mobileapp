@@ -1,10 +1,14 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ProductListing extends StatefulWidget {
   const ProductListing({super.key});
@@ -26,6 +30,8 @@ class _ProductListingState extends State<ProductListing>
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String? _selectedCategory;
+  bool _isBulkUploading = false;
+  bool _isDownloadingTemplate = false;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -129,6 +135,192 @@ class _ProductListingState extends State<ProductListing>
     }
   }
 
+  Future<void> _downloadCsvTemplate() async {
+    try {
+      setState(() => _isDownloadingTemplate = true);
+
+      // Define the CSV headers
+      List<List<dynamic>> csvData = [
+        ['title', 'category', 'pricing', 'quantity', 'unit', 'description', 'imageUrl'],
+      ];
+
+      // Convert to CSV string
+      String csv = const ListToCsvConverter().convert(csvData);
+
+      // Get the temporary directory
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/product_template.csv';
+      final file = File(filePath);
+
+      // Write the CSV string to the file
+      await file.writeAsString(csv);
+
+      // Share the file
+      await Share.shareXFiles([XFile(filePath)], text: 'Product Listing CSV Template');
+
+    } catch (e) {
+      _showErrorDialog('Error generating CSV template: $e');
+    } finally {
+      setState(() => _isDownloadingTemplate = false);
+    }
+  }
+
+  Future<void> _handleBulkUpload() async {
+    try {
+      setState(() => _isBulkUploading = true);
+
+      // Check if the user is authenticated
+      if (_auth.currentUser == null) {
+        _showErrorDialog('You must be signed in to upload products.');
+        return;
+      }
+
+      // Pick the CSV file
+      FilePickerResult? csvResult = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (csvResult == null || csvResult.files.single.path == null) {
+        _showErrorDialog('No CSV file selected.');
+        setState(() => _isBulkUploading = false);
+        return;
+      }
+
+      // Read the CSV file
+      final csvFile = File(csvResult.files.single.path!);
+      final input = await csvFile.readAsString();
+      final List<List<dynamic>> csvData = const CsvToListConverter().convert(input);
+
+      // Validate CSV headers
+      if (csvData.isEmpty) {
+        _showErrorDialog('CSV file is empty.');
+        setState(() => _isBulkUploading = false);
+        return;
+      }
+
+      List<String> expectedHeaders = [
+        'title',
+        'category',
+        'pricing',
+        'quantity',
+        'unit',
+        'description',
+        'imageUrl'
+      ];
+
+      List<String> actualHeaders = csvData[0].map((e) => e.toString().trim()).toList();
+
+      // Check number of columns
+      if (actualHeaders.length != expectedHeaders.length) {
+        _showErrorDialog(
+            'Header mismatch: Expected ${expectedHeaders.length} columns but found ${actualHeaders.length} columns.\n\n'
+            'Expected headers: ${expectedHeaders.join(", ")}\n'
+            'Found headers: ${actualHeaders.join(", ")}');
+        setState(() => _isBulkUploading = false);
+        return;
+      }
+
+      // Check each header for an exact match
+      StringBuffer headerErrors = StringBuffer();
+      for (int i = 0; i < expectedHeaders.length; i++) {
+        if (actualHeaders[i] != expectedHeaders[i]) {
+          headerErrors.writeln('Column ${i + 1}: Expected "${expectedHeaders[i]}", but found "${actualHeaders[i]}"');
+        }
+      }
+
+      if (headerErrors.isNotEmpty) {
+        _showErrorDialog(
+            'Header mismatch detected:\n\n${headerErrors.toString()}\n\n'
+            'Please ensure the CSV headers match exactly: ${expectedHeaders.join(", ")}');
+        setState(() => _isBulkUploading = false);
+        return;
+      }
+
+      // If headers are correct, proceed with data validation
+      List<Map<String, dynamic>> products = [];
+      StringBuffer errorMessages = StringBuffer();
+      for (int i = 1; i < csvData.length; i++) {
+        final row = csvData[i];
+        if (row.length != 7) {
+          errorMessages.writeln('Row ${i + 1}: Invalid number of columns. Expected 7, found ${row.length}');
+          continue;
+        }
+
+        String title = row[0].toString().trim();
+        String category = row[1].toString().trim();
+        String pricingStr = row[2].toString().trim();
+        String quantityStr = row[3].toString().trim();
+        String unit = row[4].toString().trim();
+        String description = row[5].toString().trim();
+        String imageUrl = row[6].toString().trim();
+
+        // Validate each field
+        bool hasErrors = false;
+        if (title.isEmpty) {
+          errorMessages.writeln('Row ${i + 1}: Title is empty');
+          hasErrors = true;
+        }
+        if (category.isEmpty || !['Blue Sapphires', 'White Sapphires', 'Yellow Sapphires'].contains(category)) {
+          errorMessages.writeln('Row ${i + 1}: Category is empty or invalid. Must be Blue Sapphires, White Sapphires, or Yellow Sapphires');
+          hasErrors = true;
+        }
+        double? pricing = double.tryParse(pricingStr);
+        if (pricingStr.isEmpty || pricing == null) {
+          errorMessages.writeln('Row ${i + 1}: Pricing is empty or invalid');
+          hasErrors = true;
+        }
+        int? quantity = int.tryParse(quantityStr);
+        if (quantityStr.isEmpty || quantity == null) {
+          errorMessages.writeln('Row ${i + 1}: Quantity is empty or invalid');
+          hasErrors = true;
+        }
+        if (description.isEmpty) {
+          errorMessages.writeln('Row ${i + 1}: Description is empty');
+          hasErrors = true;
+        }
+
+        if (!hasErrors) {
+          products.add({
+            'title': title,
+            'category': category,
+            'pricing': pricing!,
+            'quantity': quantity!,
+            'unit': unit,
+            'description': description,
+            'imageUrl': imageUrl,
+            'timestamp': FieldValue.serverTimestamp(),
+            'userId': _auth.currentUser!.uid,
+          });
+        }
+      }
+
+      if (products.isEmpty) {
+        if (errorMessages.isNotEmpty) {
+          _showErrorDialog('Upload failed due to the following errors:\n${errorMessages.toString()}');
+        } else {
+          _showErrorDialog('No valid products to upload. CSV file contains only headers or all rows are invalid.');
+        }
+        setState(() => _isBulkUploading = false);
+        return;
+      }
+
+      // Batch write to Firestore
+      WriteBatch batch = _firestore.batch();
+      for (var product in products) {
+        DocumentReference docRef = _firestore.collection('products').doc();
+        batch.set(docRef, product);
+      }
+
+      await batch.commit();
+      _showSuccessDialog(message: 'Successfully uploaded ${products.length} products');
+    } catch (e) {
+      _showErrorDialog('Error uploading bulk products: $e');
+    } finally {
+      setState(() => _isBulkUploading = false);
+    }
+  }
+
   void _showConfirmationDialog() {
     if (_formKey.currentState!.validate() &&
         _images.any((image) => image != null)) {
@@ -180,7 +372,7 @@ class _ProductListingState extends State<ProductListing>
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog({String? message}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -191,24 +383,26 @@ class _ProductListingState extends State<ProductListing>
           style: TextStyle(
               color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Your product has been listed successfully!',
-          style: TextStyle(color: Colors.white70, fontSize: 16),
+        content: Text(
+          message ?? 'Your product has been listed successfully!',
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
         ),
         actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(
-                context,
-                {
-                  'title': _titleController.text,
-                  'quantity': int.tryParse(_quantityController.text) ?? 0,
-                  'imagePath':
-                      _images.firstWhere((image) => image != null)?.path,
-                  'type': 'product',
-                },
-              );
+              if (message == null) {
+                Navigator.pop(
+                  context,
+                  {
+                    'title': _titleController.text,
+                    'quantity': int.tryParse(_quantityController.text) ?? 0,
+                    'imagePath':
+                        _images.firstWhere((image) => image != null)?.path,
+                    'type': 'product',
+                  },
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -234,9 +428,11 @@ class _ProductListingState extends State<ProductListing>
           style: TextStyle(
               color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        content: SingleChildScrollView(
+          child: Text(
+            message,
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+          ),
         ),
         actions: [
           ElevatedButton(
@@ -418,6 +614,92 @@ class _ProductListingState extends State<ProductListing>
                             SizedBox(width: 8),
                             Icon(Icons.check_circle,
                                 size: 20, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      child: ElevatedButton(
+                        onPressed: _isBulkUploading ? null : _handleBulkUpload,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.green.withOpacity(0.5),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isBulkUploading
+                                  ? 'UPLOADING...'
+                                  : 'BULK PRODUCT LISTING',
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            _isBulkUploading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.upload_file,
+                                    size: 20, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      child: ElevatedButton(
+                        onPressed: _isDownloadingTemplate ? null : _downloadCsvTemplate,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.orange.withOpacity(0.5),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isDownloadingTemplate
+                                  ? 'DOWNLOADING...'
+                                  : 'DOWNLOAD CSV TEMPLATE',
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            _isDownloadingTemplate
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.download,
+                                    size: 20, color: Colors.white),
                           ],
                         ),
                       ),
