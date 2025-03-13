@@ -426,7 +426,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                                 });
                                               },
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.grey[700],
+                                                backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius: BorderRadius.circular(12),
                                                 ),
@@ -434,7 +434,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                               ),
                                               child: const Text(
                                                 'Cancel',
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: 16 , color: Colors.black),
                                               ),
                                             ),
                                             ElevatedButton(
@@ -448,7 +448,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                               ),
                                               child: const Text(
                                                 'Save',
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: 16 , color: Colors.white),
                                               ),
                                             ),
                                           ],
@@ -470,7 +470,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                             ),
                                             child: const Text(
                                               'Edit Profile',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold , color: Colors.white),
                                             ),
                                           ).animate().scale(duration: 300.ms, curve: Curves.easeInOut),
                                         ),
