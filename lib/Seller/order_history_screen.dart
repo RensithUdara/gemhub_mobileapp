@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw; // For PDF generation
 import 'package:printing/printing.dart'; // For printing/sharing PDF
 import 'package:path_provider/path_provider.dart'; // For internal storage access
+import 'package:fluttertoast/fluttertoast.dart'; // For toast messages
 
 class SellerOrderHistoryScreen extends StatefulWidget {
   const SellerOrderHistoryScreen({super.key});
@@ -39,7 +40,6 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     final dateFormat = DateFormat('yyyy-MM-dd');
     double totalIncome = 0;
 
-    // Calculate total income
     for (var order in orders) {
       final data = order.data() as Map<String, dynamic>;
       final amount = data['totalAmount'];
@@ -87,44 +87,98 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
 
   // Method to save PDF to internal storage
   Future<String> _savePdfToStorage(Uint8List pdfBytes) async {
-    final directory = await getApplicationDocumentsDirectory(); // App's documents directory
+    final directory = await getApplicationDocumentsDirectory();
     final fileName = 'Order_History_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(pdfBytes);
-    return file.path; // Return the file path for feedback
+    return file.path;
   }
 
-  // Method to show save/share dialog
+  // Method to show improved save/share dialog
   Future<void> _showSaveOrShareDialog(List<QueryDocumentSnapshot> orders) async {
     final pdfBytes = await _generatePdfReport(orders);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save or Share Report'),
-        content: const Text('Would you like to save the report to internal storage or share it?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.grey[900], // Dark background to match app theme
+        title: const Row(
+          children: [
+            Icon(Icons.download, color: Colors.blueAccent),
+            SizedBox(width: 10),
+            Text(
+              'Download Report',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Choose an option to proceed with your order history report:',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Orders: ${orders.length}',
+              style: const TextStyle(color: Colors.white60),
+            ),
+            if (_selectedDateRange != null)
+              Text(
+                'Date Range: ${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)} - ${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}',
+                style: const TextStyle(color: Colors.white60),
+              ),
+          ],
+        ),
         actions: [
-          TextButton(
+          ElevatedButton.icon(
             onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop();
               final filePath = await _savePdfToStorage(pdfBytes);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Report saved to: $filePath')),
+              Fluttertoast.showToast(
+                msg: 'Saved to $filePath',
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.green.withOpacity(0.9),
+                textColor: Colors.white,
+                fontSize: 16.0,
               );
             },
-            child: const Text('Save to Storage'),
+            icon: const Icon(Icons.save),
+            label: const Text('Save'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          TextButton(
+          ElevatedButton.icon(
             onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop();
               await Printing.sharePdf(
                 bytes: pdfBytes,
                 filename: 'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
               );
+              Fluttertoast.showToast(
+                msg: 'Sharing report...',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.blueAccent.withOpacity(0.9),
+                textColor: Colors.white,
+                fontSize: 16.0,
+              );
             },
-            child: const Text('Share'),
+            icon: const Icon(Icons.share),
+            label: const Text('Share'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
         ],
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
       ),
     );
   }
