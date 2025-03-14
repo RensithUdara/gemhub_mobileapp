@@ -10,13 +10,14 @@ class SellerOrderHistoryScreen extends StatelessWidget {
   bool isOrderOverdue(Map<String, dynamic> order) {
     final deliveryDateStr = order['deliveryDate'] as String;
     final status = order['status'] as String;
-    
+
     try {
       final deliveryDate = DateTime.parse(deliveryDateStr);
       final currentDate = DateTime.now();
-      
+
       // Check if current date is past delivery date and status isn't delivered
-      return currentDate.isAfter(deliveryDate) && status.toLowerCase() != 'delivered';
+      return currentDate.isAfter(deliveryDate) &&
+          status.toLowerCase() != 'delivered';
     } catch (e) {
       // In case of parsing error, return false to avoid breaking the UI
       return false;
