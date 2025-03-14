@@ -1,12 +1,12 @@
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csv/csv.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:csv/csv.dart';
-import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -141,7 +141,15 @@ class _ProductListingState extends State<ProductListing>
 
       // Define the CSV headers
       List<List<dynamic>> csvData = [
-        ['title', 'category', 'pricing', 'quantity', 'unit', 'description', 'imageUrl'],
+        [
+          'title',
+          'category',
+          'pricing',
+          'quantity',
+          'unit',
+          'description',
+          'imageUrl'
+        ],
       ];
 
       // Convert to CSV string
@@ -156,8 +164,8 @@ class _ProductListingState extends State<ProductListing>
       await file.writeAsString(csv);
 
       // Share the file
-      await Share.shareXFiles([XFile(filePath)], text: 'Product Listing CSV Template');
-
+      await Share.shareXFiles([XFile(filePath)],
+          text: 'Product Listing CSV Template');
     } catch (e) {
       _showErrorDialog('Error generating CSV template: $e');
     } finally {
@@ -190,7 +198,8 @@ class _ProductListingState extends State<ProductListing>
       // Read the CSV file
       final csvFile = File(csvResult.files.single.path!);
       final input = await csvFile.readAsString();
-      final List<List<dynamic>> csvData = const CsvToListConverter().convert(input);
+      final List<List<dynamic>> csvData =
+          const CsvToListConverter().convert(input);
 
       // Validate CSV headers
       if (csvData.isEmpty) {
@@ -209,7 +218,8 @@ class _ProductListingState extends State<ProductListing>
         'imageUrl'
       ];
 
-      List<String> actualHeaders = csvData[0].map((e) => e.toString().trim()).toList();
+      List<String> actualHeaders =
+          csvData[0].map((e) => e.toString().trim()).toList();
 
       // Check number of columns
       if (actualHeaders.length != expectedHeaders.length) {
@@ -225,7 +235,8 @@ class _ProductListingState extends State<ProductListing>
       StringBuffer headerErrors = StringBuffer();
       for (int i = 0; i < expectedHeaders.length; i++) {
         if (actualHeaders[i] != expectedHeaders[i]) {
-          headerErrors.writeln('Column ${i + 1}: Expected "${expectedHeaders[i]}", but found "${actualHeaders[i]}"');
+          headerErrors.writeln(
+              'Column ${i + 1}: Expected "${expectedHeaders[i]}", but found "${actualHeaders[i]}"');
         }
       }
 
@@ -243,7 +254,8 @@ class _ProductListingState extends State<ProductListing>
       for (int i = 1; i < csvData.length; i++) {
         final row = csvData[i];
         if (row.length != 7) {
-          errorMessages.writeln('Row ${i + 1}: Invalid number of columns. Expected 7, found ${row.length}');
+          errorMessages.writeln(
+              'Row ${i + 1}: Invalid number of columns. Expected 7, found ${row.length}');
           continue;
         }
 
@@ -261,8 +273,11 @@ class _ProductListingState extends State<ProductListing>
           errorMessages.writeln('Row ${i + 1}: Title is empty');
           hasErrors = true;
         }
-        if (category.isEmpty || !['Blue Sapphires', 'White Sapphires', 'Yellow Sapphires'].contains(category)) {
-          errorMessages.writeln('Row ${i + 1}: Category is empty or invalid. Must be Blue Sapphires, White Sapphires, or Yellow Sapphires');
+        if (category.isEmpty ||
+            !['Blue Sapphires', 'White Sapphires', 'Yellow Sapphires']
+                .contains(category)) {
+          errorMessages.writeln(
+              'Row ${i + 1}: Category is empty or invalid. Must be Blue Sapphires, White Sapphires, or Yellow Sapphires');
           hasErrors = true;
         }
         double? pricing = double.tryParse(pricingStr);
@@ -297,9 +312,11 @@ class _ProductListingState extends State<ProductListing>
 
       if (products.isEmpty) {
         if (errorMessages.isNotEmpty) {
-          _showErrorDialog('Upload failed due to the following errors:\n${errorMessages.toString()}');
+          _showErrorDialog(
+              'Upload failed due to the following errors:\n${errorMessages.toString()}');
         } else {
-          _showErrorDialog('No valid products to upload. CSV file contains only headers or all rows are invalid.');
+          _showErrorDialog(
+              'No valid products to upload. CSV file contains only headers or all rows are invalid.');
         }
         setState(() => _isBulkUploading = false);
         return;
@@ -313,7 +330,8 @@ class _ProductListingState extends State<ProductListing>
       }
 
       await batch.commit();
-      _showSuccessDialog(message: 'Successfully uploaded ${products.length} products');
+      _showSuccessDialog(
+          message: 'Successfully uploaded ${products.length} products');
     } catch (e) {
       _showErrorDialog('Error uploading bulk products: $e');
     } finally {
@@ -667,7 +685,9 @@ class _ProductListingState extends State<ProductListing>
                     child: SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
                       child: ElevatedButton(
-                        onPressed: _isDownloadingTemplate ? null : _downloadCsvTemplate,
+                        onPressed: _isDownloadingTemplate
+                            ? null
+                            : _downloadCsvTemplate,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           foregroundColor: Colors.white,
