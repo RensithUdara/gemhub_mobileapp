@@ -1,10 +1,20 @@
-// seller_order_history_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/Seller/order_details_screen.dart';
+import 'package:intl/intl.dart'; // For date formatting
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw; // For PDF generation
+import 'package:printing/printing.dart'; // For printing/saving PDF
 
-class SellerOrderHistoryScreen extends StatelessWidget {
+class SellerOrderHistoryScreen extends StatefulWidget {
   const SellerOrderHistoryScreen({super.key});
+
+  @override
+  _SellerOrderHistoryScreenState createState() => _SellerOrderHistoryScreenState();
+}
+
+class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
+  DateTimeRange? _selectedDateRange;
 
   // Helper method to check if order is overdue
   bool isOrderOverdue(Map<String, dynamic> order) {
@@ -14,13 +24,96 @@ class SellerOrderHistoryScreen extends StatelessWidget {
     try {
       final deliveryDate = DateTime.parse(deliveryDateStr);
       final currentDate = DateTime.now();
-
-      // Check if current date is past delivery date and status isn't delivered
-      return currentDate.isAfter(deliveryDate) &&
-          status.toLowerCase() != 'delivered';
+      return currentDate.isAfter(deliveryDate) && status.toLowerCase() != 'delivered';
     } catch (e) {
-      // In case of parsing error, return false to avoid breaking the UI
       return false;
+    }
+  }
+
+  // Method to generate and download PDF report
+  Future<void> _generatePdfReport(List<QueryDocumentSnapshot> orders) async {
+    final pdf = pw.Document();
+    final dateFormat = DateFormat('yyyy-MM-dd');
+    double totalIncome = 0;
+
+    // Calculate total income
+    for (var order in orders) {
+      final data = order.data() as Map<String, dynamic>;
+      totalIncome += data['totalAmount'] as double;
+    }
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              'Order History Report',
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text(
+              'Date Range: ${dateFormat.format(_selectedDateRange?.start ?? DateTime.now())} - ${dateFormat.format(_selectedDateRange?.end ?? DateTime.now())}',
+              style: const pw.TextStyle(fontSize: 16),
+            ),
+            pw.Text(
+              'Total Income: Rs. ${totalIncome.toStringAsFixed(2)}',
+              style: const pw.TextStyle(fontSize: 16),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Table.fromTextArray(
+              headers: ['Order ID', 'Status', 'Total Amount', 'Delivery Date'],
+              data: orders.map((order) {
+                final data = order.data() as Map<String, dynamic>;
+                return [
+                  order.id.substring(0, 8),
+                  data['status'],
+                  'Rs. ${data['totalAmount'].toStringAsFixed(2)}',
+                  data['deliveryDate'],
+                ];
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Save or share the PDF
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+    );
+  }
+
+  // Method to pick date range
+  Future<void> _pickDateRange(BuildContext context) async {
+    final initialDateRange = DateTimeRange(
+      start: DateTime.now().subtract(const Duration(days: 30)),
+      end: DateTime.now(),
+    );
+    final newDateRange = await showDateRangePicker(
+      context: context,
+      initialDateRange: _selectedDateRange ?? initialDateRange,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.blueAccent,
+              onPrimary: Colors.white,
+              surface: Colors.grey,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (newDateRange != null) {
+      setState(() {
+        _selectedDateRange = newDateRange;
+      });
     }
   }
 
@@ -42,14 +135,26 @@ class SellerOrderHistoryScreen extends StatelessWidget {
         shadowColor: Colors.black26,
         title: const Text(
           'Order History',
-          style: TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.date_range, color: Colors.white),
+            onPressed: () => _pickDateRange(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.download, color: Colors.white),
+            onPressed: () async {
+              final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+              await _generatePdfReport(snapshot.docs);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Container(
@@ -64,28 +169,31 @@ class SellerOrderHistoryScreen extends StatelessWidget {
             stream: FirebaseFirestore.instance.collection('orders').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(
-                    child: CircularProgressIndicator(color: Colors.blueAccent));
+                return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
               }
               if (snapshot.hasError) {
                 return const Center(
-                    child: Text('Error loading orders',
-                        style: TextStyle(color: Colors.white)));
+                    child: Text('Error loading orders', style: TextStyle(color: Colors.white)));
               }
 
-              final orders = snapshot.data!.docs;
+              var orders = snapshot.data!.docs;
+              if (_selectedDateRange != null) {
+                orders = orders.where((order) {
+                  final data = order.data() as Map<String, dynamic>;
+                  final orderDate = DateTime.parse(data['deliveryDate']);
+                  return orderDate.isAfter(_selectedDateRange!.start) &&
+                      orderDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+                }).toList();
+              }
 
               if (orders.isEmpty) {
                 return const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.receipt_long_outlined,
-                          color: Colors.white70, size: 60),
+                      Icon(Icons.receipt_long_outlined, color: Colors.white70, size: 60),
                       SizedBox(height: 16),
-                      Text('No orders found',
-                          style:
-                              TextStyle(color: Colors.white70, fontSize: 18)),
+                      Text('No orders found', style: TextStyle(color: Colors.white70, fontSize: 18)),
                     ],
                   ),
                 );
@@ -102,8 +210,7 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                   return Card(
                     elevation: 4,
                     color: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Container(
                       decoration: BoxDecoration(
@@ -116,9 +223,7 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isOverdue
-                              ? Colors.red.withOpacity(0.5)
-                              : Colors.blue.withOpacity(0.3),
+                          color: isOverdue ? Colors.red.withOpacity(0.5) : Colors.blue.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -126,17 +231,14 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(16),
                         title: Text('Order #${orderId.substring(0, 8)}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.white)),
+                                fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 8),
                             Text('Status: ${order['status']}',
                                 style: const TextStyle(color: Colors.white60)),
-                            Text(
-                                'Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
+                            Text('Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
                                 style: const TextStyle(color: Colors.white60)),
                             Text('Delivery: ${order['deliveryDate']}',
                                 style: const TextStyle(color: Colors.white60)),
@@ -150,8 +252,7 @@ class SellerOrderHistoryScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  OrderDetailsScreen(orderId: orderId),
+                              builder: (context) => OrderDetailsScreen(orderId: orderId),
                             ),
                           );
                         },
