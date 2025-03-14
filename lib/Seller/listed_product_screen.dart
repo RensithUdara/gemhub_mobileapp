@@ -99,7 +99,7 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             pw.SizedBox(height: 20),
             pw.Text(
               'Product Details:',
-              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              style:  pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
             pw.Table.fromTextArray(
@@ -178,14 +178,27 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             onPressed: () async {
               Navigator.of(context).pop();
               final filePath = await _savePdfToStorage(pdfBytes);
-              Fluttertoast.showToast(
-                msg: 'Saved to $filePath',
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.green.withOpacity(0.9),
-                textColor: Colors.white,
-                fontSize: 16.0,
-              );
+              if (Platform.isAndroid || Platform.isIOS) {
+                try {
+                  Fluttertoast.showToast(
+                    msg: 'Saved to $filePath',
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.green.withOpacity(0.9),
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
+                } catch (e) {
+                  print('Toast error: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Saved to $filePath')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Saved to $filePath')),
+                );
+              }
             },
             icon: const Icon(Icons.save),
             label: const Text('Save'),
@@ -202,14 +215,27 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
                 bytes: pdfBytes,
                 filename: 'Product_Report_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
               );
-              Fluttertoast.showToast(
-                msg: 'Sharing report...',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.blueAccent.withOpacity(0.9),
-                textColor: Colors.white,
-                fontSize: 16.0,
-              );
+              if (Platform.isAndroid || Platform.isIOS) {
+                try {
+                  Fluttertoast.showToast(
+                    msg: 'Sharing report...',
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.blueAccent.withOpacity(0.9),
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
+                } catch (e) {
+                  print('Toast error: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sharing report...')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sharing report...')),
+                );
+              }
             },
             icon: const Icon(Icons.share),
             label: const Text('Share'),
@@ -345,7 +371,6 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
   }
 }
 
-// ProductCard class (unchanged except for the overflow fix applied earlier)
 class ProductCard extends StatefulWidget {
   final String docId;
   final String title;
