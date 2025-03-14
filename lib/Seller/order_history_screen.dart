@@ -94,6 +94,7 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     return file.path;
   }
 
+
   // Method to show improved save/share dialog
   Future<void> _showSaveOrShareDialog(List<QueryDocumentSnapshot> orders) async {
     final pdfBytes = await _generatePdfReport(orders);
@@ -151,6 +152,7 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             label: const Text('Save'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white, // Set text and icon color to white
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -174,6 +176,7 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             label: const Text('Share'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white, // Set text and icon color to white
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -182,6 +185,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
       ),
     );
   }
+
+
 
   // Method to pick date range
   Future<void> _pickDateRange(BuildContext context) async {
