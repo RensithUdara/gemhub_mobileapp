@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -43,10 +44,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     final userId = _auth.currentUser?.uid;
     if (userId != null) {
       try {
-        DocumentSnapshot doc = await _firestore
-            .collection('sellers')
-            .doc(userId)
-            .get();
+        DocumentSnapshot doc =
+            await _firestore.collection('sellers').doc(userId).get();
         if (doc.exists) {
           setState(() {
             sellerData = doc.data() as Map<String, dynamic>;
@@ -192,12 +191,15 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               ),
               SafeArea(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+                    ? const Center(
+                        child:
+                            CircularProgressIndicator(color: Colors.blueAccent))
                     : sellerData == null
                         ? const Center(
                             child: Text(
                               'No Data Available',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 18),
                             ),
                           )
                         : SingleChildScrollView(
@@ -206,7 +208,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                               children: [
                                 // Profile Header with Photo
                                 Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 20),
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     color: Colors.grey[900],
@@ -226,9 +229,12 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                         children: [
                                           CircleAvatar(
                                             radius: 70,
-                                            backgroundImage: _profileImageUrl != null
-                                                ? NetworkImage(_profileImageUrl!)
-                                                : const AssetImage('assets/images/default_profile.png')
+                                            backgroundImage: _profileImageUrl !=
+                                                    null
+                                                ? NetworkImage(
+                                                    _profileImageUrl!)
+                                                : const AssetImage(
+                                                        'assets/images/default_profile.png')
                                                     as ImageProvider,
                                             backgroundColor: Colors.grey[800],
                                           ).animate().scale(duration: 500.ms),
@@ -238,7 +244,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                             child: GestureDetector(
                                               onTap: _pickImage,
                                               child: Container(
-                                                padding: const EdgeInsets.all(10),
+                                                padding:
+                                                    const EdgeInsets.all(10),
                                                 decoration: const BoxDecoration(
                                                   color: Colors.blueAccent,
                                                   shape: BoxShape.circle,
@@ -263,24 +270,36 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                       const SizedBox(height: 20),
                                       _isEditing
                                           ? TextFormField(
-                                              controller: _displayNameController,
-                                              style: const TextStyle(color: Colors.white, fontSize: 22),
+                                              controller:
+                                                  _displayNameController,
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 22),
                                               decoration: InputDecoration(
                                                 labelText: 'Display Name',
-                                                labelStyle: const TextStyle(color: Colors.grey, fontSize: 16),
+                                                labelStyle: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 16),
                                                 border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  borderSide: BorderSide(color: Colors.blueAccent),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.blueAccent),
                                                 ),
-                                                focusedBorder: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: const BorderSide(
+                                                      color: Colors.blueAccent,
+                                                      width: 2),
                                                 ),
                                               ),
                                               textAlign: TextAlign.center,
                                             )
                                           : Text(
-                                              sellerData!['displayName'] ?? 'N/A',
+                                              sellerData!['displayName'] ??
+                                                  'N/A',
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 26,
@@ -292,17 +311,27 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                       _isEditing
                                           ? TextFormField(
                                               controller: _emailController,
-                                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16),
                                               decoration: InputDecoration(
                                                 labelText: 'Email',
-                                                labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                labelStyle: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 14),
                                                 border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  borderSide: BorderSide(color: Colors.blueAccent),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.blueAccent),
                                                 ),
-                                                focusedBorder: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: const BorderSide(
+                                                      color: Colors.blueAccent,
+                                                      width: 2),
                                                 ),
                                               ),
                                               textAlign: TextAlign.center,
@@ -321,11 +350,15 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                 const SizedBox(height: 30),
                                 // Profile Details Section
                                 Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Colors.grey[850]!, Colors.grey[900]!],
+                                      colors: [
+                                        Colors.grey[850]!,
+                                        Colors.grey[900]!
+                                      ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
@@ -339,7 +372,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                     ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Text(
                                         'Profile Details',
@@ -361,39 +395,80 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                           ? Column(
                                               children: [
                                                 TextFormField(
-                                                  controller: _addressController,
-                                                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                                                  controller:
+                                                      _addressController,
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16),
                                                   decoration: InputDecoration(
                                                     labelText: 'Address',
-                                                    labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                    labelStyle: const TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 14),
                                                     border: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      borderSide: BorderSide(color: Colors.blueAccent),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      borderSide: BorderSide(
+                                                          color: Colors
+                                                              .blueAccent),
                                                     ),
-                                                    focusedBorder: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                                    focusedBorder:
+                                                        OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                              color: Colors
+                                                                  .blueAccent,
+                                                              width: 2),
                                                     ),
                                                   ),
                                                 ),
                                                 const SizedBox(height: 15),
-                                                _buildProfileField('NIC Number', sellerData!['nicNumber'] ?? 'N/A', readOnly: true),
+                                                _buildProfileField(
+                                                    'NIC Number',
+                                                    sellerData!['nicNumber'] ??
+                                                        'N/A',
+                                                    readOnly: true),
                                                 const SizedBox(height: 15),
-                                                _buildProfileField('Phone Number', sellerData!['phoneNumber'] ?? 'N/A', readOnly: true),
+                                                _buildProfileField(
+                                                    'Phone Number',
+                                                    sellerData![
+                                                            'phoneNumber'] ??
+                                                        'N/A',
+                                                    readOnly: true),
                                                 const SizedBox(height: 15),
                                                 TextFormField(
-                                                  controller: _usernameController,
-                                                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                                                  controller:
+                                                      _usernameController,
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16),
                                                   decoration: InputDecoration(
                                                     labelText: 'Username',
-                                                    labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                    labelStyle: const TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 14),
                                                     border: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      borderSide: BorderSide(color: Colors.blueAccent),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      borderSide: BorderSide(
+                                                          color: Colors
+                                                              .blueAccent),
                                                     ),
-                                                    focusedBorder: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                                    focusedBorder:
+                                                        OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                              color: Colors
+                                                                  .blueAccent,
+                                                              width: 2),
                                                     ),
                                                   ),
                                                 ),
@@ -401,54 +476,94 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                             )
                                           : Column(
                                               children: [
-                                                _buildProfileField('Address', sellerData!['address'] ?? 'N/A'),
+                                                _buildProfileField(
+                                                    'Address',
+                                                    sellerData!['address'] ??
+                                                        'N/A'),
                                                 const SizedBox(height: 15),
-                                                _buildProfileField('NIC Number', sellerData!['nicNumber'] ?? 'N/A', readOnly: true),
+                                                _buildProfileField(
+                                                    'NIC Number',
+                                                    sellerData!['nicNumber'] ??
+                                                        'N/A',
+                                                    readOnly: true),
                                                 const SizedBox(height: 15),
-                                                _buildProfileField('Phone Number', sellerData!['phoneNumber'] ?? 'N/A', readOnly: true),
+                                                _buildProfileField(
+                                                    'Phone Number',
+                                                    sellerData![
+                                                            'phoneNumber'] ??
+                                                        'N/A',
+                                                    readOnly: true),
                                                 const SizedBox(height: 15),
-                                                _buildProfileField('Username', sellerData!['username'] ?? 'N/A'),
+                                                _buildProfileField(
+                                                    'Username',
+                                                    sellerData!['username'] ??
+                                                        'N/A'),
                                               ],
                                             ),
                                       const SizedBox(height: 20),
                                       if (_isEditing)
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
                                           children: [
                                             ElevatedButton(
                                               onPressed: () {
                                                 setState(() {
                                                   _isEditing = false;
-                                                  _displayNameController.text = sellerData!['displayName'] ?? '';
-                                                  _addressController.text = sellerData!['address'] ?? '';
-                                                  _emailController.text = sellerData!['email'] ?? '';
-                                                  _usernameController.text = sellerData!['username'] ?? '';
+                                                  _displayNameController.text =
+                                                      sellerData![
+                                                              'displayName'] ??
+                                                          '';
+                                                  _addressController.text =
+                                                      sellerData!['address'] ??
+                                                          '';
+                                                  _emailController.text =
+                                                      sellerData!['email'] ??
+                                                          '';
+                                                  _usernameController.text =
+                                                      sellerData!['username'] ??
+                                                          '';
                                                 });
                                               },
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                        255, 255, 255, 255),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 12),
                                               ),
                                               child: const Text(
                                                 'Cancel',
-                                                style: TextStyle(fontSize: 16 , color: Colors.black),
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.black),
                                               ),
                                             ),
                                             ElevatedButton(
                                               onPressed: _saveProfile,
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.blueAccent,
+                                                backgroundColor:
+                                                    Colors.blueAccent,
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 12),
                                               ),
                                               child: const Text(
                                                 'Save',
-                                                style: TextStyle(fontSize: 16 , color: Colors.white),
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.white),
                                               ),
                                             ),
                                           ],
@@ -462,17 +577,27 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                               });
                                             },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blueAccent,
+                                              backgroundColor:
+                                                  Colors.blueAccent,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
-                                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 30,
+                                                      vertical: 12),
                                             ),
                                             child: const Text(
                                               'Edit Profile',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold , color: Colors.white),
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white),
                                             ),
-                                          ).animate().scale(duration: 300.ms, curve: Curves.easeInOut),
+                                          ).animate().scale(
+                                              duration: 300.ms,
+                                              curve: Curves.easeInOut),
                                         ),
                                     ],
                                   ),
@@ -530,11 +655,14 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   label: 'Logout',
                 ),
               ],
-              selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              selectedLabelStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               unselectedLabelStyle: const TextStyle(fontSize: 10),
               showUnselectedLabels: true,
-              selectedIconTheme: const IconThemeData(size: 32, color: Colors.blueAccent),
-              unselectedIconTheme: const IconThemeData(size: 28, color: Colors.grey),
+              selectedIconTheme:
+                  const IconThemeData(size: 32, color: Colors.blueAccent),
+              unselectedIconTheme:
+                  const IconThemeData(size: 28, color: Colors.grey),
             ),
           ),
         ),
@@ -542,7 +670,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     );
   }
 
-  Widget _buildProfileField(String label, String value, {bool readOnly = false}) {
+  Widget _buildProfileField(String label, String value,
+      {bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
