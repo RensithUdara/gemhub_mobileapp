@@ -1,20 +1,21 @@
 import 'dart:io'; // For file operations
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart'; // For toast messages
 import 'package:gemhub/Seller/order_details_screen.dart';
 import 'package:intl/intl.dart'; // For date formatting
-import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart'; // For internal storage access
 import 'package:pdf/widgets.dart' as pw; // For PDF generation
 import 'package:printing/printing.dart'; // For printing/sharing PDF
-import 'package:path_provider/path_provider.dart'; // For internal storage access
-import 'package:fluttertoast/fluttertoast.dart'; // For toast messages
 
 class SellerOrderHistoryScreen extends StatefulWidget {
   const SellerOrderHistoryScreen({super.key});
 
   @override
-  _SellerOrderHistoryScreenState createState() => _SellerOrderHistoryScreenState();
+  _SellerOrderHistoryScreenState createState() =>
+      _SellerOrderHistoryScreenState();
 }
 
 class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
@@ -28,14 +29,16 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     try {
       final deliveryDate = DateTime.parse(deliveryDateStr);
       final currentDate = DateTime.now();
-      return currentDate.isAfter(deliveryDate) && status.toLowerCase() != 'delivered';
+      return currentDate.isAfter(deliveryDate) &&
+          status.toLowerCase() != 'delivered';
     } catch (e) {
       return false;
     }
   }
 
   // Method to generate PDF report
-  Future<Uint8List> _generatePdfReport(List<QueryDocumentSnapshot> orders) async {
+  Future<Uint8List> _generatePdfReport(
+      List<QueryDocumentSnapshot> orders) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('yyyy-MM-dd');
     double totalIncome = 0;
@@ -88,15 +91,16 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
   // Method to save PDF to internal storage
   Future<String> _savePdfToStorage(Uint8List pdfBytes) async {
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'Order_History_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+    final fileName =
+        'Order_History_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(pdfBytes);
     return file.path;
   }
 
-
   // Method to show improved save/share dialog
-  Future<void> _showSaveOrShareDialog(List<QueryDocumentSnapshot> orders) async {
+  Future<void> _showSaveOrShareDialog(
+      List<QueryDocumentSnapshot> orders) async {
     final pdfBytes = await _generatePdfReport(orders);
 
     showDialog(
@@ -110,7 +114,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             SizedBox(width: 10),
             Text(
               'Download Report',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -153,7 +158,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
               foregroundColor: Colors.white, // Set text and icon color to white
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
           ElevatedButton.icon(
@@ -161,7 +167,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
               Navigator.of(context).pop();
               await Printing.sharePdf(
                 bytes: pdfBytes,
-                filename: 'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+                filename:
+                    'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
               );
               Fluttertoast.showToast(
                 msg: 'Sharing report...',
@@ -177,7 +184,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
               foregroundColor: Colors.white, // Set text and icon color to white
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -185,8 +193,6 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
       ),
     );
   }
-
-
 
   // Method to pick date range
   Future<void> _pickDateRange(BuildContext context) async {
@@ -238,7 +244,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Order History',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -253,7 +260,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
           IconButton(
             icon: const Icon(Icons.download, color: Colors.white),
             onPressed: () async {
-              final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+              final snapshot =
+                  await FirebaseFirestore.instance.collection('orders').get();
               await _showSaveOrShareDialog(snapshot.docs);
             },
           ),
@@ -272,11 +280,13 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             stream: FirebaseFirestore.instance.collection('orders').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+                return const Center(
+                    child: CircularProgressIndicator(color: Colors.blueAccent));
               }
               if (snapshot.hasError) {
                 return const Center(
-                    child: Text('Error loading orders', style: TextStyle(color: Colors.white)));
+                    child: Text('Error loading orders',
+                        style: TextStyle(color: Colors.white)));
               }
 
               var orders = snapshot.data!.docs;
@@ -285,7 +295,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   final data = order.data() as Map<String, dynamic>;
                   final orderDate = DateTime.parse(data['deliveryDate']);
                   return orderDate.isAfter(_selectedDateRange!.start) &&
-                      orderDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+                      orderDate.isBefore(
+                          _selectedDateRange!.end.add(const Duration(days: 1)));
                 }).toList();
               }
 
@@ -294,9 +305,12 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.receipt_long_outlined, color: Colors.white70, size: 60),
+                      Icon(Icons.receipt_long_outlined,
+                          color: Colors.white70, size: 60),
                       SizedBox(height: 16),
-                      Text('No orders found', style: TextStyle(color: Colors.white70, fontSize: 18)),
+                      Text('No orders found',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 18)),
                     ],
                   ),
                 );
@@ -313,7 +327,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   return Card(
                     elevation: 4,
                     color: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Container(
                       decoration: BoxDecoration(
@@ -326,7 +341,9 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isOverdue ? Colors.red.withOpacity(0.5) : Colors.blue.withOpacity(0.3),
+                          color: isOverdue
+                              ? Colors.red.withOpacity(0.5)
+                              : Colors.blue.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -334,14 +351,17 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                         contentPadding: const EdgeInsets.all(16),
                         title: Text('Order #${orderId.substring(0, 8)}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 8),
                             Text('Status: ${order['status']}',
                                 style: const TextStyle(color: Colors.white60)),
-                            Text('Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
+                            Text(
+                                'Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
                                 style: const TextStyle(color: Colors.white60)),
                             Text('Delivery: ${order['deliveryDate']}',
                                 style: const TextStyle(color: Colors.white60)),
@@ -355,7 +375,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OrderDetailsScreen(orderId: orderId),
+                              builder: (context) =>
+                                  OrderDetailsScreen(orderId: orderId),
                             ),
                           );
                         },
