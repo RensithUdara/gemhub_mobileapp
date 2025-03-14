@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gemhub/Seller/order_details_screen.dart';
 import 'package:intl/intl.dart'; // For date formatting
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw; // For PDF generation
 import 'package:printing/printing.dart'; // For printing/saving PDF
 
@@ -10,7 +9,8 @@ class SellerOrderHistoryScreen extends StatefulWidget {
   const SellerOrderHistoryScreen({super.key});
 
   @override
-  _SellerOrderHistoryScreenState createState() => _SellerOrderHistoryScreenState();
+  _SellerOrderHistoryScreenState createState() =>
+      _SellerOrderHistoryScreenState();
 }
 
 class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
@@ -24,7 +24,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     try {
       final deliveryDate = DateTime.parse(deliveryDateStr);
       final currentDate = DateTime.now();
-      return currentDate.isAfter(deliveryDate) && status.toLowerCase() != 'delivered';
+      return currentDate.isAfter(deliveryDate) &&
+          status.toLowerCase() != 'delivered';
     } catch (e) {
       return false;
     }
@@ -39,7 +40,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     // Calculate total income
     for (var order in orders) {
       final data = order.data() as Map<String, dynamic>;
-      totalIncome += data['totalAmount'] as double;
+      final amount = data['totalAmount']; // Get the raw value
+      totalIncome += (amount is int ? amount.toDouble() : amount as double);
     }
 
     pdf.addPage(
@@ -68,7 +70,7 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                 return [
                   order.id.substring(0, 8),
                   data['status'],
-                  'Rs. ${data['totalAmount'].toStringAsFixed(2)}',
+                  'Rs. ${(data['totalAmount'] is int ? (data['totalAmount'] as int).toDouble() : data['totalAmount'] as double).toStringAsFixed(2)}',
                   data['deliveryDate'],
                 ];
               }).toList(),
@@ -81,7 +83,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
     // Save or share the PDF
     await Printing.sharePdf(
       bytes: await pdf.save(),
-      filename: 'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+      filename:
+          'Order_History_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
     );
   }
 
@@ -135,7 +138,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Order History',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -150,7 +154,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
           IconButton(
             icon: const Icon(Icons.download, color: Colors.white),
             onPressed: () async {
-              final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+              final snapshot =
+                  await FirebaseFirestore.instance.collection('orders').get();
               await _generatePdfReport(snapshot.docs);
             },
           ),
@@ -169,11 +174,13 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
             stream: FirebaseFirestore.instance.collection('orders').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+                return const Center(
+                    child: CircularProgressIndicator(color: Colors.blueAccent));
               }
               if (snapshot.hasError) {
                 return const Center(
-                    child: Text('Error loading orders', style: TextStyle(color: Colors.white)));
+                    child: Text('Error loading orders',
+                        style: TextStyle(color: Colors.white)));
               }
 
               var orders = snapshot.data!.docs;
@@ -182,7 +189,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   final data = order.data() as Map<String, dynamic>;
                   final orderDate = DateTime.parse(data['deliveryDate']);
                   return orderDate.isAfter(_selectedDateRange!.start) &&
-                      orderDate.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+                      orderDate.isBefore(
+                          _selectedDateRange!.end.add(const Duration(days: 1)));
                 }).toList();
               }
 
@@ -191,9 +199,12 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.receipt_long_outlined, color: Colors.white70, size: 60),
+                      Icon(Icons.receipt_long_outlined,
+                          color: Colors.white70, size: 60),
                       SizedBox(height: 16),
-                      Text('No orders found', style: TextStyle(color: Colors.white70, fontSize: 18)),
+                      Text('No orders found',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 18)),
                     ],
                   ),
                 );
@@ -210,7 +221,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                   return Card(
                     elevation: 4,
                     color: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Container(
                       decoration: BoxDecoration(
@@ -223,7 +235,9 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isOverdue ? Colors.red.withOpacity(0.5) : Colors.blue.withOpacity(0.3),
+                          color: isOverdue
+                              ? Colors.red.withOpacity(0.5)
+                              : Colors.blue.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -231,14 +245,17 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                         contentPadding: const EdgeInsets.all(16),
                         title: Text('Order #${orderId.substring(0, 8)}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 8),
                             Text('Status: ${order['status']}',
                                 style: const TextStyle(color: Colors.white60)),
-                            Text('Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
+                            Text(
+                                'Total: Rs. ${order['totalAmount'].toStringAsFixed(2)}',
                                 style: const TextStyle(color: Colors.white60)),
                             Text('Delivery: ${order['deliveryDate']}',
                                 style: const TextStyle(color: Colors.white60)),
@@ -252,7 +269,8 @@ class _SellerOrderHistoryScreenState extends State<SellerOrderHistoryScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OrderDetailsScreen(orderId: orderId),
+                              builder: (context) =>
+                                  OrderDetailsScreen(orderId: orderId),
                             ),
                           );
                         },
