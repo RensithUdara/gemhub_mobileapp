@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -51,7 +52,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
   }
 
   // Method to generate PDF report
-  Future<Uint8List> _generatePdfReport(List<QueryDocumentSnapshot> products) async {
+  Future<Uint8List> _generatePdfReport(
+      List<QueryDocumentSnapshot> products) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('yyyy-MM-dd');
     double totalValueInRange = 0;
@@ -60,17 +62,26 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
     // Calculate total value for products in the selected date range (if any)
     for (var product in products) {
       final data = product.data() as Map<String, dynamic>;
-      final pricing = data['pricing'] is int ? (data['pricing'] as int).toDouble() : data['pricing'] as double;
-      final quantity = data['quantity'] is int ? (data['quantity'] as int).toDouble() : data['quantity'] as double;
+      final pricing = data['pricing'] is int
+          ? (data['pricing'] as int).toDouble()
+          : data['pricing'] as double;
+      final quantity = data['quantity'] is int
+          ? (data['quantity'] as int).toDouble()
+          : data['quantity'] as double;
       totalValueInRange += pricing * quantity;
     }
 
     // Fetch all products for all-time total value
-    final allProductsSnapshot = await FirebaseFirestore.instance.collection('products').get();
+    final allProductsSnapshot =
+        await FirebaseFirestore.instance.collection('products').get();
     for (var product in allProductsSnapshot.docs) {
-      final data = product.data() as Map<String, dynamic>;
-      final pricing = data['pricing'] is int ? (data['pricing'] as int).toDouble() : data['pricing'] as double;
-      final quantity = data['quantity'] is int ? (data['quantity'] as int).toDouble() : data['quantity'] as double;
+      final data = product.data();
+      final pricing = data['pricing'] is int
+          ? (data['pricing'] as int).toDouble()
+          : data['pricing'] as double;
+      final quantity = data['quantity'] is int
+          ? (data['quantity'] as int).toDouble()
+          : data['quantity'] as double;
       allTimeTotalValue += pricing * quantity;
     }
 
@@ -99,15 +110,19 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             pw.SizedBox(height: 20),
             pw.Text(
               'Product Details:',
-              style:  pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
             pw.Table.fromTextArray(
               headers: ['Title', 'Category', 'Pricing', 'Quantity', 'Total'],
               data: products.map((product) {
                 final data = product.data() as Map<String, dynamic>;
-                final pricing = data['pricing'] is int ? (data['pricing'] as int).toDouble() : data['pricing'] as double;
-                final quantity = data['quantity'] is int ? (data['quantity'] as int).toDouble() : data['quantity'] as double;
+                final pricing = data['pricing'] is int
+                    ? (data['pricing'] as int).toDouble()
+                    : data['pricing'] as double;
+                final quantity = data['quantity'] is int
+                    ? (data['quantity'] as int).toDouble()
+                    : data['quantity'] as double;
                 return [
                   data['title'],
                   data['category'],
@@ -128,14 +143,16 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
   // Method to save PDF to internal storage
   Future<String> _savePdfToStorage(Uint8List pdfBytes) async {
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'Product_Report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+    final fileName =
+        'Product_Report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(pdfBytes);
     return file.path;
   }
 
   // Method to show save/share dialog
-  Future<void> _showSaveOrShareDialog(List<QueryDocumentSnapshot> products) async {
+  Future<void> _showSaveOrShareDialog(
+      List<QueryDocumentSnapshot> products) async {
     final pdfBytes = await _generatePdfReport(products);
 
     showDialog(
@@ -149,7 +166,10 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             SizedBox(width: 10),
             Text(
               'Download Product Report',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
             ),
           ],
         ),
@@ -205,7 +225,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
           ElevatedButton.icon(
@@ -213,7 +234,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
               Navigator.of(context).pop();
               await Printing.sharePdf(
                 bytes: pdfBytes,
-                filename: 'Product_Report_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+                filename:
+                    'Product_Report_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
               );
               if (Platform.isAndroid || Platform.isIOS) {
                 try {
@@ -242,7 +264,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blueAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -269,7 +292,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
         shadowColor: Colors.black26,
         title: const Text(
           'Listed Products',
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -291,10 +315,11 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
               var filteredProducts = snapshot.docs;
               if (_selectedDateRange != null) {
                 filteredProducts = filteredProducts.where((product) {
-                  final data = product.data() as Map<String, dynamic>;
+                  final data = product.data();
                   final timestamp = (data['timestamp'] as Timestamp).toDate();
                   return timestamp.isAfter(_selectedDateRange!.start) &&
-                      timestamp.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+                      timestamp.isBefore(
+                          _selectedDateRange!.end.add(const Duration(days: 1)));
                 }).toList();
               }
               await _showSaveOrShareDialog(filteredProducts);
@@ -310,14 +335,19 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: Colors.blue, strokeWidth: 3));
+              return const Center(
+                  child: CircularProgressIndicator(
+                      color: Colors.blue, strokeWidth: 3));
             }
 
             if (snapshot.hasError) {
               return Center(
                 child: Text(
                   'Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               );
             }
@@ -327,11 +357,15 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.inventory_2_outlined, color: Colors.white70, size: 60),
+                    Icon(Icons.inventory_2_outlined,
+                        color: Colors.white70, size: 60),
                     SizedBox(height: 16),
                     Text(
                       'No products listed yet',
-                      style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -344,7 +378,8 @@ class _ListedProductScreenState extends State<ListedProductScreen> {
                 final data = product.data() as Map<String, dynamic>;
                 final timestamp = (data['timestamp'] as Timestamp).toDate();
                 return timestamp.isAfter(_selectedDateRange!.start) &&
-                    timestamp.isBefore(_selectedDateRange!.end.add(const Duration(days: 1)));
+                    timestamp.isBefore(
+                        _selectedDateRange!.end.add(const Duration(days: 1)));
               }).toList();
             }
 
@@ -400,7 +435,8 @@ class _ProductCardState extends State<ProductCard> {
     final titleController = TextEditingController(text: widget.title);
     final pricingController = TextEditingController(text: widget.pricing);
     final quantityController = TextEditingController(text: widget.quantity);
-    final descriptionController = TextEditingController(text: widget.description);
+    final descriptionController =
+        TextEditingController(text: widget.description);
     String? selectedCategory = widget.category;
 
     showDialog(
@@ -410,7 +446,8 @@ class _ProductCardState extends State<ProductCard> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Edit Product',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -422,9 +459,11 @@ class _ProductCardState extends State<ProductCard> {
                 selectedCategory = value;
               }),
               const SizedBox(height: 12),
-              _buildTextField('Pricing', pricingController, TextInputType.number),
+              _buildTextField(
+                  'Pricing', pricingController, TextInputType.number),
               const SizedBox(height: 12),
-              _buildTextField('Quantity', quantityController, TextInputType.number),
+              _buildTextField(
+                  'Quantity', quantityController, TextInputType.number),
               const SizedBox(height: 12),
               _buildTextField('Description', descriptionController, null, 3),
             ],
@@ -438,7 +477,10 @@ class _ProductCardState extends State<ProductCard> {
           ElevatedButton(
             onPressed: () async {
               try {
-                await FirebaseFirestore.instance.collection('products').doc(widget.docId).update({
+                await FirebaseFirestore.instance
+                    .collection('products')
+                    .doc(widget.docId)
+                    .update({
                   'title': titleController.text,
                   'pricing': double.parse(pricingController.text),
                   'quantity': int.parse(quantityController.text),
@@ -447,18 +489,23 @@ class _ProductCardState extends State<ProductCard> {
                 });
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Product updated successfully'), backgroundColor: Colors.green),
+                  const SnackBar(
+                      content: Text('Product updated successfully'),
+                      backgroundColor: Colors.green),
                 );
               } catch (e) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error updating product: $e'), backgroundColor: Colors.red),
+                  SnackBar(
+                      content: Text('Error updating product: $e'),
+                      backgroundColor: Colors.red),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Save'),
           ),
@@ -479,13 +526,18 @@ class _ProductCardState extends State<ProductCard> {
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.grey[800],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.blue)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.blue)),
       ),
     );
   }
 
-  Widget _buildDropdownField(String label, String? value, void Function(String?) onChanged) {
+  Widget _buildDropdownField(
+      String label, String? value, void Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
       value: value,
       decoration: InputDecoration(
@@ -493,15 +545,22 @@ class _ProductCardState extends State<ProductCard> {
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.grey[800],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.blue)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.blue)),
       ),
       dropdownColor: Colors.grey[900],
       style: const TextStyle(color: Colors.white),
       items: const [
-        DropdownMenuItem(value: 'Blue Sapphires', child: Text('Blue Sapphires')),
-        DropdownMenuItem(value: 'White Sapphires', child: Text('White Sapphires')),
-        DropdownMenuItem(value: 'Yellow Sapphires', child: Text('Yellow Sapphires')),
+        DropdownMenuItem(
+            value: 'Blue Sapphires', child: Text('Blue Sapphires')),
+        DropdownMenuItem(
+            value: 'White Sapphires', child: Text('White Sapphires')),
+        DropdownMenuItem(
+            value: 'Yellow Sapphires', child: Text('Yellow Sapphires')),
       ],
       onChanged: onChanged,
     );
@@ -513,9 +572,17 @@ class _ProductCardState extends State<ProductCard> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.grey[850]!, Colors.grey[900]!], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+            colors: [Colors.grey[850]!, Colors.grey[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.blue.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 6))
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -525,7 +592,12 @@ class _ProductCardState extends State<ProductCard> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4))
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -538,7 +610,8 @@ class _ProductCardState extends State<ProductCard> {
                     width: 100,
                     height: 100,
                     color: Colors.grey[800],
-                    child: const Icon(Icons.broken_image, color: Colors.white54, size: 40),
+                    child: const Icon(Icons.broken_image,
+                        color: Colors.white54, size: 40),
                   ),
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
@@ -551,7 +624,8 @@ class _ProductCardState extends State<ProductCard> {
                           color: Colors.blue,
                           strokeWidth: 2,
                           value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
                               : null,
                         ),
                       ),
@@ -569,23 +643,36 @@ class _ProductCardState extends State<ProductCard> {
               children: [
                 Text(
                   widget.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.2),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12)),
                   child: Text(
                     widget.category,
-                    style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   widget.description,
-                  style: const TextStyle(color: Colors.white60, fontSize: 14, fontWeight: FontWeight.w400),
+                  style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -596,7 +683,10 @@ class _ProductCardState extends State<ProductCard> {
                     Flexible(
                       child: Text(
                         'Rs. ${widget.pricing}',
-                        style: const TextStyle(color: Colors.blueAccent, fontSize: 16, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -605,11 +695,17 @@ class _ProductCardState extends State<ProductCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: Colors.grey[800],
+                                borderRadius: BorderRadius.circular(12)),
                             child: Text(
                               'Qty: ${widget.quantity}',
-                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -617,8 +713,11 @@ class _ProductCardState extends State<ProductCard> {
                             onTap: () => _showEditDialog(context),
                             child: Container(
                               padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                              child: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                              decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(Icons.edit,
+                                  color: Colors.blue, size: 20),
                             ),
                           ),
                         ],
