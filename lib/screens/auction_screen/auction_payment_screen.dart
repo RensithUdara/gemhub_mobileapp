@@ -108,7 +108,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Payment Successful!',
+                'Payment Successful!!',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
