@@ -240,15 +240,15 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
           .add(paymentData);
 
       // Step 2: Create the order record
-      DateTime paymentDate = DateTime.now(); // Current date as payment date
+      DateTime paymentDate = DateTime.now(); 
       DateTime deliveryDate = paymentDate.add(
-          const Duration(days: 5)); // Delivery date = payment date + 5 days
+          const Duration(days: 5)); 
 
       Map<String, dynamic> orderData = {
         'userId': currentUser.uid,
         'auctionId': widget.auctionId,
-        'orderDate': paymentDate.toIso8601String(), // Store as ISO string
-        'deliveryDate': deliveryDate.toIso8601String(), // Store as ISO string
+        'orderDate': paymentDate.toIso8601String(), 
+        'deliveryDate': deliveryDate.toIso8601String(), 
         'address': _selectedDeliveryOption == 'delivery'
             ? '${_fullNameController.text}, ${_addressController.text}, ${_cityController.text}, ${_postalCodeController.text}'
             : 'Pickup at 123 Luxury Auction St, Colombo, Sri Lanka',
