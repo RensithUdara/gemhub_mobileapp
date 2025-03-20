@@ -116,7 +116,8 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery'
+                _selectedPaymentMethod == 'cod' &&
+                        _selectedDeliveryOption == 'delivery'
                     ? 'Your Cash on Delivery request has been submitted.'
                     : 'Your payment has been processed successfully.',
                 textAlign: TextAlign.center,
@@ -166,8 +167,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         _addressController.text.isNotEmpty &&
         _cityController.text.isNotEmpty &&
         _postalCodeController.text.isNotEmpty &&
-        RegExp(r'^\d{5}$')
-            .hasMatch(_postalCodeController.text);
+        RegExp(r'^\d{5}$').hasMatch(_postalCodeController.text);
   }
 
   bool _areCardFieldsValid() {
@@ -203,8 +203,9 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         'auctionId': widget.auctionId,
         'userId': currentUser.uid,
         'totalPrice': _calculateTotalPrice(),
-        'paymentMethod': _selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup' 
-            ? 'cash' 
+        'paymentMethod': _selectedPaymentMethod == 'cash' &&
+                _selectedDeliveryOption == 'pickup'
+            ? 'cash'
             : _selectedPaymentMethod,
         'paymentStatus': 'pending',
         'paymentInitiatedAt': FieldValue.serverTimestamp(),
@@ -242,14 +243,15 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         'userId': currentUser.uid,
         'auctionId': widget.auctionId,
         'orderDate': paymentDate.toIso8601String(),
-        'deliveryDate': _selectedDeliveryOption == 'delivery' 
-            ? deliveryDate.toIso8601String() 
+        'deliveryDate': _selectedDeliveryOption == 'delivery'
+            ? deliveryDate.toIso8601String()
             : null,
         'address': _selectedDeliveryOption == 'delivery'
             ? '${_fullNameController.text}, ${_addressController.text}, ${_cityController.text}, ${_postalCodeController.text}'
             : 'Pickup at 123 Luxury Auction St, Colombo, Sri Lanka',
-        'paymentMethod': _selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup' 
-            ? 'cash' 
+        'paymentMethod': _selectedPaymentMethod == 'cash' &&
+                _selectedDeliveryOption == 'pickup'
+            ? 'cash'
             : _selectedPaymentMethod,
         'totalAmount': _calculateTotalPrice(),
         'status': 'Pending',
@@ -393,7 +395,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
             const Text(
               'Delivery Options',
               style: TextStyle(
@@ -504,7 +505,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ],
             ),
             const SizedBox(height: 24),
-
             if (_selectedDeliveryOption == 'pickup') ...[
               const Text(
                 'Pickup Location',
@@ -603,7 +603,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
             ],
             const SizedBox(height: 24),
-
             const Text(
               'Payment Method',
               style: TextStyle(
@@ -619,22 +618,27 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        _selectedPaymentMethod = _selectedDeliveryOption == 'pickup' 
-                            ? 'cash' 
-                            : 'cod';
+                        _selectedPaymentMethod =
+                            _selectedDeliveryOption == 'pickup'
+                                ? 'cash'
+                                : 'cod';
                       });
                     },
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: (_selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup') ||
-                               (_selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery')
+                        color: (_selectedPaymentMethod == 'cash' &&
+                                    _selectedDeliveryOption == 'pickup') ||
+                                (_selectedPaymentMethod == 'cod' &&
+                                    _selectedDeliveryOption == 'delivery')
                             ? Colors.blue[100]
                             : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: (_selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup') ||
-                                 (_selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery')
+                          color: (_selectedPaymentMethod == 'cash' &&
+                                      _selectedDeliveryOption == 'pickup') ||
+                                  (_selectedPaymentMethod == 'cod' &&
+                                      _selectedDeliveryOption == 'delivery')
                               ? Colors.blue[700]!
                               : Colors.grey[300]!,
                           width: 2,
@@ -645,8 +649,8 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                           Icon(Icons.money, color: Colors.blue[700], size: 30),
                           const SizedBox(height: 8),
                           Text(
-                            _selectedDeliveryOption == 'pickup' 
-                                ? 'Cash Payment' 
+                            _selectedDeliveryOption == 'pickup'
+                                ? 'Cash Payment'
                                 : 'Cash on Delivery',
                             style: TextStyle(
                               fontSize: 16,
@@ -704,7 +708,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ],
             ),
             const SizedBox(height: 24),
-
             if (_selectedPaymentMethod == 'card') ...[
               const Text(
                 'Card Details',
@@ -772,7 +775,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
             ],
             const SizedBox(height: 24),
-
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -845,7 +847,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
             SizedBox(
               width: double.infinity,
               height: 56,
