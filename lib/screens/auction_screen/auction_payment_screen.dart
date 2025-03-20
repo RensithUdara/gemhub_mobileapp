@@ -70,11 +70,10 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
     );
   }
 
-  // Show Payment Success Popup
   Future<void> _showPaymentSuccessDialog() async {
     await showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing by tapping outside
+      barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -117,7 +116,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _selectedPaymentMethod == 'cod'
+                _selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery'
                     ? 'Your Cash on Delivery request has been submitted.'
                     : 'Your payment has been processed successfully.',
                 textAlign: TextAlign.center,
@@ -129,8 +128,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                  // Navigate to OrderHistoryScreen
+                  Navigator.pop(context);
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -169,16 +167,14 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         _cityController.text.isNotEmpty &&
         _postalCodeController.text.isNotEmpty &&
         RegExp(r'^\d{5}$')
-            .hasMatch(_postalCodeController.text); // 5-digit postal code
+            .hasMatch(_postalCodeController.text);
   }
 
   bool _areCardFieldsValid() {
     if (_selectedPaymentMethod != 'card') return true;
-    return _cardNumberController.text.length >=
-            16 && // Basic card number length check
-        RegExp(r'^\d{2}/\d{2}$')
-            .hasMatch(_expDateController.text) && // MM/YY format
-        RegExp(r'^\d{3,4}$').hasMatch(_cvcController.text); // 3 or 4 digits
+    return _cardNumberController.text.length >= 16 &&
+        RegExp(r'^\d{2}/\d{2}$').hasMatch(_expDateController.text) &&
+        RegExp(r'^\d{3,4}$').hasMatch(_cvcController.text);
   }
 
   bool _isFormValid() {
@@ -203,12 +199,13 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Step 1: Create the payment record
       Map<String, dynamic> paymentData = {
         'auctionId': widget.auctionId,
         'userId': currentUser.uid,
         'totalPrice': _calculateTotalPrice(),
-        'paymentMethod': _selectedPaymentMethod,
+        'paymentMethod': _selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup' 
+            ? 'cash' 
+            : _selectedPaymentMethod,
         'paymentStatus': 'pending',
         'paymentInitiatedAt': FieldValue.serverTimestamp(),
       };
@@ -234,12 +231,10 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         });
       }
 
-      // Add payment to Firestore
       DocumentReference paymentRef = await FirebaseFirestore.instance
           .collection('payments')
           .add(paymentData);
 
-      // Step 2: Create the order record
       DateTime paymentDate = DateTime.now();
       DateTime deliveryDate = paymentDate.add(const Duration(days: 5));
 
@@ -247,20 +242,22 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         'userId': currentUser.uid,
         'auctionId': widget.auctionId,
         'orderDate': paymentDate.toIso8601String(),
-        'deliveryDate': deliveryDate.toIso8601String(),
+        'deliveryDate': _selectedDeliveryOption == 'delivery' 
+            ? deliveryDate.toIso8601String() 
+            : null,
         'address': _selectedDeliveryOption == 'delivery'
             ? '${_fullNameController.text}, ${_addressController.text}, ${_cityController.text}, ${_postalCodeController.text}'
             : 'Pickup at 123 Luxury Auction St, Colombo, Sri Lanka',
-        'paymentMethod': _selectedPaymentMethod,
+        'paymentMethod': _selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup' 
+            ? 'cash' 
+            : _selectedPaymentMethod,
         'totalAmount': _calculateTotalPrice(),
         'status': 'Pending',
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      // Add order to Firestore
       await FirebaseFirestore.instance.collection('orders').add(orderData);
 
-      // Step 3: Update the auction document with payment status
       await FirebaseFirestore.instance
           .collection('auctions')
           .doc(widget.auctionId)
@@ -269,7 +266,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         'paymentInitiatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Show the success popup
       await _showPaymentSuccessDialog();
     } catch (e) {
       print("Payment error: $e");
@@ -323,7 +319,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Item Details
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
@@ -399,7 +394,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Delivery Options
             const Text(
               'Delivery Options',
               style: TextStyle(
@@ -416,7 +410,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                     onTap: () {
                       setState(() {
                         _selectedDeliveryOption = 'pickup';
-                        _selectedPaymentMethod = null; // Reset payment method
+                        _selectedPaymentMethod = null;
                       });
                     },
                     child: Container(
@@ -464,7 +458,7 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                     onTap: () {
                       setState(() {
                         _selectedDeliveryOption = 'delivery';
-                        _selectedPaymentMethod = null; // Reset payment method
+                        _selectedPaymentMethod = null;
                       });
                     },
                     child: Container(
@@ -511,7 +505,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Pickup Location or Delivery Details
             if (_selectedDeliveryOption == 'pickup') ...[
               const Text(
                 'Pickup Location',
@@ -611,7 +604,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ],
             const SizedBox(height: 24),
 
-            // Payment Options
             const Text(
               'Payment Method',
               style: TextStyle(
@@ -627,18 +619,22 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        _selectedPaymentMethod = 'cod';
+                        _selectedPaymentMethod = _selectedDeliveryOption == 'pickup' 
+                            ? 'cash' 
+                            : 'cod';
                       });
                     },
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: _selectedPaymentMethod == 'cod'
+                        color: (_selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup') ||
+                               (_selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery')
                             ? Colors.blue[100]
                             : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _selectedPaymentMethod == 'cod'
+                          color: (_selectedPaymentMethod == 'cash' && _selectedDeliveryOption == 'pickup') ||
+                                 (_selectedPaymentMethod == 'cod' && _selectedDeliveryOption == 'delivery')
                               ? Colors.blue[700]!
                               : Colors.grey[300]!,
                           width: 2,
@@ -649,7 +645,9 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                           Icon(Icons.money, color: Colors.blue[700], size: 30),
                           const SizedBox(height: 8),
                           Text(
-                            'Cash on Delivery',
+                            _selectedDeliveryOption == 'pickup' 
+                                ? 'Cash Payment' 
+                                : 'Cash on Delivery',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -707,7 +705,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Card Payment Details (if selected)
             if (_selectedPaymentMethod == 'card') ...[
               const Text(
                 'Card Details',
@@ -776,7 +773,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ],
             const SizedBox(height: 24),
 
-            // Total Price
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -850,7 +846,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Proceed Button
             SizedBox(
               width: double.infinity,
               height: 56,
