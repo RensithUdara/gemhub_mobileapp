@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,7 +17,6 @@ class AuctionScreen extends StatelessWidget {
       try {
         return DateTime.parse(endTime);
       } catch (e) {
-        print('Error parsing endTime string: $e');
         return DateTime.now();
       }
     }
