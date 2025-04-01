@@ -50,8 +50,6 @@ class DatabaseHelper {
     return await db.query('users');
   }
 
-  // In db_helper.dart
-
 Future<void> updateUserPassword(String phoneNumber, String newPassword) async {
   final db = await database;
   await db.update(
@@ -61,5 +59,4 @@ Future<void> updateUserPassword(String phoneNumber, String newPassword) async {
     whereArgs: [phoneNumber],
   );
 }
-
 }
