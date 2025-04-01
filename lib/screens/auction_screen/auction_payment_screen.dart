@@ -22,8 +22,8 @@ class AuctionPaymentScreen extends StatefulWidget {
 }
 
 class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
-  String _selectedDeliveryOption = 'pickup'; // Default to pickup
-  String? _selectedPaymentMethod; // Null until a payment method is chosen
+  String _selectedDeliveryOption = 'pickup';
+  String? _selectedPaymentMethod;
   final double _deliveryCharge = 1000.0;
   bool _isLoading = false;
 
