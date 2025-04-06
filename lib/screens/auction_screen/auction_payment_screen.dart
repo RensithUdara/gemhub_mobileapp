@@ -867,9 +867,6 @@ class _AuctionPaymentScreenState extends State<AuctionPaymentScreen> {
                         strokeWidth: 2.5,
                       )
                     : const Text(
-
-
-                      
                         'Confirm Payment',
                         style: TextStyle(
                           fontSize: 18,
